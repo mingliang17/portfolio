@@ -24,7 +24,7 @@ export default {
 };
 
 Install GSAP
-npm install GSAP
+npm install gsap
 
 Install GSAP React Helper plugin
 npm install gsap @gsap/react
@@ -41,3 +41,20 @@ https://hub.avaturn.me/
 
 Mixamo
 
+Solar Calculator
+npm install solar-calculator --legacy-peer-deps
+
+React-Globe
+npm i react-globe.gl
+
+React-Router-DOM
+npm i react-router-dom
+
+Tanstack
+npx create-tsrouter-app@latest
+
+World Atlas
+npm i world-atlas topojson-client
+
+Another 1 
+npm install d3-geo topojson-client world-atlas
