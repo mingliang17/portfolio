@@ -51,7 +51,11 @@ html:focus-within {
     -moz-osx-font-smoothing: grayscale;
 
     /* Browser hint: supports both light and dark mode */
-    color-scheme: light dark;
+    color-scheme: light dark;/* In your global CSS (index.css, App.css, or globals.css) */
+
+    nav-height: 64px; /* Default fallback value - adjust based on your navbar height */
+
+
 
   }
 
@@ -86,6 +90,24 @@ html:focus-within {
     outline: 4px auto -webkit-focus-ring-color;
   }
 
+  nav {
+  transition: height 0.3s ease;
+  }
+
+
+
+/*Project Alpha */
+  .project-alpha {
+  /* Isolate the animation context */
+  isolation: isolate;
+}
+
+  .project-alpha h1 {
+    /* Ensure the element doesn't affect layout during animation */
+    display: inline-block;
+    /* Prevent layout thrashing */
+    contain: layout style paint;
+  }
   /* Light mode overrides */
   @media (prefers-color-scheme: light) {
     :root {

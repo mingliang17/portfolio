@@ -293,33 +293,33 @@ export const globeProjects = [{
       description: 'AI-powered app',
       lat: 40.7128,  // New York
       lon: -74.0060,
-      link: 'portfolio/projects/alpha'
+      link: 'projects/alpha'
     },
     {
       title: 'Project Beta',
       description: 'E-commerce platform',
       lat: 51.5074,  // London
       lon: -0.1278,
-      link: '/projects/beta'
+      link: 'projects/beta'
     },
     {
       title: 'Project Gamma',
       description: 'Social network',
       lat: 35.6762,  // Tokyo
       lon: 139.6503,
-      link: '/projects/gamma'
+      link: 'projects/gamma'
     },
     {
       title: 'Project Delta',
       description: 'Mobile game',
       lat: -33.8688, // Sydney
       lon: 151.2093,
-      link: '/projects/delta'
+      link: 'projects/delta'
     },
     {
       title: 'Project Epsilon',
       description: 'Data visualization',
       lat: 1.3521,   // Singapore
       lon: 103.8198,
-      link: '/projects/epsilon'
+      link: 'projects/epsilon'
     }]
