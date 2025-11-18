@@ -27,11 +27,35 @@ const Navbar = forwardRef((props, ref) => {
   const location = useLocation();
   
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
-  const showOnHover = !isHomePage;
+  const isFullPageProject = location.pathname === '/projects/MH1';
+  
+  const showOnHover = !isHomePage && !isFullPageProject;
 
-  // Scroll direction detection
+  // SCROLL DIRECTION DETECTION - Enhanced for full-page projects
   useEffect(() => {
-    const handleScroll = () => {
+    let scrollTimeout;
+
+    const handleWheel = (e) => {
+      if (isFullPageProject) {
+        const currentDelta = e.deltaY;
+        
+        if (currentDelta > 0) {
+          setScrollDirection('down');
+          setIsHovered(false);
+        } else if (currentDelta < 0) {
+          setScrollDirection('up');
+          setIsHovered(true);
+          
+          clearTimeout(scrollTimeout);
+          scrollTimeout = setTimeout(() => {
+            if (!isOpen) {
+              setIsHovered(false);
+            }
+          }, 2000);
+        }
+        return;
+      }
+
       const currentScrollY = window.scrollY;
       
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
@@ -43,9 +67,78 @@ const Navbar = forwardRef((props, ref) => {
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    const handleTouchStart = (e) => {
+      if (!isFullPageProject) return;
+      const touchY = e.touches[0].clientY;
+      setLastScrollY(touchY);
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isFullPageProject) return;
+      const currentTouchY = e.touches[0].clientY;
+      
+      if (currentTouchY < lastScrollY - 10) {
+        setScrollDirection('down');
+        setIsHovered(false);
+      } else if (currentTouchY > lastScrollY + 10) {
+        setScrollDirection('up');
+        setIsHovered(true);
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (!isOpen) {
+            setIsHovered(false);
+          }
+        }, 2000);
+      }
+      setLastScrollY(currentTouchY);
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      clearTimeout(scrollTimeout);
+    };
+  }, [lastScrollY, isFullPageProject, isOpen]);
+
+  // MOUSE HOVER LOGIC - Only for full-page projects
+  useEffect(() => {
+    if (!isFullPageProject) return;
+
+    let hoverTimeout;
+
+    const handleMouseMove = (e) => {
+      if (e.clientY < 60) {
+        setIsHovered(true);
+        clearTimeout(hoverTimeout);
+      } else {
+        if (scrollDirection !== 'up' && !isOpen) {
+          hoverTimeout = setTimeout(() => {
+            setIsHovered(false);
+          }, 500);
+        }
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      clearTimeout(hoverTimeout);
+    };
+  }, [isFullPageProject, scrollDirection, isOpen]);
+
+  // Keep navbar visible when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      setIsHovered(true);
+    }
+  }, [isOpen]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -60,27 +153,36 @@ const Navbar = forwardRef((props, ref) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
-  const shouldShow = isHomePage 
-    ? true 
-    : isHovered || scrollDirection === 'up' || isOpen || lastScrollY < 50;
+  const shouldShow = isFullPageProject 
+    ? isHovered || isOpen || scrollDirection === 'up'
+    : (isHomePage 
+        ? true 
+        : isHovered || scrollDirection === 'up' || isOpen || lastScrollY < 50);
 
   return (
     <>
       {/* Main Navbar */}
       <header 
         ref={ref}
-        className={`fixed top-0 left-0 right-0 z-50 bg-black/90 transition-all duration-300 ${
-          shouldShow ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
-        }`}
-        onMouseEnter={() => showOnHover && setIsHovered(true)}
-        onMouseLeave={() => showOnHover && setIsHovered(false)}
-        style={{ 
-          pointerEvents: shouldShow ? 'auto' : 'none' 
+        className={`navbar-header ${shouldShow ? 'visible' : 'hidden'}`}
+        onMouseEnter={() => {
+          if (showOnHover) setIsHovered(true);
+          if (isFullPageProject) setIsHovered(true);
+        }}
+        onMouseLeave={() => {
+          if (showOnHover) {
+            const timeout = setTimeout(() => setIsHovered(false), 300);
+            return () => clearTimeout(timeout);
+          }
+          if (isFullPageProject && scrollDirection !== 'up' && !isOpen) {
+            const timeout = setTimeout(() => setIsHovered(false), 500);
+            return () => clearTimeout(timeout);
+          }
         }}
       >
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center h-16">
-            <a href="/" className="text-neutral-400 font-bold text-xl hover:text-white transition-colors">
+        <div className="navbar-container">
+          <div className="navbar-inner">
+            <a href="/" className="navbar-brand">
               Kaden
             </a>
 
@@ -90,9 +192,8 @@ const Navbar = forwardRef((props, ref) => {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden text-neutral-400 z-60 hover:text-white focus:outline-none"
+              className="navbar-mobile-button"
               aria-label="Toggle menu"
-              style={{ pointerEvents: 'auto' }}
             >
               <img 
                 src={assetPath(isOpen ? 'close.svg' : 'menu.svg')} 
@@ -104,23 +205,27 @@ const Navbar = forwardRef((props, ref) => {
         </div>
 
         {isOpen && (
-          <div className="md:hidden fixed inset-0 bg-black/95 z-40 pt-16">
-            <div className="p-6">
+          <div className="navbar-mobile-overlay">
+            <div className="navbar-mobile-content">
               <NavItems mobile onClick={() => setIsOpen(false)} />
             </div>
           </div>
         )}
       </header>
 
-      {/* Invisible hover strip - only shows when navbar is hidden on non-home pages */}
+      {/* Invisible hover strip - only for non-fullpage projects */}
       {!shouldShow && showOnHover && (
         <div 
-          className="fixed top-0 left-0 right-0 h-[var(--nav-height)] z-40 bg-transparent"
-          onMouseEnter={() => {
-            console.log('Hover strip activated');
-            setIsHovered(true);
-          }}
-          style={{ pointerEvents: 'auto' }}
+          className="navbar-hover-strip regular"
+          onMouseEnter={() => setIsHovered(true)}
+        />
+      )}
+
+      {/* Special hover strip for full-page projects */}
+      {isFullPageProject && (
+        <div 
+          className="navbar-hover-strip fullpage"
+          onMouseEnter={() => setIsHovered(true)}
         />
       )}
     </>

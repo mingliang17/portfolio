@@ -10,7 +10,7 @@ const ProjectMH1 = () => {
   const [waitingForInteraction, setWaitingForInteraction] = useState(false);
   const [unlockAnimation, setUnlockAnimation] = useState(false);
   const [dragProgress, setDragProgress] = useState(0);
-  const totalSections = 2;
+  const totalSections = 5;
 
   const heroContentRef = useRef(null);
   const backgroundImageRef = useRef(null);
@@ -251,60 +251,46 @@ const ProjectMH1 = () => {
         }
 
         // Unlock animation sequence
-        const unlockTimeline = gsap.timeline({
-          onComplete: () => {
-            setAnimationCompleted(true);
-            setCurrentSection(1);
-          }
-        });
-
-        // Phase 1: Initial reveal (2 second pause + animations)
-        unlockTimeline.to({}, { duration: 2 }); // 2 second pause
-
+        const unlockTimeline = gsap.timeline();
+        
         // Remove gradient overlay completely
         unlockTimeline.to(gradientOverlayRef.current, {
           opacity: 0,
           duration: 0.6,
           ease: "power2.inOut"
-        }, "-=1.8"); // Start slightly before pause ends
-
+        });
+        
         // Fully brighten background
         unlockTimeline.to(backgroundImageRef.current, {
           filter: "brightness(1)",
           duration: 0.8,
           ease: "power2.out"
-        }, "-=1.6");
-
+        }, "-=0.6");
+        
         // Scale up and fade out scroll indicator with glow effect
         unlockTimeline.to(scrollIndicatorRef.current, {
           scale: 2,
           opacity: 0,
           duration: 0.6,
           ease: "power2.out"
-        }, "-=1.4");
-
+        }, "-=0.4");
+        
         // Fade out title and description
         unlockTimeline.to(heroContentRef.current, {
           opacity: 0,
           y: -50,
           duration: 0.8,
           ease: "power2.inOut"
-        }, "-=1.2");
-
-        // Phase 2: Background image fade out (starts after Phase 1 completes)
-        unlockTimeline.to(backgroundImageRef.current, {
-          opacity: 0,
-          duration: 1.5,
-          ease: "power2.inOut",
-          delay: 0.5 // Small delay before fading out background
+        }, "-=0.3");
+        
+        // Final transition to next section
+        unlockTimeline.to({}, {
+          duration: 0.5,
+          onComplete: () => {
+            setAnimationCompleted(true);
+            setCurrentSection(1);
+          }
         });
-
-        // Optional: Add a subtle scale effect to the background during fade out
-        unlockTimeline.to(backgroundImageRef.current, {
-          scale: 1.1,
-          duration: 1.5,
-          ease: "power2.inOut"
-        }, "-=1.5"); // Sync with opacity animation
       }
     };
 
@@ -344,19 +330,12 @@ const ProjectMH1 = () => {
       // Reset drag progress
       setDragProgress(0);
       
-      // Fade in background image and gradient overlay
-      reverseTimeline.to(backgroundImageRef.current, {
-        opacity: 1,
-        scale: 1,
-        duration: 0.8,
-        ease: "power2.out"
-      });
-      
+      // Fade in gradient overlay
       reverseTimeline.to(gradientOverlayRef.current, {
         opacity: 1,
         duration: 0.8,
         ease: "power2.out"
-      }, "-=0.8");
+      });
       
       // Reset background brightness
       reverseTimeline.to(backgroundImageRef.current, {
@@ -387,8 +366,13 @@ const ProjectMH1 = () => {
     }
   }, [currentSection, animationCompleted]);
 
+  // Rest of the component remains the same...
+  // [Previous scroll logic, image zoom, navigation dots, etc.]
+
   return (
     <div className="project-mh1-container">
+      {/* Navigation Dots and other components... */}
+
       {/* Background Image with initial dark filter */}
       <div 
         ref={backgroundImageRef}
@@ -462,17 +446,7 @@ const ProjectMH1 = () => {
           </div>
         </section>
 
-        {/* Section 2: Content after unlock */}
-        <section className="project-mh1-section">
-          <div className="project-mh1-content-center">
-            <h2 className="project-mh1-page2-title">
-              Project Details
-            </h2>
-            <p className="project-mh1-page2-subtitle">
-              Welcome to the main content
-            </p>
-          </div>
-        </section>
+        {/* Other sections... */}
       </div>
     </div>
   );
