@@ -12,6 +12,7 @@ html {
   padding: 0;
   height: 100%;
   overflow: hidden;
+
 }
 
 /* 3. Theme tokens */
@@ -601,6 +602,41 @@ nav {
 }
 
 /* Project MH1 Specific Styles */
+.project-mh1-section {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.project-mh1-content-center {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 4;
+  padding: 2rem;
+  margin: 0;
+  width: auto;
+}
+
+.project-mh1-scroll-indicator {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .project-mh1-container {
   position: relative;
   height: 100vh;
@@ -618,18 +654,6 @@ nav {
   padding: 0;
   overflow: hidden;
   transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-
-.project-mh1-section {
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
 }
 
 .project-mh1-background-image {
@@ -711,14 +735,6 @@ nav {
   font-family: var(--font-all);
 }
 
-.project-mh1-content-center {
-  text-align: center;
-  z-index: 4;
-  position: relative;
-  padding: 4rem 2rem 0 2rem;
-  margin-top: 2rem;
-}
-
 .project-mh1-hero-title {
   font-size: clamp(3rem, 8vw, 6rem);
   font-weight: 900;
@@ -729,6 +745,7 @@ nav {
   background-clip: text;
   font-family: var(--font-all);
   line-height: 1.5;
+  overflow: hidden;
 }
 
 .project-mh1-hero-subtitle {
@@ -738,20 +755,10 @@ nav {
   font-family: var(--font-all);
   font-weight: 400;
   letter-spacing: 0.5px;
+  overflow: hidden;
 }
 
-.project-mh1-scroll-indicator {
-  position: absolute;
-  bottom: 3rem;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
+
 
 .project-mh1-scroll-arrow {
   width: 40px;
@@ -764,6 +771,7 @@ nav {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   animation: float-arrow 2s ease-in-out infinite;
+  overflow: hidden;
 }
 
 .project-mh1-arrow-icon {
@@ -857,9 +865,6 @@ nav {
     right: 1rem;
   }
   
-  .project-mh1-content-center {
-    padding: 2rem 1rem 0 1rem;
-  }
 }
 
 @media (max-width: 480px) {
