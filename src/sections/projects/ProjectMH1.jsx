@@ -7,14 +7,16 @@ const ProjectMH1 = () => {
   const [animationPhase, setAnimationPhase] = useState('initial');
   const [titleOpacity, setTitleOpacity] = useState(0);
   const [unlockProgress, setUnlockProgress] = useState(0);
-  const [gradientOpacity, setGradientOpacity] = useState(1);
-  const [backgroundFade, setBackgroundFade] = useState(1);
+  const [gradientOpacity, setGradientOpacity] = useState(0);
+  const [backgroundFade, setBackgroundFade] = useState(0);
+  const [navbarOpacity, setNavbarOpacity] = useState(0);
   
   const totalSections = 5;
   const heroContentRef = useRef(null);
   const scrollAccumulator = useRef(0);
   const touchStartY = useRef(0);
   const isDragging = useRef(false);
+  const dragProgressRef = useRef(0);
 
   // Function to hide navbar
   const hideNavbar = () => {
@@ -26,37 +28,56 @@ const ProjectMH1 = () => {
     window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
   };
 
-  // Initial animation sequence
+  // Enhanced animation sequence
   useEffect(() => {
     setIsLoaded(true);
     
-    // Hide navbar initially for full-screen experience
-    hideNavbar();
+    // Initial state: everything hidden
+    setNavbarOpacity(0);
+    setGradientOpacity(0);
+    setBackgroundFade(0);
+    setTitleOpacity(0);
     
-    // Fade in title and description
-    const titleTimer = setTimeout(() => {
+    // Animation sequence
+    const sequence = async () => {
+      // Step 1: Fade in navbar and gradient overlay (1 second)
+      await new Promise(resolve => {
+        setNavbarOpacity(1);
+        setGradientOpacity(1);
+        setTimeout(resolve, 1000);
+      });
+      
+      // Step 2: Fade in background image
+      await new Promise(resolve => {
+        setBackgroundFade(1);
+        setTimeout(resolve, 800);
+      });
+      
+      // Step 3: Fade in title and move to waiting phase
       setTitleOpacity(1);
-    }, 500);
-
-    // Move to waiting phase after title appears
-    const phaseTimer = setTimeout(() => {
-      setAnimationPhase('waiting');
-    }, 2000);
-
-    return () => {
-      clearTimeout(titleTimer);
-      clearTimeout(phaseTimer);
+      setTimeout(() => {
+        setAnimationPhase('waiting');
+      }, 1000);
     };
+    
+    sequence();
   }, []);
 
-  // Handle drag during waiting phase
+  // Handle drag during waiting phase with improved UI
   useEffect(() => {
     if (animationPhase !== 'waiting') return;
+
+    const updateDragUI = (progress) => {
+      dragProgressRef.current = progress;
+      const newGradientOpacity = Math.max(0, 1 - progress);
+      setGradientOpacity(newGradientOpacity);
+    };
 
     const handleTouchStart = (e) => {
       isDragging.current = true;
       touchStartY.current = e.touches[0].clientY;
       hideNavbar();
+      document.body.style.cursor = 'grabbing';
     };
 
     const handleTouchMove = (e) => {
@@ -67,13 +88,14 @@ const ProjectMH1 = () => {
       
       if (deltaY > 0) {
         scrollAccumulator.current += deltaY;
-        const newGradientOpacity = Math.max(0, 1 - scrollAccumulator.current / 300);
-        setGradientOpacity(newGradientOpacity);
+        const progress = Math.min(1, scrollAccumulator.current / 300);
+        updateDragUI(progress);
         
         if (scrollAccumulator.current >= 300) {
           setAnimationPhase('unlocking');
           scrollAccumulator.current = 0;
           isDragging.current = false;
+          document.body.style.cursor = '';
         }
         
         touchStartY.current = touchY;
@@ -82,16 +104,31 @@ const ProjectMH1 = () => {
 
     const handleTouchEnd = () => {
       isDragging.current = false;
+      document.body.style.cursor = '';
+      
       if (animationPhase === 'waiting') {
-        showNavbar();
+        if (dragProgressRef.current > 0) {
+          const resetInterval = setInterval(() => {
+            dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
+            updateDragUI(dragProgressRef.current);
+            
+            if (dragProgressRef.current <= 0) {
+              clearInterval(resetInterval);
+              scrollAccumulator.current = 0;
+              showNavbar();
+            }
+          }, 16);
+        } else {
+          showNavbar();
+        }
       }
     };
 
-    // Mouse drag support
     const handleMouseDown = (e) => {
       isDragging.current = true;
       touchStartY.current = e.clientY;
       hideNavbar();
+      document.body.style.cursor = 'grabbing';
     };
 
     const handleMouseMove = (e) => {
@@ -102,13 +139,14 @@ const ProjectMH1 = () => {
       
       if (deltaY > 0) {
         scrollAccumulator.current += deltaY;
-        const newGradientOpacity = Math.max(0, 1 - scrollAccumulator.current / 300);
-        setGradientOpacity(newGradientOpacity);
+        const progress = Math.min(1, scrollAccumulator.current / 300);
+        updateDragUI(progress);
         
         if (scrollAccumulator.current >= 300) {
           setAnimationPhase('unlocking');
           scrollAccumulator.current = 0;
           isDragging.current = false;
+          document.body.style.cursor = '';
         }
         
         touchStartY.current = mouseY;
@@ -117,12 +155,26 @@ const ProjectMH1 = () => {
 
     const handleMouseUp = () => {
       isDragging.current = false;
+      document.body.style.cursor = '';
+      
       if (animationPhase === 'waiting') {
-        showNavbar();
+        if (dragProgressRef.current > 0) {
+          const resetInterval = setInterval(() => {
+            dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
+            updateDragUI(dragProgressRef.current);
+            
+            if (dragProgressRef.current <= 0) {
+              clearInterval(resetInterval);
+              scrollAccumulator.current = 0;
+              showNavbar();
+            }
+          }, 16);
+        } else {
+          showNavbar();
+        }
       }
     };
 
-    // Add event listeners
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchend', handleTouchEnd);
@@ -139,6 +191,8 @@ const ProjectMH1 = () => {
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      
+      document.body.style.cursor = '';
     };
   }, [animationPhase]);
 
@@ -308,6 +362,7 @@ const ProjectMH1 = () => {
               setGradientOpacity(1);
               setUnlockProgress(0);
               scrollAccumulator.current = 0;
+              dragProgressRef.current = 0;
             }
           }, 20);
         }, 500);
@@ -316,7 +371,6 @@ const ProjectMH1 = () => {
       }
     };
 
-    // Show navbar when mouse moves to top of screen
     const handleMouseMoveTop = (e) => {
       if (e.clientY < 100) {
         showNavbar();
@@ -495,17 +549,64 @@ const ProjectMH1 = () => {
     );
   };
 
+  // Enhanced Drag Progress Indicator
+  const DragProgressIndicator = () => {
+    if (animationPhase !== 'waiting' || dragProgressRef.current === 0) return null;
+
+    return (
+      <div className="corn-drag-progress" style={{
+        position: 'fixed',
+        bottom: '6rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+        textAlign: 'center',
+        color: '#f59e0b',
+        fontSize: '0.9rem',
+        fontWeight: '600'
+      }}>
+        <div style={{
+          width: '120px',
+          height: '4px',
+          backgroundColor: 'rgba(245, 158, 11, 0.3)',
+          borderRadius: '2px',
+          margin: '0 auto 8px auto',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${dragProgressRef.current * 100}%`,
+            height: '100%',
+            backgroundColor: '#f59e0b',
+            borderRadius: '2px',
+            transition: 'width 0.1s ease'
+          }} />
+        </div>
+        {Math.round(dragProgressRef.current * 100)}% Complete
+      </div>
+    );
+  };
+
   return (
-    <div className="corn-revolution-container">
+    <div 
+      className="corn-revolution-container"
+      style={{
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+      }}
+    >
       {/* <ParticleBackground /> */}
       <NavigationDots />
       <UnlockOverlay />
+      <DragProgressIndicator />
 
       {/* Background Image with gradient mask */}
       <div 
         className="corn-background-wrapper"
         style={{
           opacity: backgroundFade,
+          transition: 'opacity 0.8s ease-out'
         }}
       >
         <div 
@@ -514,11 +615,12 @@ const ProjectMH1 = () => {
             backgroundImage: "url('assets/projects/projectMH1/imageMH1_1.jpg')",
           }}
         />
-        {/* Gradient overlay that fades from opaque top to transparent bottom */}
+        {/* Gradient overlay with controlled opacity */}
         <div 
           className="corn-background-gradient-mask"
           style={{
             opacity: gradientOpacity,
+            transition: 'opacity 0.3s ease-out'
           }}
         />
       </div>
@@ -534,7 +636,10 @@ const ProjectMH1 = () => {
           <div 
             ref={heroContentRef}
             className="corn-content-center"
-            style={{ opacity: titleOpacity }}
+            style={{ 
+              opacity: titleOpacity,
+              transition: 'opacity 0.8s ease-out'
+            }}
           >
             <h1 className="corn-hero-title">
               Project MH1
@@ -546,13 +651,128 @@ const ProjectMH1 = () => {
           
           {animationPhase === 'waiting' && (
             <div className="corn-scroll-prompt">
-              <div className="corn-scroll-arrow" style={{ transform: 'rotate(180deg)' }} />
-              <p className="text-yellow-400 mt-4 animate-pulse">Drag up to unlock</p>
+              <div 
+                className="corn-scroll-arrow" 
+                style={{ 
+                  transform: 'rotate(180deg)',
+                  cursor: 'grab',
+                  borderColor: dragProgressRef.current > 0 ? '#fbbf24' : '#f59e0b',
+                  transition: 'border-color 0.2s ease'
+                }} 
+              />
+              <p 
+                className="text-yellow-400 mt-4 animate-pulse"
+                style={{
+                  cursor: 'grab',
+                  color: dragProgressRef.current > 0 ? '#fbbf24' : '#f59e0b'
+                }}
+              >
+                {dragProgressRef.current > 0 ? 'Keep dragging...' : 'Drag up to unlock'}
+              </p>
             </div>
           )}
         </section>
 
+        {/* Section 2: DNA Science */}
+        <section className="corn-section">
+          <div className="corn-content-wrapper">
+            <div className="corn-grid-2col">
+              <div className={currentSection >= 1 ? 'corn-slide-in-left' : 'opacity-0'}>
+                <DNAHelix />
+              </div>
+              <div className={currentSection >= 1 ? 'corn-slide-in-right' : 'opacity-0'}>
+                <h2 className="text-5xl font-bold mb-6 text-yellow-400">
+                  The Science Behind Growth
+                </h2>
+                <p className="text-lg text-slate-300 mb-4 leading-relaxed">
+                  Through cutting-edge genetic research, we're unlocking the full potential of corn. Our revolutionary approach combines traditional breeding with modern biotechnology to create crops that are more resilient, nutritious, and sustainable.
+                </p>
+                <p className="text-lg text-slate-300 leading-relaxed">
+                  Each strand of DNA represents years of research, innovation, and commitment to feeding the future.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
+        {/* Section 3: Statistics */}
+        <section className="corn-section corn-bg-accent">
+          <div className="corn-content-wrapper">
+            <h2 className={`text-5xl font-bold text-center mb-20 ${currentSection >= 2 ? 'corn-fade-in-up' : 'opacity-0'}`}>
+              Impact By Numbers
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { number: '50%', label: 'Increased Yield', delay: '0s' },
+                { number: '30%', label: 'Water Reduction', delay: '0.2s' },
+                { number: '100M+', label: 'Lives Impacted', delay: '0.4s' },
+              ].map((stat, i) => (
+                <div 
+                  key={i}
+                  className={`text-center p-8 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl hover:scale-105 transition-transform duration-300 ${currentSection >= 2 ? 'corn-scale-in' : 'opacity-0'}`}
+                  style={{ animationDelay: stat.delay }}
+                >
+                  <div className="text-6xl font-bold text-yellow-400 mb-4">{stat.number}</div>
+                  <div className="text-xl text-slate-300">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: Innovation */}
+        <section className="corn-section">
+          <div className="corn-content-wrapper">
+            <div className="corn-grid-2col">
+              <div className={currentSection >= 3 ? 'corn-slide-in-left' : 'opacity-0'}>
+                <h2 className="text-5xl font-bold mb-6 text-yellow-400">
+                  Innovation Rooted in Nature
+                </h2>
+                <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                  We believe the future of agriculture lies in understanding and enhancing nature's own processes. Our research focuses on:
+                </p>
+                <ul className="space-y-4">
+                  {['Drought Resistance', 'Nutrient Enhancement', 'Climate Adaptation', 'Sustainable Practices'].map((item, i) => (
+                    <li key={i} className="flex items-center text-lg text-slate-300">
+                      <span className="w-2 h-2 bg-yellow-400 rounded-full mr-4"></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className={`relative h-96 ${currentSection >= 3 ? 'corn-slide-in-right' : 'opacity-0'}`}>
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-amber-600/20 rounded-3xl backdrop-blur-sm flex items-center justify-center">
+                  <div className="text-center">
+                    <svg className="w-32 h-32 mx-auto mb-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                    </svg>
+                    <p className="text-2xl font-semibold text-yellow-400">Research in Progress</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 5: Footer/Contact */}
+        <section className="corn-section corn-bg-dark">
+          <div className="corn-content-center">
+            <h3 className={`text-5xl font-bold mb-6 text-yellow-400 ${currentSection >= 4 ? 'corn-fade-in-up' : 'opacity-0'}`}>
+              Join the Revolution
+            </h3>
+            <p className={`text-xl text-slate-400 mb-12 ${currentSection >= 4 ? 'corn-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+              Together, we're growing a better future.
+            </p>
+            <div className={`flex justify-center space-x-4 ${currentSection >= 4 ? 'corn-scale-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+              <button className="bg-slate-800 hover:bg-slate-700 px-8 py-4 rounded-lg transition-colors text-lg">
+                Contact Us
+              </button>
+              <button className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 px-8 py-4 rounded-lg transition-colors font-semibold text-lg">
+                Get Started
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

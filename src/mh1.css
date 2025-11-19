@@ -42,10 +42,10 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(to bottom, 
-    #0f172a 0%,           /* Fully opaque at top - hides image */
-    rgba(15, 23, 42, 0.8) 30%,
-    rgba(15, 23, 42, 0.4) 60%,
-    transparent 100%      /* Fully transparent at bottom - shows image */
+    rgba(15, 23, 42, 0.8) 30%,  /* Darker and higher up */
+    rgba(15, 23, 42, 0.7) 60%,
+    rgba(15, 23, 42, 0.6) 80%,
+    rgba(15, 23, 42, 0.2) 100%   /* Never fully transparent */
   );
   pointer-events: none;
   transition: opacity 0.3s ease-out;
