@@ -9,33 +9,59 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <footer className="c-space pt-7 pb-3 border-t border-black-300 flex flex-col md:flex-row justify-between items-center gap-5">
+    <footer style={{
+      padding: '3rem 1.25rem 1rem 1.25rem',
+      borderTop: '1px solid var(--color-black-300)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: '1.25rem'
+    }}>
       {/* Terms & Privacy */}
-      <div className="text-white-500 flex flex-wrap gap-2 text-sm">
-        <p className="hover:underline cursor-pointer">Terms & Conditions</p>
+      <div style={{
+        color: 'var(--color-white-500)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
+        fontSize: '0.875rem'
+      }}>
+        <p style={{ cursor: 'pointer', textDecoration: 'underline' }}>Terms & Conditions</p>
         <span>|</span>
-        <p className="hover:underline cursor-pointer">Privacy Policy</p>
+        <p style={{ cursor: 'pointer', textDecoration: 'underline' }}>Privacy Policy</p>
       </div>
 
       {/* Social Icons & Copyright */}
-      <div className="flex flex-wrap items-center gap-4">
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '1rem',
+        justifyContent: 'center'
+      }}>
         {socialLinks.map((link) => (
           <a
             key={link.name}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon w-6 h-6"
+            className="social-icon"
+            style={{ width: '1.5rem', height: '1.5rem' }}
           >
             <img
               src={assetPath(`/assets/${link.icon}`)}
               alt={link.name}
-              className="w-full h-full object-contain"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
           </a>
         ))}
 
-        <p className="text-white-500 text-sm mt-2 md:mt-0">
+        <p style={{
+          color: 'var(--color-white-500)',
+          fontSize: '0.875rem',
+          marginTop: '0.5rem',
+          textAlign: 'center'
+        }}>
           © 2025 Ming Liang. All rights reserved.
         </p>
       </div>

@@ -497,7 +497,7 @@ const ProjectMH1 = () => {
 
   return (
     <div className="corn-revolution-container">
-      <ParticleBackground />
+      {/* <ParticleBackground /> */}
       <NavigationDots />
       <UnlockOverlay />
 

@@ -7,6 +7,7 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
+  
 }
 
 /* Background Image Layers */
@@ -18,6 +19,8 @@
   height: 100%;
   z-index: 1;
   transition: opacity 0.5s ease-out;
+  overflow: hidden;
+  border: #d97706 2px solid !important;
 }
 
 .corn-background-image {
@@ -82,6 +85,7 @@
   height: 100%;
   position: relative;
   z-index: 2;
+  border: 2px solid red !important;
 }
 
 .corn-section {
@@ -119,6 +123,7 @@
   width: 100%;
   position: relative;
   z-index: 3;
+  border: 2px solid blue !important;
 }
 
 .corn-grid-2col {
@@ -253,6 +258,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  border: 2px solid green !important;
 }
 
 .corn-unlock-circle {
