@@ -1,478 +1,558 @@
 import React, { useState, useEffect, useRef } from 'react';
-import gsap from 'gsap';
 
 const ProjectMH1 = () => {
   const [currentSection, setCurrentSection] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [overlayEl, setOverlayEl] = useState(null);
-  const [animationCompleted, setAnimationCompleted] = useState(false);
-  const [waitingForInteraction, setWaitingForInteraction] = useState(false);
-  const [unlockAnimation, setUnlockAnimation] = useState(false);
-  const [dragProgress, setDragProgress] = useState(0);
-  const totalSections = 2;
-
+  const [animationPhase, setAnimationPhase] = useState('initial');
+  const [titleOpacity, setTitleOpacity] = useState(0);
+  const [unlockProgress, setUnlockProgress] = useState(0);
+  const [gradientOpacity, setGradientOpacity] = useState(1);
+  const [backgroundFade, setBackgroundFade] = useState(1);
+  
+  const totalSections = 5;
   const heroContentRef = useRef(null);
-  const backgroundImageRef = useRef(null);
-  const scrollIndicatorRef = useRef(null);
-  const gradientOverlayRef = useRef(null);
-  const interactionListenerRef = useRef(null);
-  const dragContainerRef = useRef(null);
+  const scrollAccumulator = useRef(0);
+  const touchStartY = useRef(0);
+  const isDragging = useRef(false);
 
+  // Function to hide navbar
+  const hideNavbar = () => {
+    window.dispatchEvent(new CustomEvent('projectMH1-navbar-hide'));
+  };
+
+  // Function to show navbar
+  const showNavbar = () => {
+    window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
+  };
+
+  // Initial animation sequence
   useEffect(() => {
     setIsLoaded(true);
     
-    // Initial animation sequence
-    if (heroContentRef.current && backgroundImageRef.current && scrollIndicatorRef.current && gradientOverlayRef.current) {
-      const timeline = gsap.timeline();
-      
-      // Fade in background image with initial gradient
-      timeline.fromTo(backgroundImageRef.current,
-        { opacity: 0 },
-        { 
-          opacity: 1, 
-          duration: 1.2, 
-          ease: "power2.out" 
-        }
-      );
-      
-      // Fade in title and description
-      timeline.fromTo(heroContentRef.current,
-        { opacity: 0, y: 50 },
-        { 
-          opacity: 1, 
-          y: 0,
-          duration: 3, 
-          ease: "power2.out" 
-        },
-        "-=0.8"
-      );
-      
-      // Animate scroll indicator with bounce effect
-      timeline.fromTo(scrollIndicatorRef.current,
-        { 
-          opacity: 0,
-          scale: 0.8,
-          y: 20
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "back.out(1.7)",
-          onComplete: () => {
-            setWaitingForInteraction(true);
-          }
-        },
-        "-=0.5"
-      );
-    }
+    // Hide navbar initially for full-screen experience
+    hideNavbar();
+    
+    // Fade in title and description
+    const titleTimer = setTimeout(() => {
+      setTitleOpacity(1);
+    }, 500);
+
+    // Move to waiting phase after title appears
+    const phaseTimer = setTimeout(() => {
+      setAnimationPhase('waiting');
+    }, 2000);
+
+    return () => {
+      clearTimeout(titleTimer);
+      clearTimeout(phaseTimer);
+    };
   }, []);
 
-  // Handle drag interaction
+  // Handle drag during waiting phase
   useEffect(() => {
-    if (!waitingForInteraction) return;
-
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-    const dragThreshold = 150; // pixels to drag to unlock
+    if (animationPhase !== 'waiting') return;
 
     const handleTouchStart = (e) => {
-      startY = e.touches[0].clientY;
-      isDragging = true;
-      document.body.style.overflow = 'hidden'; // Prevent page scroll
+      isDragging.current = true;
+      touchStartY.current = e.touches[0].clientY;
+      hideNavbar();
     };
 
     const handleTouchMove = (e) => {
-      if (!isDragging) return;
+      if (!isDragging.current) return;
       
-      e.preventDefault();
-      currentY = e.touches[0].clientY;
-      const dragDistance = startY - currentY; // Positive = upward drag
+      const touchY = e.touches[0].clientY;
+      const deltaY = touchStartY.current - touchY;
       
-      if (dragDistance > 0) {
-        const progress = Math.min(dragDistance / dragThreshold, 1);
-        setDragProgress(progress);
+      if (deltaY > 0) {
+        scrollAccumulator.current += deltaY;
+        const newGradientOpacity = Math.max(0, 1 - scrollAccumulator.current / 300);
+        setGradientOpacity(newGradientOpacity);
         
-        // Update background gradient based on drag progress
-        updateBackgroundGradient(progress);
+        if (scrollAccumulator.current >= 300) {
+          setAnimationPhase('unlocking');
+          scrollAccumulator.current = 0;
+          isDragging.current = false;
+        }
         
-        // Update scroll indicator position and scale
-        updateScrollIndicator(progress);
+        touchStartY.current = touchY;
       }
     };
 
-    const handleTouchEnd = (e) => {
-      if (!isDragging) return;
-      
-      isDragging = false;
-      document.body.style.overflow = ''; // Restore scroll
-      
-      const dragDistance = startY - currentY;
-      
-      if (dragDistance >= dragThreshold) {
-        triggerUnlockSequence();
-      } else {
-        // Reset if not enough drag
-        resetDragAnimation();
+    const handleTouchEnd = () => {
+      isDragging.current = false;
+      if (animationPhase === 'waiting') {
+        showNavbar();
       }
     };
 
+    // Mouse drag support
     const handleMouseDown = (e) => {
-      startY = e.clientY;
-      isDragging = true;
-      document.body.style.overflow = 'hidden';
-      
-      // Add mouse move and up listeners
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      isDragging.current = true;
+      touchStartY.current = e.clientY;
+      hideNavbar();
     };
 
     const handleMouseMove = (e) => {
-      if (!isDragging) return;
+      if (!isDragging.current) return;
       
-      e.preventDefault();
-      currentY = e.clientY;
-      const dragDistance = startY - currentY;
+      const mouseY = e.clientY;
+      const deltaY = touchStartY.current - mouseY;
       
-      if (dragDistance > 0) {
-        const progress = Math.min(dragDistance / dragThreshold, 1);
-        setDragProgress(progress);
+      if (deltaY > 0) {
+        scrollAccumulator.current += deltaY;
+        const newGradientOpacity = Math.max(0, 1 - scrollAccumulator.current / 300);
+        setGradientOpacity(newGradientOpacity);
         
-        // Update background gradient based on drag progress
-        updateBackgroundGradient(progress);
-        
-        // Update scroll indicator position and scale
-        updateScrollIndicator(progress);
-      }
-    };
-
-    const handleMouseUp = (e) => {
-      if (!isDragging) return;
-      
-      isDragging = false;
-      document.body.style.overflow = '';
-      
-      // Remove mouse listeners
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      
-      const dragDistance = startY - currentY;
-      
-      if (dragDistance >= dragThreshold) {
-        triggerUnlockSequence();
-      } else {
-        // Reset if not enough drag
-        resetDragAnimation();
-      }
-    };
-
-    const updateBackgroundGradient = (progress) => {
-      if (gradientOverlayRef.current) {
-        // Reduce gradient opacity as user drags up
-        const opacity = 1 - progress;
-        gradientOverlayRef.current.style.opacity = opacity;
-        
-        // Also adjust background brightness for more dramatic effect
-        const brightness = 0.7 + (progress * 0.3); // From 70% to 100%
-        backgroundImageRef.current.style.filter = `brightness(${brightness})`;
-      }
-    };
-
-    const updateScrollIndicator = (progress) => {
-      if (scrollIndicatorRef.current) {
-        // Move indicator up with drag
-        const moveDistance = -progress * 100; // Move up to 100px
-        scrollIndicatorRef.current.style.transform = `translateX(-50%) translateY(${moveDistance}px)`;
-        
-        // Scale down as user drags
-        const scale = 1 - (progress * 0.3); // Scale down to 70%
-        scrollIndicatorRef.current.style.scale = scale;
-        
-        // Change color based on progress
-        const arrowIcon = scrollIndicatorRef.current.querySelector('.project-mh1-arrow-icon');
-        if (arrowIcon) {
-          const hueRotate = progress * 90; // Rotate hue based on progress
-          arrowIcon.style.filter = `hue-rotate(${hueRotate}deg) brightness(${1 + progress})`;
+        if (scrollAccumulator.current >= 300) {
+          setAnimationPhase('unlocking');
+          scrollAccumulator.current = 0;
+          isDragging.current = false;
         }
-      }
-    };
-
-    const resetDragAnimation = () => {
-      setDragProgress(0);
-      
-      // Reset background gradient
-      if (gradientOverlayRef.current) {
-        gsap.to(gradientOverlayRef.current, {
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out"
-        });
-      }
-      
-      // Reset background filter
-      if (backgroundImageRef.current) {
-        gsap.to(backgroundImageRef.current, {
-          filter: "brightness(0.7)",
-          duration: 0.5,
-          ease: "power2.out"
-        });
-      }
-      
-      // Reset scroll indicator
-      if (scrollIndicatorRef.current) {
-        gsap.to(scrollIndicatorRef.current, {
-          y: 0,
-          scale: 1,
-          duration: 0.5,
-          ease: "back.out(1.7)"
-        });
         
-        const arrowIcon = scrollIndicatorRef.current.querySelector('.project-mh1-arrow-icon');
-        if (arrowIcon) {
-          gsap.to(arrowIcon, {
-            filter: "hue-rotate(0deg) brightness(1)",
-            duration: 0.5
-          });
-        }
+        touchStartY.current = mouseY;
       }
     };
 
-    const triggerUnlockSequence = () => {
-      if (waitingForInteraction && !unlockAnimation) {
-        setWaitingForInteraction(false);
-        setUnlockAnimation(true);
-        
-        // Remove interaction listeners
-        if (interactionListenerRef.current) {
-          interactionListenerRef.current();
-        }
-
-        // Unlock animation sequence
-        const unlockTimeline = gsap.timeline({
-          onComplete: () => {
-            setAnimationCompleted(true);
-            setCurrentSection(1);
-          }
-        });
-
-        // Phase 1: Initial reveal (2 second pause + animations)
-        unlockTimeline.to({}, { duration: 2 }); // 2 second pause
-
-        // Remove gradient overlay completely
-        unlockTimeline.to(gradientOverlayRef.current, {
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.inOut"
-        }, "-=1.8"); // Start slightly before pause ends
-
-        // Fully brighten background
-        unlockTimeline.to(backgroundImageRef.current, {
-          filter: "brightness(1)",
-          duration: 0.8,
-          ease: "power2.out"
-        }, "-=1.6");
-
-        // Scale up and fade out scroll indicator with glow effect
-        unlockTimeline.to(scrollIndicatorRef.current, {
-          scale: 2,
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        }, "-=1.4");
-
-        // Fade out title and description
-        unlockTimeline.to(heroContentRef.current, {
-          opacity: 0,
-          y: -50,
-          duration: 0.8,
-          ease: "power2.inOut"
-        }, "-=1.2");
-
-        // Phase 2: Background image fade out (starts after Phase 1 completes)
-        unlockTimeline.to(backgroundImageRef.current, {
-          opacity: 0,
-          duration: 1.5,
-          ease: "power2.inOut",
-          delay: 0.5 // Small delay before fading out background
-        });
-
-        // Optional: Add a subtle scale effect to the background during fade out
-        unlockTimeline.to(backgroundImageRef.current, {
-          scale: 1.1,
-          duration: 1.5,
-          ease: "power2.inOut"
-        }, "-=1.5"); // Sync with opacity animation
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      if (animationPhase === 'waiting') {
+        showNavbar();
       }
     };
 
-    // Add event listeners to the drag container
-    const dragContainer = dragContainerRef.current;
-    if (dragContainer) {
-      dragContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-      dragContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-      dragContainer.addEventListener('touchend', handleTouchEnd);
-      dragContainer.addEventListener('mousedown', handleMouseDown);
-    }
-
-    // Store cleanup function
-    interactionListenerRef.current = () => {
-      if (dragContainer) {
-        dragContainer.removeEventListener('touchstart', handleTouchStart);
-        dragContainer.removeEventListener('touchmove', handleTouchMove);
-        dragContainer.removeEventListener('touchend', handleTouchEnd);
-        dragContainer.removeEventListener('mousedown', handleMouseDown);
-      }
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+    // Add event listeners
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      if (interactionListenerRef.current) {
-        interactionListenerRef.current();
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [animationPhase]);
+
+  // Unlock animation sequence
+  useEffect(() => {
+    if (animationPhase !== 'unlocking') return;
+
+    let progress = 0;
+    const unlockInterval = setInterval(() => {
+      progress += 0.02;
+      setUnlockProgress(progress);
+      setTitleOpacity(Math.max(0, 1 - progress * 2));
+      
+      if (progress >= 1) {
+        clearInterval(unlockInterval);
+        setAnimationPhase('fadeout');
+      }
+    }, 20);
+
+    return () => clearInterval(unlockInterval);
+  }, [animationPhase]);
+
+  // Fade out background and transition to next section
+  useEffect(() => {
+    if (animationPhase !== 'fadeout') return;
+
+    let fadeProgress = 0;
+    const fadeInterval = setInterval(() => {
+      fadeProgress += 0.05;
+      setBackgroundFade(Math.max(0, 1 - fadeProgress));
+      
+      if (fadeProgress >= 1) {
+        clearInterval(fadeInterval);
+        setAnimationPhase('completed');
+        setTimeout(() => {
+          setCurrentSection(1);
+        }, 100);
+      }
+    }, 20);
+
+    return () => clearInterval(fadeInterval);
+  }, [animationPhase]);
+
+  // Show navbar when returning to first section
+  useEffect(() => {
+    if (currentSection === 0 && animationPhase === 'waiting') {
+      showNavbar();
+    }
+  }, [currentSection, animationPhase]);
+
+  // Regular scroll/drag logic after animation completion
+  useEffect(() => {
+    if (animationPhase !== 'completed') return;
+
+    let lastScrollTime = Date.now();
+    let accumulatedDelta = 0;
+    let dragStartY = 0;
+    let isDraggingPostAnimation = false;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      
+      const now = Date.now();
+      const timeSinceLastScroll = now - lastScrollTime;
+      
+      if (timeSinceLastScroll > 200) {
+        accumulatedDelta = 0;
+      }
+      
+      lastScrollTime = now;
+      accumulatedDelta += e.deltaY;
+      
+      const threshold = 100;
+      
+      if (Math.abs(accumulatedDelta) > threshold && !isScrolling) {
+        if (accumulatedDelta > 0 && currentSection < totalSections - 1) {
+          hideNavbar();
+          setCurrentSection(prev => prev + 1);
+          accumulatedDelta = 0;
+        } else if (accumulatedDelta < 0 && currentSection > 0) {
+          handleGoBack();
+          accumulatedDelta = 0;
+        }
       }
     };
-  }, [waitingForInteraction, unlockAnimation]);
 
-  // Handle reverse animation when scrolling back to first section
-  useEffect(() => {
-    if (currentSection === 0 && animationCompleted) {
-      const reverseTimeline = gsap.timeline();
+    const handleTouchStart = (e) => {
+      isDraggingPostAnimation = true;
+      dragStartY = e.touches[0].clientY;
+      hideNavbar();
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isDraggingPostAnimation || isScrolling) return;
       
-      // Reset drag progress
-      setDragProgress(0);
+      const touchY = e.touches[0].clientY;
+      const deltaY = dragStartY - touchY;
       
-      // Fade in background image and gradient overlay
-      reverseTimeline.to(backgroundImageRef.current, {
-        opacity: 1,
-        scale: 1,
-        duration: 0.8,
-        ease: "power2.out"
-      });
-      
-      reverseTimeline.to(gradientOverlayRef.current, {
-        opacity: 1,
-        duration: 0.8,
-        ease: "power2.out"
-      }, "-=0.8");
-      
-      // Reset background brightness
-      reverseTimeline.to(backgroundImageRef.current, {
-        filter: "brightness(0.7)",
-        duration: 0.8,
-        ease: "power2.out"
-      }, "-=0.8");
-      
-      // Fade in title and description
-      reverseTimeline.to(heroContentRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      }, "-=0.5");
-      
-      // Show scroll indicator again
-      reverseTimeline.to(scrollIndicatorRef.current, {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.6,
-        ease: "back.out(1.7)",
-        onComplete: () => {
-          setWaitingForInteraction(true);
+      if (Math.abs(deltaY) > 50) {
+        if (deltaY > 0 && currentSection < totalSections - 1) {
+          setCurrentSection(prev => prev + 1);
+          isDraggingPostAnimation = false;
+        } else if (deltaY < 0 && currentSection > 0) {
+          handleGoBack();
+          isDraggingPostAnimation = false;
         }
-      }, "-=0.3");
-    }
-  }, [currentSection, animationCompleted]);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingPostAnimation = false;
+    };
+
+    const handleMouseDown = (e) => {
+      isDraggingPostAnimation = true;
+      dragStartY = e.clientY;
+      hideNavbar();
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDraggingPostAnimation || isScrolling) return;
+      
+      const mouseY = e.clientY;
+      const deltaY = dragStartY - mouseY;
+      
+      if (Math.abs(deltaY) > 50) {
+        if (deltaY > 0 && currentSection < totalSections - 1) {
+          setCurrentSection(prev => prev + 1);
+          isDraggingPostAnimation = false;
+        } else if (deltaY < 0 && currentSection > 0) {
+          handleGoBack();
+          isDraggingPostAnimation = false;
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDraggingPostAnimation = false;
+    };
+
+    const handleKeyDown = (e) => {
+      if (isScrolling) return;
+      
+      if (e.key === 'ArrowDown' && currentSection < totalSections - 1) {
+        hideNavbar();
+        setCurrentSection(prev => prev + 1);
+      } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        handleGoBack();
+      }
+    };
+
+    const handleGoBack = () => {
+      if (currentSection === 1) {
+        setBackgroundFade(0);
+        setCurrentSection(0);
+        
+        setTimeout(() => {
+          let reverseFade = 0;
+          const reverseFadeInterval = setInterval(() => {
+            reverseFade += 0.05;
+            setBackgroundFade(Math.min(1, reverseFade));
+            
+            if (reverseFade >= 1) {
+              clearInterval(reverseFadeInterval);
+              setAnimationPhase('waiting');
+              setTitleOpacity(1);
+              setGradientOpacity(1);
+              setUnlockProgress(0);
+              scrollAccumulator.current = 0;
+            }
+          }, 20);
+        }, 500);
+      } else {
+        setCurrentSection(prev => prev - 1);
+      }
+    };
+
+    // Show navbar when mouse moves to top of screen
+    const handleMouseMoveTop = (e) => {
+      if (e.clientY < 100) {
+        showNavbar();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMoveTop);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMoveTop);
+    };
+  }, [currentSection, isScrolling, animationPhase]);
+
+  useEffect(() => {
+    if (animationPhase !== 'completed') return;
+    
+    setIsScrolling(true);
+    const timeout = setTimeout(() => setIsScrolling(false), 1000);
+    return () => clearTimeout(timeout);
+  }, [currentSection, animationPhase]);
+
+  // DNA Helix Component
+  const DNAHelix = () => {
+    const [rotation, setRotation] = useState(0);
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setRotation(prev => (prev + 1) % 360);
+      }, 30);
+      return () => clearInterval(interval);
+    }, []);
+
+    const numPairs = 20;
+    const pairs = Array.from({ length: numPairs }, (_, i) => {
+      const angle1 = (rotation + i * 18) * (Math.PI / 180);
+      const angle2 = angle1 + Math.PI;
+      const y = i * 15;
+      const radius = 40;
+      return {
+        x1: Math.cos(angle1) * radius + 100,
+        y1: y + 50,
+        x2: Math.cos(angle2) * radius + 100,
+        y2: y + 50,
+      };
+    });
+
+    return (
+      <svg width="200" height="350" className="mx-auto">
+        <defs>
+          <linearGradient id="dnaGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+          <linearGradient id="dnaGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+        </defs>
+        
+        {pairs.map((pair, i) => (
+          <g key={i} opacity={0.8}>
+            <circle cx={pair.x1} cy={pair.y1} r="4" fill="url(#dnaGradient1)" />
+            <circle cx={pair.x2} cy={pair.y2} r="4" fill="url(#dnaGradient2)" />
+            <line 
+              x1={pair.x1} 
+              y1={pair.y1} 
+              x2={pair.x2} 
+              y2={pair.y2} 
+              stroke="#94a3b8" 
+              strokeWidth="1.5"
+              opacity="0.4"
+            />
+          </g>
+        ))}
+        
+        {pairs.slice(0, -1).map((pair, i) => {
+          const nextPair = pairs[i + 1];
+          return (
+            <g key={`strand-${i}`}>
+              <line 
+                x1={pair.x1} 
+                y1={pair.y1} 
+                x2={nextPair.x1} 
+                y2={nextPair.y1} 
+                stroke="url(#dnaGradient1)" 
+                strokeWidth="2.5"
+                opacity="0.7"
+              />
+              <line 
+                x1={pair.x2} 
+                y1={pair.y2} 
+                x2={nextPair.x2} 
+                y2={nextPair.y2} 
+                stroke="url(#dnaGradient2)" 
+                strokeWidth="2.5"
+                opacity="0.7"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
+
+  // Particle Background
+  const ParticleBackground = () => {
+    const particles = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: Math.random() * 5,
+      duration: 10 + Math.random() * 10,
+    }));
+
+    return (
+      <div className="corn-particle-background">
+        {particles.map(p => (
+          <div
+            key={p.id}
+            className="corn-particle"
+            style={{
+              left: p.left,
+              animationDuration: `${p.duration}s`,
+              animationDelay: `${p.delay}s`,
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Section Navigation Dots
+  const NavigationDots = () => (
+    <div className="corn-navigation-dots">
+      {Array.from({ length: totalSections }).map((_, i) => (
+        <button
+          key={i}
+          onClick={() => {
+            if (animationPhase === 'completed') {
+              setCurrentSection(i);
+            }
+          }}
+          className={`corn-nav-dot ${i === currentSection ? 'active' : ''}`}
+          aria-label={`Go to section ${i + 1}`}
+        />
+      ))}
+    </div>
+  );
+
+  // Unlock Animation Overlay
+  const UnlockOverlay = () => {
+    if (animationPhase !== 'unlocking') return null;
+
+    return (
+      <div className="corn-unlock-overlay">
+        <div className="corn-unlock-circle" style={{ transform: `scale(${unlockProgress * 3})`, opacity: 1 - unlockProgress }} />
+        <div className="corn-unlock-ring" style={{ 
+          transform: `scale(${0.5 + unlockProgress * 1.5}) rotate(${unlockProgress * 360}deg)`,
+          opacity: 1 - unlockProgress 
+        }} />
+      </div>
+    );
+  };
 
   return (
-    <div className="project-mh1-container">
-      {/* Background Image with initial dark filter */}
+    <div className="corn-revolution-container">
+      <ParticleBackground />
+      <NavigationDots />
+      <UnlockOverlay />
+
+      {/* Background Image with gradient mask */}
       <div 
-        ref={backgroundImageRef}
-        className="project-mh1-background-image"
+        className="corn-background-wrapper"
         style={{
-          backgroundImage: "url('/portfolio/assets/projects/projectMH1/imageMH1_1.jpg')",
-          filter: "brightness(0.7)" // Initial dark filter
+          opacity: backgroundFade,
         }}
-      />
-
-      {/* Gradient Overlay for the background effect */}
-      <div 
-        ref={gradientOverlayRef}
-        className="project-mh1-gradient-overlay"
-      />
-
-      {/* Drag Container - covers the entire first section */}
-      {waitingForInteraction && (
+      >
         <div 
-          ref={dragContainerRef}
-          className="project-mh1-drag-container"
+          className="corn-background-image"
+          style={{
+            backgroundImage: "url('assets/projects/projectMH1/imageMH1_1.jpg')",
+          }}
         />
-      )}
-
-      {/* Drag Progress Indicator */}
-      {waitingForInteraction && dragProgress > 0 && (
-        <div className="project-mh1-drag-progress">
-          <div 
-            className="project-mh1-progress-bar"
-            style={{ width: `${dragProgress * 100}%` }}
-          />
-          <span className="project-mh1-progress-text">
-            {Math.round(dragProgress * 100)}%
-          </span>
-        </div>
-      )}
+        {/* Gradient overlay that fades from opaque top to transparent bottom */}
+        <div 
+          className="corn-background-gradient-mask"
+          style={{
+            opacity: gradientOpacity,
+          }}
+        />
+      </div>
 
       <div 
-        className="project-mh1-section-container"
+        className="corn-section-container"
         style={{
           transform: `translateY(-${currentSection * 100}vh)`,
         }}
       >
-        {/* Section 1: Hero */}
-        <section className="project-mh1-section">
+        {/* Section 1: Hero with Animation */}
+        <section className="corn-section">
           <div 
             ref={heroContentRef}
-            className="project-mh1-content-center"
+            className="corn-content-center"
+            style={{ opacity: titleOpacity }}
           >
-            <h1 className="project-mh1-hero-title">
-              Meinhardt I
+            <h1 className="corn-hero-title">
+              Project MH1
             </h1>
-            <p className="project-mh1-hero-subtitle">
-              Large Factory Design (Internship Project)
+            <p className="corn-hero-subtitle">
+              Redefining Agriculture Through Genetic Innovation
             </p>
           </div>
           
-          {/* Animated Scroll Indicator */}
-          <div 
-            ref={scrollIndicatorRef}
-            className="project-mh1-scroll-indicator"
-          >
-            <div className="project-mh1-scroll-arrow">
-              <svg className="project-mh1-arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
+          {animationPhase === 'waiting' && (
+            <div className="corn-scroll-prompt">
+              <div className="corn-scroll-arrow" style={{ transform: 'rotate(180deg)' }} />
+              <p className="text-yellow-400 mt-4 animate-pulse">Drag up to unlock</p>
             </div>
-            <p className="project-mh1-scroll-text">
-              {waitingForInteraction ? "Drag up to unlock" : ""}
-            </p>
-          </div>
+          )}
         </section>
 
-        {/* Section 2: Content after unlock */}
-        <section className="project-mh1-section">
-          <div className="project-mh1-content-center">
-            <h2 className="project-mh1-page2-title">
-              Project Details
-            </h2>
-            <p className="project-mh1-page2-subtitle">
-              Welcome to the main content
-            </p>
-          </div>
-        </section>
+
       </div>
     </div>
   );

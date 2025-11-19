@@ -9,6 +9,9 @@ import { StrictMode } from 'react'
 //1. Create Root
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './mh1.css'
+import './navbar.css'
+
 import App from './App';
 
 //2. Render a markup to root

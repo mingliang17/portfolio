@@ -4,12 +4,12 @@ import { navLinks } from '../constants/index.js';
 import { assetPath } from '../utils/assetPath.js'; 
 
 const NavItems = ({ mobile = false, onClick = () => {} }) => (
-  <ul className={mobile ? "flex flex-col space-y-4" : "flex space-x-8"}>
+  <ul className={mobile ? "navbar-mobile-ul" : "navbar-desktop-ul"}>
     {navLinks.map((item) => (
-      <li key={item.id}>
+      <li key={item.id} className={mobile ? "navbar-mobile-li" : "navbar-desktop-li"}>
         <a 
           href={item.href} 
-          className="text-neutral-400 hover:text-white transition-colors"
+          className={mobile ? "navbar-mobile-link" : "navbar-desktop-link"}
           onClick={onClick}
         >
           {item.name}
@@ -24,119 +24,127 @@ const Navbar = forwardRef((props, ref) => {
   const [isHovered, setIsHovered] = useState(false);
   const [scrollDirection, setScrollDirection] = useState('up');
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const [isProjectMH1Controlled, setIsProjectMH1Controlled] = useState(false);
   const location = useLocation();
   
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const isFullPageProject = location.pathname === '/projects/MH1';
-  
-  const showOnHover = !isHomePage && !isFullPageProject;
 
-  // SCROLL DIRECTION DETECTION - Enhanced for full-page projects
+  // Listen for ProjectMH1 navbar control events
   useEffect(() => {
-    let scrollTimeout;
+    const handleProjectMH1Hide = () => {
+      console.log('ProjectMH1: Hiding navbar');
+      setIsProjectMH1Controlled(true);
+      setIsVisible(false);
+      setIsHovered(false);
+    };
+
+    const handleProjectMH1Show = () => {
+      console.log('ProjectMH1: Showing navbar');
+      setIsProjectMH1Controlled(false);
+      setIsVisible(true);
+    };
+
+    window.addEventListener('projectMH1-navbar-hide', handleProjectMH1Hide);
+    window.addEventListener('projectMH1-navbar-show', handleProjectMH1Show);
+
+    return () => {
+      window.removeEventListener('projectMH1-navbar-hide', handleProjectMH1Hide);
+      window.removeEventListener('projectMH1-navbar-show', handleProjectMH1Show);
+    };
+  }, []);
+
+  // SIMPLIFIED: Always show navbar on scroll up for ProjectMH1
+  useEffect(() => {
+    if (!isFullPageProject) return;
 
     const handleWheel = (e) => {
-      if (isFullPageProject) {
-        const currentDelta = e.deltaY;
-        
-        if (currentDelta > 0) {
-          setScrollDirection('down');
-          setIsHovered(false);
-        } else if (currentDelta < 0) {
-          setScrollDirection('up');
-          setIsHovered(true);
-          
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            if (!isOpen) {
-              setIsHovered(false);
-            }
-          }, 2000);
-        }
-        return;
+      // Show navbar on any scroll up movement
+      if (e.deltaY < 0) { // Scroll up
+        setIsProjectMH1Controlled(false);
+        setIsVisible(true);
       }
+    };
 
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [isFullPageProject]);
+
+  // Regular scroll direction detection (only when not controlled by ProjectMH1 and not on ProjectMH1 page)
+  useEffect(() => {
+    if (isProjectMH1Controlled || isFullPageProject) return;
+
+    let ticking = false;
+
+    const updateScrollDirection = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      if (currentScrollY < 50) {
+        setIsVisible(true);
+        setScrollDirection('up');
+      } else if (currentScrollY > lastScrollY) {
+        setIsVisible(false);
         setScrollDirection('down');
       } else if (currentScrollY < lastScrollY) {
+        setIsVisible(true);
         setScrollDirection('up');
       }
       
       setLastScrollY(currentScrollY);
+      ticking = false;
     };
 
-    const handleTouchStart = (e) => {
-      if (!isFullPageProject) return;
-      const touchY = e.touches[0].clientY;
-      setLastScrollY(touchY);
-    };
-
-    const handleTouchMove = (e) => {
-      if (!isFullPageProject) return;
-      const currentTouchY = e.touches[0].clientY;
-      
-      if (currentTouchY < lastScrollY - 10) {
-        setScrollDirection('down');
-        setIsHovered(false);
-      } else if (currentTouchY > lastScrollY + 10) {
-        setScrollDirection('up');
-        setIsHovered(true);
-        
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          if (!isOpen) {
-            setIsHovered(false);
-          }
-        }, 2000);
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateScrollDirection);
+        ticking = true;
       }
-      setLastScrollY(currentTouchY);
     };
 
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, isProjectMH1Controlled, isFullPageProject]);
 
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      clearTimeout(scrollTimeout);
-    };
-  }, [lastScrollY, isFullPageProject, isOpen]);
-
-  // MOUSE HOVER LOGIC - Only for full-page projects
+  // Mouse hover logic
   useEffect(() => {
-    if (!isFullPageProject) return;
-
     let hoverTimeout;
 
-    const handleMouseMove = (e) => {
-      if (e.clientY < 60) {
-        setIsHovered(true);
-        clearTimeout(hoverTimeout);
-      } else {
-        if (scrollDirection !== 'up' && !isOpen) {
-          hoverTimeout = setTimeout(() => {
-            setIsHovered(false);
-          }, 500);
-        }
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
+    const handleMouseEnter = () => {
+      setIsHovered(true);
+      setIsProjectMH1Controlled(false);
       clearTimeout(hoverTimeout);
     };
-  }, [isFullPageProject, scrollDirection, isOpen]);
+
+    const handleMouseLeave = () => {
+      hoverTimeout = setTimeout(() => {
+        if (!isOpen && scrollDirection === 'down' && !isProjectMH1Controlled) {
+          setIsHovered(false);
+        }
+      }, 300);
+    };
+
+    const navbar = document.querySelector('.navbar-header');
+    if (navbar) {
+      navbar.addEventListener('mouseenter', handleMouseEnter);
+      navbar.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (navbar) {
+        navbar.removeEventListener('mouseenter', handleMouseEnter);
+        navbar.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      clearTimeout(hoverTimeout);
+    };
+  }, [isOpen, scrollDirection, isProjectMH1Controlled]);
 
   // Keep navbar visible when menu is open
   useEffect(() => {
     if (isOpen) {
+      setIsVisible(true);
       setIsHovered(true);
+      setIsProjectMH1Controlled(false);
     }
   }, [isOpen]);
 
@@ -148,34 +156,48 @@ const Navbar = forwardRef((props, ref) => {
 
   // Close menu on Escape key
   useEffect(() => {
-    const handleEscape = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    const handleEscape = (e) => { 
+      if (e.key === 'Escape') setIsOpen(false); 
+    };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
-  const shouldShow = isFullPageProject 
-    ? isHovered || isOpen || scrollDirection === 'up'
-    : (isHomePage 
-        ? true 
-        : isHovered || scrollDirection === 'up' || isOpen || lastScrollY < 50);
+  // Reset ProjectMH1 control when leaving the page
+  useEffect(() => {
+    if (!isFullPageProject) {
+      setIsProjectMH1Controlled(false);
+    }
+  }, [isFullPageProject]);
+
+  // Determine if navbar should be visible - SIMPLIFIED LOGIC
+  const shouldShow = isProjectMH1Controlled 
+    ? false // ProjectMH1 has full control
+    : isVisible || isHovered || isOpen || scrollDirection === 'up';
+
+  console.log('Navbar state:', { 
+    shouldShow, 
+    isVisible, 
+    isHovered, 
+    isOpen, 
+    scrollDirection, 
+    isProjectMH1Controlled 
+  });
 
   return (
     <>
       {/* Main Navbar */}
       <header 
         ref={ref}
-        className={`navbar-header ${shouldShow ? 'visible' : 'hidden'}`}
+        className={`navbar-header ${isHomePage ? 'transparent' : 'dark'} ${
+          shouldShow ? 'visible' : 'hidden'
+        }`}
         onMouseEnter={() => {
-          if (showOnHover) setIsHovered(true);
-          if (isFullPageProject) setIsHovered(true);
+          if (!isProjectMH1Controlled) setIsHovered(true);
         }}
         onMouseLeave={() => {
-          if (showOnHover) {
+          if (!isOpen && scrollDirection === 'down' && !isProjectMH1Controlled) {
             const timeout = setTimeout(() => setIsHovered(false), 300);
-            return () => clearTimeout(timeout);
-          }
-          if (isFullPageProject && scrollDirection !== 'up' && !isOpen) {
-            const timeout = setTimeout(() => setIsHovered(false), 500);
             return () => clearTimeout(timeout);
           }
         }}
@@ -186,7 +208,7 @@ const Navbar = forwardRef((props, ref) => {
               Kaden
             </a>
 
-            <nav className="hidden md:block">
+            <nav className="navbar-desktop-nav">
               <NavItems />
             </nav>
 
@@ -213,19 +235,25 @@ const Navbar = forwardRef((props, ref) => {
         )}
       </header>
 
-      {/* Invisible hover strip - only for non-fullpage projects */}
-      {!shouldShow && showOnHover && (
-        <div 
-          className="navbar-hover-strip regular"
-          onMouseEnter={() => setIsHovered(true)}
-        />
-      )}
-
-      {/* Special hover strip for full-page projects */}
-      {isFullPageProject && (
+      {/* Invisible hover strip - always show for ProjectMH1 to allow manual reveal */}
+      {isFullPageProject && !shouldShow && (
         <div 
           className="navbar-hover-strip fullpage"
-          onMouseEnter={() => setIsHovered(true)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '50px',
+            background: 'transparent',
+            zIndex: 9998,
+            cursor: 'pointer'
+          }}
+          onMouseEnter={() => {
+            setIsProjectMH1Controlled(false);
+            setIsHovered(true);
+            setIsVisible(true);
+          }}
         />
       )}
     </>
