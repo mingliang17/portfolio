@@ -675,48 +675,25 @@ const ProjectMH1 = () => {
 
         {/* Section 2: DNA Science */}
         <section className="mh1-section">
-          <div style={{display:'flex',gap:'1rem'}}>
-            <div style={{display:'flex',flexDirection:'column',gap:'1rem',flex:1}}>
-              <div>SixTeen
- a recycled pavilion
- authors: Ming Liang, Jonathan, Sarah, Meijia, Vincent, Justin
- location: Somerset Belt @ Youth Park, Singapore
- category: Public Installation</div>
-              <div>Logos</div>
+          <div className="mh1-content-wrapper">
+            <div className="mh1-grid-2col">
+              <div className={currentSection >= 1 ? 'mh1-slide-in-left' : 'opacity-0'}>
+                <DNAHelix />
+              </div>
+              <div className={currentSection >= 1 ? 'mh1-slide-in-right' : 'opacity-0'}>
+                <h2 className="text-5xl font-bold mb-6 text-yellow-400">
+                  The Science Behind Growth
+                </h2>
+                <p className="text-lg text-slate-300 mb-4 leading-relaxed">
+                  Through cutting-edge genetic research, we're unlocking the full potential of mh1. Our revolutionary approach combines traditional breeding with modern biotechnology to create crops that are more resilient, nutritious, and sustainable.
+                </p>
+                <p className="text-lg text-slate-300 leading-relaxed">
+                  Each strand of DNA represents years of research, innovation, and commitment to feeding the future.
+                </p>
+              </div>
             </div>
-            <div style={{flex:1}}>
-              <img 
-        src="assets/projects/projectMH1/imageMH1_4.jpg" 
-        alt="Project MH1"
-        style={{
-          width: '100%',
-          height: 'auto',
-          borderRadius: '0.5rem',
-          display: 'block'
-        }}
-      />
-            </div>
-            <div style={{flex:1}}> RE:Paper is a project initiated under the Somerset Belt Propsal 
-established by efforts between MCCY and NYC. The project aims 
-develop a temporary interactive installation that seeks to engage 
-the public and embody the character and identity of the Park and 
-its users. The theme of the collective exhibitions is Social Engage
-ment, a total of 8 installations were on display for over a month. All 
-the exhibits were built primarily using recycled printing 
-paper tubes. The tubes are all sourced from existing 
-printing companies and are further treated to attain wa
-terproofing qualities. The pavilion design is inspired by the 
-Sound of Music pavilion, resembling a crystal cavern with 
-the the blue ceiling lighitng display at night resembles the 
-night stars. This creates a comfortable atmosphere for us
-ers to come to rest and recharge while admiring the views, 
-fostering a sense of community and encouraging interac
-tions between different visitors. In total, the pavilion was 
-fabricated with a total of 504 tubes of varying length held 
-together by cable ties</div>
           </div>
         </section>
-
 
         {/* Section 3: Statistics */}
         <section className="mh1-section mh1-bg-accent">

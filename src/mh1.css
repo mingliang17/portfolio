@@ -1,7 +1,7 @@
-/* Corn Revolution Specific Styles */
+/* mh1 Revolution Specific Styles */
 
 /* Container */
-.corn-revolution-container {
+.mh1-revolution-container {
   background: linear-gradient(to bottom, #0f172a, #1e293b, #0f172a);
   color: white;
   height: 100vh;
@@ -11,7 +11,7 @@
 }
 
 /* Background Image Layers */
-.corn-background-wrapper {
+.mh1-background-wrapper {
   position: fixed;
   top: 0;
   left: 0;
@@ -23,7 +23,7 @@
   border: #d97706 2px solid !important;
 }
 
-.corn-background-image {
+.mh1-background-image {
   position: absolute;
   top: 0;
   left: 0;
@@ -35,7 +35,7 @@
 }
 
 /* Gradient Mask: Creates fade from opaque top (blocks image) to transparent bottom (shows image) */
-.corn-background-gradient-mask {
+.mh1-background-gradient-mask {
   position: absolute;
   top: 0;
   left: 0;
@@ -52,7 +52,7 @@
 }
 
 /* Particle Background */
-.corn-particle-background {
+.mh1-particle-background {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -60,17 +60,17 @@
   z-index: 0;
 }
 
-.corn-particle {
+.mh1-particle {
   position: absolute;
   width: 4px;
   height: 4px;
   background-color: #f59e0b;
   border-radius: 50%;
   opacity: 0.3;
-  animation: corn-particle-float infinite ease-in-out;
+  animation: mh1-particle-float infinite ease-in-out;
 }
 
-@keyframes corn-particle-float {
+@keyframes mh1-particle-float {
   0%, 100% { 
     transform: translateY(100vh) translateX(0); 
   }
@@ -80,7 +80,7 @@
 }
 
 /* Section Container */
-.corn-section-container {
+.mh1-section-container {
   transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
   height: 100%;
   position: relative;
@@ -88,7 +88,7 @@
   border: 2px solid red !important;
 }
 
-.corn-section {
+.mh1-section {
   height: 100vh;
   width: 100%;
   position: relative;
@@ -98,16 +98,16 @@
   padding: 0 1rem;
 }
 
-.corn-bg-accent {
+.mh1-bg-accent {
   background-color: rgba(30, 41, 59, 0.5);
 }
 
-.corn-bg-dark {
+.mh1-bg-dark {
   background-color: #0f172a;
 }
 
 /* Content Wrappers */
-.corn-content-center {
+.mh1-content-center {
   max-width: 72rem;
   margin-left: auto;
   margin-right: auto;
@@ -116,7 +116,7 @@
   z-index: 3;
 }
 
-.corn-content-wrapper {
+.mh1-content-wrapper {
   max-width: 72rem;
   margin-left: auto;
   margin-right: auto;
@@ -126,7 +126,7 @@
   border: 2px solid blue !important;
 }
 
-.corn-grid-2col {
+.mh1-grid-2col {
   display: grid;
   grid-template-columns: 1fr;
   gap: 4rem;
@@ -134,13 +134,13 @@
 }
 
 @media (min-width: 768px) {
-  .corn-grid-2col {
+  .mh1-grid-2col {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 /* Hero Section */
-.corn-hero-title {
+.mh1-hero-title {
   font-size: clamp(3rem, 8vw, 8rem);
   font-weight: 700;
   background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706);
@@ -153,7 +153,7 @@
    margin-top: -18rem; /* Move title up */
 }
 
-.corn-hero-subtitle {
+.mh1-hero-subtitle {
   font-size: clamp(1.25rem, 3vw, 3rem);
   color: #cbd5e1;
   margin-bottom: 2rem;
@@ -161,7 +161,7 @@
 }
 
 /* Scroll Prompt */
-.corn-scroll-prompt {
+.mh1-scroll-prompt {
   position: absolute;
   bottom: 3rem;
   left: 50%;
@@ -170,17 +170,17 @@
   z-index: 10;
 }
 
-.corn-scroll-arrow {
+.mh1-scroll-arrow {
   width: 30px;
   height: 50px;
   border: 3px solid #f59e0b;
   border-radius: 25px;
   position: relative;
   margin: 0 auto;
-  animation: corn-scroll-bounce 2s infinite;
+  animation: mh1-scroll-bounce 2s infinite;
 }
 
-.corn-scroll-arrow::before {
+.mh1-scroll-arrow::before {
   content: '';
   position: absolute;
   top: 10px;
@@ -190,10 +190,10 @@
   height: 8px;
   background-color: #f59e0b;
   border-radius: 50%;
-  animation: corn-scroll-dot 2s infinite;
+  animation: mh1-scroll-dot 2s infinite;
 }
 
-@keyframes corn-scroll-bounce {
+@keyframes mh1-scroll-bounce {
   0%, 100% {
     transform: translateY(0);
   }
@@ -202,7 +202,7 @@
   }
 }
 
-@keyframes corn-scroll-dot {
+@keyframes mh1-scroll-dot {
   0% {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -218,7 +218,7 @@
 }
 
 /* Navigation Dots */
-.corn-navigation-dots {
+.mh1-navigation-dots {
   position: fixed;
   right: 2rem;
   top: 50%;
@@ -229,7 +229,7 @@
   gap: 1rem;
 }
 
-.corn-nav-dot {
+.mh1-nav-dot {
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
@@ -239,17 +239,17 @@
   cursor: pointer;
 }
 
-.corn-nav-dot:hover {
+.mh1-nav-dot:hover {
   background-color: #94a3b8;
 }
 
-.corn-nav-dot.active {
+.mh1-nav-dot.active {
   background-color: #f59e0b;
   transform: scale(1.25);
 }
 
 /* Unlock Animation Overlay */
-.corn-unlock-overlay {
+.mh1-unlock-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -263,16 +263,16 @@
   border: 2px solid green !important;
 }
 
-.corn-unlock-circle {
+.mh1-unlock-circle {
   position: absolute;
   width: 200px;
   height: 200px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(245, 158, 11, 0.4), transparent);
-  animation: corn-unlock-pulse 1s ease-out;
+  animation: mh1-unlock-pulse 1s ease-out;
 }
 
-.corn-unlock-ring {
+.mh1-unlock-ring {
   position: absolute;
   width: 150px;
   height: 150px;
@@ -282,7 +282,7 @@
   border-right-color: transparent;
 }
 
-@keyframes corn-unlock-pulse {
+@keyframes mh1-unlock-pulse {
   0% {
     transform: scale(0);
     opacity: 1;
@@ -294,24 +294,24 @@
 }
 
 /* Animation Classes */
-.corn-fade-in-up {
-  animation: corn-fade-in-up 0.8s ease-out forwards;
+.mh1-fade-in-up {
+  animation: mh1-fade-in-up 0.8s ease-out forwards;
 }
 
-.corn-slide-in-left {
-  animation: corn-slide-in-left 0.8s ease-out forwards;
+.mh1-slide-in-left {
+  animation: mh1-slide-in-left 0.8s ease-out forwards;
 }
 
-.corn-slide-in-right {
-  animation: corn-slide-in-right 0.8s ease-out forwards;
+.mh1-slide-in-right {
+  animation: mh1-slide-in-right 0.8s ease-out forwards;
 }
 
-.corn-scale-in {
-  animation: corn-scale-in 0.8s ease-out forwards;
+.mh1-scale-in {
+  animation: mh1-scale-in 0.8s ease-out forwards;
 }
 
 /* Keyframe Animations */
-@keyframes corn-fade-in-up {
+@keyframes mh1-fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -322,7 +322,7 @@
   }
 }
 
-@keyframes corn-slide-in-left {
+@keyframes mh1-slide-in-left {
   from {
     opacity: 0;
     transform: translateX(-50px);
@@ -333,7 +333,7 @@
   }
 }
 
-@keyframes corn-slide-in-right {
+@keyframes mh1-slide-in-right {
   from {
     opacity: 0;
     transform: translateX(50px);
@@ -344,7 +344,7 @@
   }
 }
 
-@keyframes corn-scale-in {
+@keyframes mh1-scale-in {
   from {
     opacity: 0;
     transform: scale(0.8);
@@ -357,19 +357,19 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .corn-navigation-dots {
+  .mh1-navigation-dots {
     right: 1rem;
   }
   
-  .corn-scroll-prompt {
+  .mh1-scroll-prompt {
     bottom: 2rem;
   }
   
-  .corn-hero-title {
+  .mh1-hero-title {
     font-size: clamp(2rem, 10vw, 5rem);
   }
   
-  .corn-hero-subtitle {
+  .mh1-hero-subtitle {
     font-size: clamp(1rem, 5vw, 2rem);
   }
 }
