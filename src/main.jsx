@@ -11,6 +11,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './mh1.css'
 import './navbar.css'
+import './map.css'
 
 import App from './App';
 

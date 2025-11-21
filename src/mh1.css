@@ -2,12 +2,17 @@
 
 /* Container */
 .mh1-revolution-container {
-  background: linear-gradient(to bottom, #0f172a, #1e293b, #0f172a);
   color: white;
+  background: rgba(139, 92, 246, 1); /* CHANGED: Remove solid magenta background */
   height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  
+  user-select: none;
+}
+
+.mh1-revolution-container.mh1-map-section {
+  height: auto;
+  overflow: visible;
 }
 
 /* Background Image Layers */
@@ -17,10 +22,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 0; /* CHANGED: Lower z-index so content can be above */
   transition: opacity 0.5s ease-out;
   overflow: hidden;
-  border: #d97706 2px solid !important;
 }
 
 .mh1-background-image {
@@ -32,9 +36,10 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: #1a1a1a; /* ADDED: Fallback background if image fails to load */
 }
 
-/* Gradient Mask: Creates fade from opaque top (blocks image) to transparent bottom (shows image) */
+/* Gradient Mask */
 .mh1-background-gradient-mask {
   position: absolute;
   top: 0;
@@ -42,10 +47,10 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(to bottom, 
-    rgba(15, 23, 42, 0.8) 30%,  /* Darker and higher up */
+    rgba(15, 23, 42, 0.8) 30%,
     rgba(15, 23, 42, 0.7) 60%,
     rgba(15, 23, 42, 0.5) 80%,
-    rgba(15, 23, 42, 0.2) 100%   /* Never fully transparent */
+    rgba(15, 23, 42, 0.2) 100%
   );
   pointer-events: none;
   transition: opacity 0.3s ease-out;
@@ -84,8 +89,7 @@
   transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
   height: 100%;
   position: relative;
-  z-index: 2;
-  border: 2px solid red !important;
+  z-index: 1; /* CHANGED: Ensure content stays above background */
 }
 
 .mh1-section {
@@ -98,6 +102,7 @@
   padding: 0 1rem;
 }
 
+/* Background Variations */
 .mh1-bg-accent {
   background-color: rgba(30, 41, 59, 0.5);
 }
@@ -123,9 +128,9 @@
   width: 100%;
   position: relative;
   z-index: 3;
-  border: 2px solid blue !important;
 }
 
+/* Grid Layout */
 .mh1-grid-2col {
   display: grid;
   grid-template-columns: 1fr;
@@ -150,7 +155,7 @@
   margin-bottom: -3rem;
   transition: opacity 0.8s ease-out;
   line-height: 2;
-   margin-top: -18rem; /* Move title up */
+  margin-top: -18rem;
 }
 
 .mh1-hero-subtitle {
@@ -260,7 +265,6 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  border: 2px solid green !important;
 }
 
 .mh1-unlock-circle {
@@ -310,7 +314,6 @@
   animation: mh1-scale-in 0.8s ease-out forwards;
 }
 
-/* Keyframe Animations */
 @keyframes mh1-fade-in-up {
   from {
     opacity: 0;
@@ -355,31 +358,263 @@
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .mh1-navigation-dots {
-    right: 1rem;
-  }
-  
-  .mh1-scroll-prompt {
-    bottom: 2rem;
-  }
-  
-  .mh1-hero-title {
-    font-size: clamp(2rem, 10vw, 5rem);
-  }
-  
-  .mh1-hero-subtitle {
-    font-size: clamp(1rem, 5vw, 2rem);
-  }
+/* Map Section Styles */
+.mh1-map-section {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: visible;
+  z-index: 10;
+  background: #0f172a; /* ADDED: Ensure map section has background */
 }
 
-/* Smooth transitions for opacity changes */
+.mh1-map-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.mh1-sidebar {
+  flex: 0 0 30%;
+  background-color: rgba(30, 41, 59, 0.8);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mh1-sidebar-left h2,
+.mh1-sidebar-right h2 {
+  color: #f59e0b;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+  font-weight: bold;
+}
+
+.mh1-info-card {
+  background-color: rgba(15, 23, 42, 0.6);
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.mh1-info-card-blue {
+  border-left-color: #3b82f6;
+}
+
+.mh1-info-card-blue h3 {
+  color: #3b82f6;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.mh1-info-card-green {
+  border-left-color: #10b981;
+}
+
+.mh1-info-card-green h3 {
+  color: #10b981;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.mh1-info-card p {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.mh1-tip-box {
+  margin-top: auto;
+  padding: 16px;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.mh1-tip-box p {
+  color: #f59e0b;
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0;
+}
+
+.mh1-map-container {
+  flex: 0 0 40%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.mh1-map-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a1a;
+  color: white;
+  font-size: 18px;
+}
+
+.mh1-metrics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mh1-metric-card {
+  background-color: rgba(15, 23, 42, 0.6);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.mh1-metric-value {
+  color: #f59e0b;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.mh1-metric-label {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.mh1-focus-box {
+  margin-top: auto;
+  padding: 16px;
+  background-color: rgba(139, 92, 246, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.mh1-focus-box h4 {
+  color: #8b5cf6;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.mh1-focus-box p {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Impact Section */
+.mh1-impact-section {
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mh1-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  padding: 2rem;
+}
+
+.mh1-stat-card {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #475569, #374151);
+  border-radius: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.mh1-stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.mh1-stat-number {
+  font-size: 3.75rem;
+  font-weight: bold;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.mh1-stat-label {
+  font-size: 1.25rem;
+  color: #cbd5e1;
+}
+
+/* Drag Progress */
+.mh1-drag-progress {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  text-align: center;
+  color: #f59e0b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mh1-drag-progress-bar {
+  width: 120px;
+  height: 4px;
+  background-color: rgba(245, 158, 11, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 8px auto;
+  overflow: hidden;
+}
+
+.mh1-drag-progress-fill {
+  height: 100%;
+  background-color: #f59e0b;
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* Drag Arrow */
+.mh1-drag-arrow {
+  transform: rotate(180deg);
+  cursor: grab;
+  border-left: none !important;
+  border-top: none !important;
+  transition: border-right-color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.mh1-drag-text {
+  cursor: grab;
+  color: #f59e0b;
+  margin-top: 1rem;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.mh1-drag-text:hover,
+.mh1-drag-arrow:hover {
+  color: #fbbf24;
+  border-right-color: #fbbf24 !important;
+  border-bottom-color: #fbbf24 !important;
+}
+
+/* Hero Section specific */
+.mh1-hero-section {
+  position: relative;
+}
+
+/* Utility classes */
 .opacity-0 {
   opacity: 0;
 }
 
-/* Utility classes */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -391,4 +626,117 @@
   50% {
     opacity: 0.5;
   }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .mh1-map-layout {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+  
+  .mh1-sidebar {
+    flex: 0 0 auto;
+    max-height: 40vh;
+  }
+  
+  .mh1-map-container {
+    flex: 0 0 50vh;
+    order: -1;
+  }
+  
+  .mh1-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .mh1-hero-title {
+    font-size: clamp(2rem, 10vw, 5rem);
+    margin-top: -10rem;
+  }
+  
+  .mh1-hero-subtitle {
+    font-size: clamp(1rem, 5vw, 2rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .mh1-navigation-dots {
+    right: 1rem;
+  }
+  
+  .mh1-scroll-prompt {
+    bottom: 2rem;
+  }
+  
+  .mh1-map-layout {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .mh1-sidebar {
+    padding: 16px;
+  }
+  
+  .mh1-stats-grid {
+    padding: 1rem;
+  }
+  
+  .mh1-stat-card {
+    padding: 1.5rem;
+  }
+  
+  .mh1-stat-number {
+    font-size: 2.5rem;
+  }
+  
+  .mh1-stat-label {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mh1-hero-title {
+    margin-top: -5rem;
+    margin-bottom: -1rem;
+  }
+  
+  .mh1-sidebar h2 {
+    font-size: 1.25rem;
+  }
+  
+  .mh1-metric-value {
+    font-size: 1.5rem;
+  }
+  
+  .mh1-drag-progress {
+    bottom: 4rem;
+    font-size: 0.8rem;
+  }
+  
+  .mh1-drag-progress-bar {
+    width: 100px;
+  }
+}
+
+/* Debug borders (remove in production) */
+.mh1-revolution-container {
+  /* border: 2px solid magenta; */
+}
+
+.mh1-section-container {
+  /* border: 2px solid red; */
+}
+
+.mh1-content-wrapper {
+  /* border: 2px solid blue; */
+}
+
+.mh1-unlock-overlay {
+  /* border: 2px solid green; */
+}
+
+.mh1-background-wrapper {
+  /* border: 2px solid #d97706; */
 }
