@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import Carousel from '../Carousel.jsx';
 
 // Lazy load the MyMap component to prevent early mounting
 const MyMap = lazy(() => import('../MyMap.jsx'));
@@ -361,7 +362,7 @@ const ProjectMH1 = () => {
   };
 
   return (
-    <div className={`mh1-revolution-container ${currentSection === 1 ? 'mh1-map-section' : ''}`}>
+    <div className="mh1-revolution-container">
       <NavigationDots />
       <UnlockOverlay />
       <DragProgressIndicator />
@@ -418,85 +419,52 @@ const ProjectMH1 = () => {
 
         {/* Section 1: Map with Sidebars */}
         {currentSection === 1 && (
-          <section className="mh1-map-section">
+          <section className="mh1-section">
             <div className="mh1-map-layout">
-              {/* Left Sidebar */}
-              <div className="mh1-sidebar mh1-sidebar-left">
-                <h2>Project Overview</h2>
-                
-                <div className="mh1-info-card mh1-info-card-blue">
-                  <h3>Genetic Innovation</h3>
-                  <p>Advanced genetic mapping techniques to enhance crop resilience and yield through targeted modifications.</p>
-                </div>
 
-                <div className="mh1-info-card mh1-info-card-green">
-                  <h3>Sustainability Impact</h3>
-                  <p>Reducing water consumption by 30% while increasing overall agricultural output by 50%.</p>
-                </div>
-
-                <div className="mh1-tip-box">
-                  <p>Drag to explore the genetic mapping visualization</p>
-                </div>
-              </div>
-
-              {/* Main Map Area */}
+              {/* Map */}
               <div className="mh1-map-container">
                 <Suspense fallback={<div className="mh1-map-loading">Loading Genetic Map...</div>}>
                   <MyMap />
                 </Suspense>
               </div>
 
-              {/* Right Sidebar */}
-              <div className="mh1-sidebar mh1-sidebar-right">
+              {/* Logos */}
+              <div className="mh1-logo-container flex flex-col justify-center items-center">
+                <img src="assets/github.svg" alt="github" className="mh1-logo" />
+                <img src="assets/github.svg" alt="github" className="mh1-logo" />
+                <img src="assets/github.svg" alt="github" className="mh1-logo" />
+                <img src="assets/twitter.svg" alt="twitter" className="mh1-logo" />
+              </div>
+
+              {/* Right Sidebar */} 
+              <div className="mh1-sidebar">
                 <h2>Data Metrics</h2>
-
-                <div className="mh1-metrics-grid">
-                  <div className="mh1-metric-card">
-                    <div className="mh1-metric-value">50%</div>
-                    <div className="mh1-metric-label">Yield Increase</div>
-                  </div>
-
-                  <div className="mh1-metric-card">
-                    <div className="mh1-metric-value">30%</div>
-                    <div className="mh1-metric-label">Water Reduction</div>
-                  </div>
-
-                  <div className="mh1-metric-card">
-                    <div className="mh1-metric-value">100M+</div>
-                    <div className="mh1-metric-label">Lives Impacted</div>
-                  </div>
+                <div className="mh1-description-grid">
+                  <div className="mh1-description-value">Collaborators</div>
+                  <div className="mh1-description-label">Meinhardt EPCM</div>
                 </div>
 
-                <div className="mh1-focus-box">
-                  <h4>Current Focus</h4>
-                  <p>Analyzing genetic markers for drought resistance in key agricultural regions.</p>
+                <div className="mh1-description-grid">
+                  <div className="mh1-description-value">Type</div>
+                  <div className="mh1-description-label">Design and Preliminary Design</div>
                 </div>
+
+                <div className="mh1-description-grid">
+                  <div className="mh1-description-value">Description</div>
+                    <div className="mh1-description-label">A project is a temporary endeavor undertaken to create a unique product, service, or result. It can involve anything from the glamorous events of Fashion Week to humanitarian aid efforts overseas. More specifically, a project is a series of structured tasks, activities, and deliverables that are carefully executed to achieve a desired outcome.</div>
+                </div>
+                <div className="mh1-description-label">*Client Name and certain details have been omitted for confidentiality</div>
               </div>
             </div>
           </section>
         )}
 
-        {/* Section 2: Impact Numbers */}
+        {/* Section 2: Carousel */}
         {currentSection === 2 && (
-          <section className="mh1-section mh1-impact-section">
-            <div className="mh1-content-wrapper">
-              <h2>Impact By Numbers</h2>
-              <div className="mh1-stats-grid">
-                {[
-                  { number: '50%', label: 'Increased Yield' },
-                  { number: '30%', label: 'Water Reduction' },
-                  { number: '100M+', label: 'Lives Impacted' },
-                ].map((stat, i) => (
-                  <div key={i} className="mh1-stat-card">
-                    <div className="mh1-stat-number">{stat.number}</div>
-                    <div className="mh1-stat-label">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          <Carousel />
         )}
-      </div>
+      </div>  
     </div>
   );
 };

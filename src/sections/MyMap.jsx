@@ -16,7 +16,7 @@ const MyMap = () => {
   // Animation variables
   const zoomFactor = 10 ;
   const globalScale = 1.5;
-  const animationDuration = 4000;
+  const animationDuration = 3000;
   const targetPositionC = { x: -300, y: 150 };
   const moveDistanceA = 100;
   const moveDistanceB = moveDistanceA;
@@ -112,7 +112,7 @@ const MyMap = () => {
     <div style={{
       width: '100%',
       height: '100%',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'transparent',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -276,7 +276,7 @@ const MyMap = () => {
         top: '10px',
         left: '10px',
         color: 'white',
-        backgroundColor: 'rgba(0,0,0,0.9)',
+        backgroundColor: 'rgba(0,0,0,0.3)',
         padding: '12px',
         borderRadius: '4px',
         fontSize: '12px',
