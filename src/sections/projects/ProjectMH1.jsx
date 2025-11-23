@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import Carousel from '../Carousel.jsx';
+import { logoMH1 } from '/src/constants/projects.js';
 
 // Lazy load the MyMap component to prevent early mounting
 const MyMap = lazy(() => import('../MyMap.jsx'));
@@ -362,7 +363,7 @@ const ProjectMH1 = () => {
   };
 
   return (
-    <div className="mh1-revolution-container">
+    <div className="mh1-base-container">
       <NavigationDots />
       <UnlockOverlay />
       <DragProgressIndicator />
@@ -392,10 +393,10 @@ const ProjectMH1 = () => {
               className="mh1-content-center"
               style={{ opacity: titleOpacity }}
             >
-              <h1 className="mh1-hero-title">
+              <h1 className="mh1-hero-title unselectable">
                 Project MH1
               </h1>
-              <p className="mh1-hero-subtitle">
+              <p className="mh1-hero-subtitle unselectable">
                 Redefining Agriculture Through Genetic Innovation
               </p>
             </div>
@@ -431,10 +432,15 @@ const ProjectMH1 = () => {
 
               {/* Logos */}
               <div className="mh1-logo-container flex flex-col justify-center items-center">
-                <img src="assets/github.svg" alt="github" className="mh1-logo" />
-                <img src="assets/github.svg" alt="github" className="mh1-logo" />
-                <img src="assets/github.svg" alt="github" className="mh1-logo" />
-                <img src="assets/twitter.svg" alt="twitter" className="mh1-logo" />
+                {logoMH1.map((logo, index) => (
+                  <img 
+                    key={index}
+                    src={logo.src} 
+                    alt={logo.alt} 
+                    title={logo.title}
+                    className={logo.className}
+                  />
+                ))}
               </div>
 
               {/* Right Sidebar */} 
@@ -443,7 +449,7 @@ const ProjectMH1 = () => {
                 <div className="mh1-description-grid">
                   <div className="mh1-description-value">Collaborators</div>
                   <div className="mh1-description-label">Meinhardt EPCM</div>
-                </div>
+                </div>  
 
                 <div className="mh1-description-grid">
                   <div className="mh1-description-value">Type</div>
@@ -462,7 +468,9 @@ const ProjectMH1 = () => {
 
         {/* Section 2: Carousel */}
         {currentSection === 2 && (
-          <Carousel />
+          <section className="mh1-section mh1-carousel-section-wrapper">
+            <Carousel />
+          </section>
         )}
       </div>  
     </div>
