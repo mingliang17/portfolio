@@ -7,10 +7,14 @@ const Carousel = () => {
   const [targetIndex, setTargetIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [isHoveringCloseArea, setIsHoveringCloseArea] = useState(false);
+  const [overlayAnimation, setOverlayAnimation] = useState('hidden'); // 'hidden' | 'entering' | 'visible' | 'exiting'
   
   const containerRef = useRef(null);
   const itemRefs = useRef([]);
   const hoverTimeoutRef = useRef(null);
+  const closeHoverTimeoutRef = useRef(null);
+  const animationTimeoutRef = useRef(null);
   
   const carouselData = carouselMH1;
   const totalItems = carouselData.length;
@@ -40,44 +44,90 @@ const Carousel = () => {
     setTargetIndex(index);
   }, [isAnimating, currentIndex, zoomedImage]);
 
+  // Enhanced zoom functions with animations
+  const openZoom = useCallback((image) => {
+    setZoomedImage(image);
+    setOverlayAnimation('entering');
+    
+    // Clear any existing timeouts
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    
+    // Transition to visible state after enter animation
+    animationTimeoutRef.current = setTimeout(() => {
+      setOverlayAnimation('visible');
+    }, 300);
+  }, []);
+
+  const closeZoom = useCallback(() => {
+    setOverlayAnimation('exiting');
+    
+    // Clear any existing timeouts
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    if (closeHoverTimeoutRef.current) {
+      clearTimeout(closeHoverTimeoutRef.current);
+    }
+    
+    // Remove overlay after exit animation
+    animationTimeoutRef.current = setTimeout(() => {
+      setZoomedImage(null);
+      setOverlayAnimation('hidden');
+      setIsHoveringCloseArea(false);
+    }, 300);
+  }, []);
+
   // Handle image hover
   const handleMouseEnter = useCallback((index) => {
-    console.log('🖱️ Mouse entered image:', index);
-    
-    if (zoomedImage) {
-      console.log('⚠️ Already zoomed, ignoring');
-      return;
-    }
+    if (zoomedImage) return;
     
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
 
     hoverTimeoutRef.current = setTimeout(() => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      console.log('🔍 ZOOMING:', {
-        index,
-        viewport: `${vw}px × ${vh}px`,
-        target: `${Math.floor(vw * 0.9)}px × ${Math.floor(vh * 0.9)}px`,
-        item: carouselData[index].title
-      });
-      setZoomedImage(carouselData[index]);
+      openZoom(carouselData[index]);
     }, 500);
-  }, [zoomedImage, carouselData]);
+  }, [zoomedImage, carouselData, openZoom]);
 
   const handleMouseLeave = useCallback(() => {
-    console.log('🖱️ Mouse left image');
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
   }, []);
 
-  const closeZoom = useCallback(() => {
-    console.log('🚪 Closing zoom overlay');
-    setZoomedImage(null);
+  // Handle hover over close areas (padded regions) - 100ms delay
+  const handleCloseAreaEnter = useCallback(() => {
+    if (overlayAnimation !== 'visible') return;
+    
+    setIsHoveringCloseArea(true);
+    
+    if (closeHoverTimeoutRef.current) {
+      clearTimeout(closeHoverTimeoutRef.current);
+    }
+    
+    closeHoverTimeoutRef.current = setTimeout(() => {
+      closeZoom();
+    }, 100);
+  }, [overlayAnimation, closeZoom]);
+
+  const handleCloseAreaLeave = useCallback(() => {
+    if (closeHoverTimeoutRef.current) {
+      clearTimeout(closeHoverTimeoutRef.current);
+      closeHoverTimeoutRef.current = null;
+    }
+    setIsHoveringCloseArea(false);
   }, []);
+
+  // Handle click on background
+  const handleBackgroundClick = useCallback((e) => {
+    if (overlayAnimation === 'visible') {
+      closeZoom();
+    }
+  }, [overlayAnimation, closeZoom]);
 
   // Animate from currentIndex to targetIndex
   useEffect(() => {
@@ -156,20 +206,26 @@ const Carousel = () => {
   // Escape key to close zoom
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && zoomedImage) {
+      if (e.key === 'Escape' && zoomedImage && overlayAnimation === 'visible') {
         closeZoom();
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [zoomedImage, closeZoom]);
+  }, [zoomedImage, overlayAnimation, closeZoom]);
 
   // Cleanup
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
+      }
+      if (closeHoverTimeoutRef.current) {
+        clearTimeout(closeHoverTimeoutRef.current);
+      }
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
       }
     };
   }, []);
@@ -178,102 +234,90 @@ const Carousel = () => {
 
   return (
     <>
-      {/* ZOOM OVERLAY - Rendered to document.body via portal */}
-      {zoomedImage && createPortal(
+      {/* ENHANCED ZOOM OVERLAY - With smooth fade animations */}
+      {(zoomedImage || overlayAnimation !== 'hidden') && createPortal(
         <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.95)',
-            zIndex: 999999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-          onClick={closeZoom}
-          onMouseLeave={closeZoom}
+          className={`zoom-overlay zoom-overlay-${overlayAnimation}`}
+          onClick={handleBackgroundClick}
         >
-          <button 
-            style={{
-              position: 'fixed',
-              top: '2rem',
-              right: '2rem',
-              width: '3.5rem',
-              height: '3.5rem',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(239, 68, 68, 0.9)',
-              border: '2px solid #ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 1000000,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              closeZoom();
-            }}
-          >
-            <svg viewBox="0 0 24 24" style={{ width: '1.5rem', height: '1.5rem', fill: 'white' }}>
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
+          {/* Background layer */}
+          <div 
+            className={`zoom-background zoom-background-${overlayAnimation}`}
+            onClick={handleBackgroundClick}
+          />
           
-          <div style={{
-            width: `${Math.floor(window.innerWidth * 0.9)}px`,
-            height: `${Math.floor(window.innerHeight * 0.9)}px`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-          }}>
-            <img 
-              src={zoomedImage.image}
-              alt={zoomedImage.title}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                width: 'auto',
-                height: 'auto',
-                objectFit: 'contain',
-                borderRadius: '0.5rem',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
-              }}
-            />
-            <div style={{
-              position: 'absolute',
-              bottom: '-5rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '90%',
-              maxWidth: '800px',
-              textAlign: 'center',
-              background: 'rgba(0, 0, 0, 0.9)',
-              padding: '1.5rem 2rem',
-              borderRadius: '0.5rem',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-            }}>
-              <h3 style={{ fontSize: '2rem', color: '#f59e0b', margin: '0 0 0.5rem 0' }}>
-                {zoomedImage.title}
-              </h3>
-              <p style={{ color: '#cbd5e1', fontSize: '1.1rem', lineHeight: '1.6', margin: 0 }}>
-                {zoomedImage.description}
-              </p>
+          {/* Close areas around the image */}
+          <div 
+            className={`zoom-close-area zoom-close-top zoom-close-area-${overlayAnimation}`}
+            onMouseEnter={handleCloseAreaEnter}
+            onMouseLeave={handleCloseAreaLeave}
+          />
+          
+          <div 
+            className={`zoom-close-area zoom-close-bottom zoom-close-area-${overlayAnimation}`}
+            onMouseEnter={handleCloseAreaEnter}
+            onMouseLeave={handleCloseAreaLeave}
+          />
+          
+          <div 
+            className={`zoom-close-area zoom-close-left zoom-close-area-${overlayAnimation}`}
+            onMouseEnter={handleCloseAreaEnter}
+            onMouseLeave={handleCloseAreaLeave}
+          />
+          
+          <div 
+            className={`zoom-close-area zoom-close-right zoom-close-area-${overlayAnimation}`}
+            onMouseEnter={handleCloseAreaEnter}
+            onMouseLeave={handleCloseAreaLeave}
+          />
+
+          {/* Visual indicator when hovering close areas */}
+          {isHoveringCloseArea && overlayAnimation === 'visible' && (
+            <div className="zoom-close-indicator">
+              <div className="zoom-close-icon">✕</div>
+              <span>Release to close</span>
             </div>
+          )}
+          
+          {/* Main image content */}
+          <div 
+            className={`zoom-image-container zoom-image-container-${overlayAnimation}`}
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={handleCloseAreaLeave}
+          >
+            <button 
+              className={`zoom-close-btn zoom-close-btn-${overlayAnimation}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                closeZoom();
+              }}
+              aria-label="Close zoom view"
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+            
+            <img 
+              src={zoomedImage?.image}
+              alt={zoomedImage?.title}
+              className={`zoom-image zoom-image-${overlayAnimation}`}
+            />
           </div>
         </div>,
         document.body
       )}
 
-      {/* CAROUSEL */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+      {/* CAROUSEL with fade effects */}
+      <div 
+        className={`carousel-main-container ${
+          overlayAnimation === 'hidden' ? 'carousel-visible' : 
+          overlayAnimation === 'entering' ? 'carousel-fading-out' : 
+          overlayAnimation === 'exiting' ? 'carousel-fading-in' : 
+          'carousel-hidden'
+        }`}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
+      >
         <div className="carousel-3d-container" ref={containerRef}>
           <div className="carousel-3d-stage">
             {carouselData.map((item, index) => {
