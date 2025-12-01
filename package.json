@@ -2,7 +2,7 @@
   "name": "my-web",
   "version": "0.0.0",
   "private": true,
-  "homepage": "https://YOUR_USERNAME.github.io/Portfolio",
+  "homepage": "https://mingliang17.github.io/Portfolio",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
