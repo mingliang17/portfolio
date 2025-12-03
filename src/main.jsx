@@ -8,12 +8,11 @@ import { StrictMode } from 'react'
 
 //1. Create Root
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import './mh1.css'
-import './navbar.css'
-import './map.css'
+import './styles/index.css'
+import './styles/mh1.css'
+import './styles/navbar.css'
 
-import App from './App';
+import App from './App.jsx';
 
 //2. Render a markup to root
 createRoot(document.getElementById('root')).render(

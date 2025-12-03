@@ -1,135 +1,131 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// src/sections/Carousel.jsx - REFACTORED VERSION
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { carouselMH1 } from '../constants/projects.js';
+
+// Position configurations as constants
+const POSITION_CONFIG = {
+  '-2': { translateX: -100, translateZ: -500, rotateY: -40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
+  '-1': { translateX: -70, translateZ: -300, rotateY: -30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
+  0: { translateX: 0, translateZ: 0, rotateY: 0, scale: 1, zIndex: 10, opacity: 1, brightness: 1 },
+  1: { translateX: 70, translateZ: -300, rotateY: 30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
+  2: { translateX: 100, translateZ: -500, rotateY: 40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
+};
+
+const ANIMATION_STATES = {
+  HIDDEN: 'hidden',
+  ENTERING: 'entering', 
+  VISIBLE: 'visible',
+  EXITING: 'exiting'
+};
 
 const Carousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [targetIndex, setTargetIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [overlayAnimation, setOverlayAnimation] = useState(ANIMATION_STATES.HIDDEN);
   const [isHoveringCloseArea, setIsHoveringCloseArea] = useState(false);
-  const [overlayAnimation, setOverlayAnimation] = useState('hidden'); // 'hidden' | 'entering' | 'visible' | 'exiting'
   
-  const containerRef = useRef(null);
+  // Consolidated refs
+  const timeoutRefs = useRef({
+    hover: null,
+    closeHover: null,
+    animation: null
+  });
   const itemRefs = useRef([]);
-  const hoverTimeoutRef = useRef(null);
-  const closeHoverTimeoutRef = useRef(null);
-  const animationTimeoutRef = useRef(null);
   
   const carouselData = carouselMH1;
   const totalItems = carouselData.length;
 
-  // Position configuration
-  const positionConfig = {
-    '-2': { translateX: -100, translateZ: -500, rotateY: -40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
-    '-1': { translateX: -70, translateZ: -300, rotateY: -30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
-    0: { translateX: 0, translateZ: 0, rotateY: 0, scale: 1, zIndex: 10, opacity: 1, brightness: 1 },
-    1: { translateX: 70, translateZ: -300, rotateY: 30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
-    2: { translateX: 100, translateZ: -500, rotateY: 40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
-  };
+  // === UTILITY: Clear all timeouts ===
+  const clearAllTimeouts = useCallback(() => {
+    Object.values(timeoutRefs.current).forEach(timeout => {
+      if (timeout) clearTimeout(timeout);
+    });
+    timeoutRefs.current = { hover: null, closeHover: null, animation: null };
+  }, []);
 
-  // Navigation functions
+  // === NAVIGATION ===
+  const canNavigate = useMemo(() => !isAnimating && !zoomedImage, [isAnimating, zoomedImage]);
+  
   const goToNext = useCallback(() => {
-    if (isAnimating || zoomedImage) return;
+    if (!canNavigate) return;
     setTargetIndex(prev => (prev + 1) % totalItems);
-  }, [isAnimating, totalItems, zoomedImage]);
+  }, [canNavigate, totalItems]);
 
   const goToPrev = useCallback(() => {
-    if (isAnimating || zoomedImage) return;
+    if (!canNavigate) return;
     setTargetIndex(prev => (prev - 1 + totalItems) % totalItems);
-  }, [isAnimating, totalItems, zoomedImage]);
+  }, [canNavigate, totalItems]);
 
   const goToSlide = useCallback((index) => {
-    if (isAnimating || index === currentIndex || zoomedImage) return;
+    if (!canNavigate || index === currentIndex) return;
     setTargetIndex(index);
-  }, [isAnimating, currentIndex, zoomedImage]);
+  }, [canNavigate, currentIndex]);
 
-  // Enhanced zoom functions with animations
+  // === ZOOM MANAGEMENT ===
   const openZoom = useCallback((image) => {
+    clearAllTimeouts();
     setZoomedImage(image);
-    setOverlayAnimation('entering');
+    setOverlayAnimation(ANIMATION_STATES.ENTERING);
     
-    // Clear any existing timeouts
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    
-    // Transition to visible state after enter animation
-    animationTimeoutRef.current = setTimeout(() => {
-      setOverlayAnimation('visible');
+    timeoutRefs.current.animation = setTimeout(() => {
+      setOverlayAnimation(ANIMATION_STATES.VISIBLE);
     }, 300);
-  }, []);
+  }, [clearAllTimeouts]);
 
   const closeZoom = useCallback(() => {
-    setOverlayAnimation('exiting');
+    clearAllTimeouts();
+    setOverlayAnimation(ANIMATION_STATES.EXITING);
     
-    // Clear any existing timeouts
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    if (closeHoverTimeoutRef.current) {
-      clearTimeout(closeHoverTimeoutRef.current);
-    }
-    
-    // Remove overlay after exit animation
-    animationTimeoutRef.current = setTimeout(() => {
+    timeoutRefs.current.animation = setTimeout(() => {
       setZoomedImage(null);
-      setOverlayAnimation('hidden');
+      setOverlayAnimation(ANIMATION_STATES.HIDDEN);
       setIsHoveringCloseArea(false);
     }, 300);
-  }, []);
+  }, [clearAllTimeouts]);
 
-  // Handle image hover
+  // === HOVER HANDLERS ===
   const handleMouseEnter = useCallback((index) => {
     if (zoomedImage) return;
     
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-
-    hoverTimeoutRef.current = setTimeout(() => {
+    clearAllTimeouts();
+    timeoutRefs.current.hover = setTimeout(() => {
       openZoom(carouselData[index]);
     }, 500);
-  }, [zoomedImage, carouselData, openZoom]);
+  }, [zoomedImage, carouselData, openZoom, clearAllTimeouts]);
 
   const handleMouseLeave = useCallback(() => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
+    if (timeoutRefs.current.hover) {
+      clearTimeout(timeoutRefs.current.hover);
+      timeoutRefs.current.hover = null;
     }
   }, []);
 
-  // Handle hover over close areas (padded regions) - 100ms delay
   const handleCloseAreaEnter = useCallback(() => {
-    if (overlayAnimation !== 'visible') return;
+    if (overlayAnimation !== ANIMATION_STATES.VISIBLE) return;
     
     setIsHoveringCloseArea(true);
     
-    if (closeHoverTimeoutRef.current) {
-      clearTimeout(closeHoverTimeoutRef.current);
+    if (timeoutRefs.current.closeHover) {
+      clearTimeout(timeoutRefs.current.closeHover);
     }
     
-    closeHoverTimeoutRef.current = setTimeout(() => {
+    timeoutRefs.current.closeHover = setTimeout(() => {
       closeZoom();
     }, 100);
   }, [overlayAnimation, closeZoom]);
 
   const handleCloseAreaLeave = useCallback(() => {
-    if (closeHoverTimeoutRef.current) {
-      clearTimeout(closeHoverTimeoutRef.current);
-      closeHoverTimeoutRef.current = null;
+    if (timeoutRefs.current.closeHover) {
+      clearTimeout(timeoutRefs.current.closeHover);
+      timeoutRefs.current.closeHover = null;
     }
     setIsHoveringCloseArea(false);
   }, []);
 
-  // Handle click on background
-  const handleBackgroundClick = useCallback((e) => {
-    if (overlayAnimation === 'visible') {
-      closeZoom();
-    }
-  }, [overlayAnimation, closeZoom]);
-
-  // Animate from currentIndex to targetIndex
+  // === ANIMATION SEQUENCE ===
   useEffect(() => {
     if (currentIndex === targetIndex) return;
 
@@ -140,9 +136,9 @@ const Carousel = () => {
       diff = diff > 0 ? diff - totalItems : diff + totalItems;
     }
 
-    let step = 0;
     const steps = Math.abs(diff);
     const direction = diff > 0 ? 1 : -1;
+    let step = 0;
     
     const animateStep = () => {
       if (step < steps) {
@@ -157,7 +153,7 @@ const Carousel = () => {
     animateStep();
   }, [targetIndex, currentIndex, totalItems]);
 
-  // Get item style based on position
+  // === ITEM POSITIONING ===
   const getItemStyle = useCallback((index) => {
     let position = index - currentIndex;
     
@@ -180,7 +176,7 @@ const Carousel = () => {
       };
     }
 
-    const config = positionConfig[position];
+    const config = POSITION_CONFIG[position];
     return {
       transform: `translate(-50%, -50%) translateX(${config.translateX}%) translateZ(${config.translateZ}px) rotateY(${config.rotateY}deg) scale(${config.scale})`,
       zIndex: config.zIndex,
@@ -190,96 +186,54 @@ const Carousel = () => {
     };
   }, [currentIndex, totalItems]);
 
-  // Keyboard navigation
+  // === KEYBOARD NAVIGATION ===
   useEffect(() => {
     if (zoomedImage) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') goToPrev();
       if (e.key === 'ArrowRight') goToNext();
+      if (e.key === 'Escape' && overlayAnimation === ANIMATION_STATES.VISIBLE) closeZoom();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToPrev, goToNext, zoomedImage]);
+  }, [goToPrev, goToNext, zoomedImage, overlayAnimation, closeZoom]);
 
-  // Escape key to close zoom
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && zoomedImage && overlayAnimation === 'visible') {
-        closeZoom();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [zoomedImage, overlayAnimation, closeZoom]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-      if (closeHoverTimeoutRef.current) {
-        clearTimeout(closeHoverTimeoutRef.current);
-      }
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
+  // === CLEANUP ===
+  useEffect(() => clearAllTimeouts, [clearAllTimeouts]);
 
   const currentItem = carouselData[currentIndex];
 
   return (
     <>
-      {/* ENHANCED ZOOM OVERLAY - With smooth fade animations */}
-      {(zoomedImage || overlayAnimation !== 'hidden') && createPortal(
+      {/* ZOOM OVERLAY */}
+      {(zoomedImage || overlayAnimation !== ANIMATION_STATES.HIDDEN) && createPortal(
         <div 
           className={`zoom-overlay zoom-overlay-${overlayAnimation}`}
-          onClick={handleBackgroundClick}
+          onClick={() => overlayAnimation === ANIMATION_STATES.VISIBLE && closeZoom()}
         >
-          {/* Background layer */}
-          <div 
-            className={`zoom-background zoom-background-${overlayAnimation}`}
-            onClick={handleBackgroundClick}
-          />
+          <div className={`zoom-background zoom-background-${overlayAnimation}`} />
           
-          {/* Close areas around the image */}
-          <div 
-            className={`zoom-close-area zoom-close-top zoom-close-area-${overlayAnimation}`}
-            onMouseEnter={handleCloseAreaEnter}
-            onMouseLeave={handleCloseAreaLeave}
-          />
-          
-          <div 
-            className={`zoom-close-area zoom-close-bottom zoom-close-area-${overlayAnimation}`}
-            onMouseEnter={handleCloseAreaEnter}
-            onMouseLeave={handleCloseAreaLeave}
-          />
-          
-          <div 
-            className={`zoom-close-area zoom-close-left zoom-close-area-${overlayAnimation}`}
-            onMouseEnter={handleCloseAreaEnter}
-            onMouseLeave={handleCloseAreaLeave}
-          />
-          
-          <div 
-            className={`zoom-close-area zoom-close-right zoom-close-area-${overlayAnimation}`}
-            onMouseEnter={handleCloseAreaEnter}
-            onMouseLeave={handleCloseAreaLeave}
-          />
+          {/* Close Areas */}
+          {['top', 'bottom', 'left', 'right'].map(side => (
+            <div 
+              key={side}
+              className={`zoom-close-area zoom-close-${side} zoom-close-area-${overlayAnimation}`}
+              onMouseEnter={handleCloseAreaEnter}
+              onMouseLeave={handleCloseAreaLeave}
+            />
+          ))}
 
-          {/* Visual indicator when hovering close areas */}
-          {isHoveringCloseArea && overlayAnimation === 'visible' && (
+          {/* Hover Indicator */}
+          {isHoveringCloseArea && overlayAnimation === ANIMATION_STATES.VISIBLE && (
             <div className="zoom-close-indicator">
               <div className="zoom-close-icon">✕</div>
               <span>Release to close</span>
             </div>
           )}
           
-          {/* Main image content */}
+          {/* Image Container */}
           <div 
             className={`zoom-image-container zoom-image-container-${overlayAnimation}`}
             onClick={(e) => e.stopPropagation()}
@@ -308,17 +262,16 @@ const Carousel = () => {
         document.body
       )}
 
-      {/* CAROUSEL with fade effects */}
+      {/* CAROUSEL */}
       <div 
         className={`carousel-main-container ${
-          overlayAnimation === 'hidden' ? 'carousel-visible' : 
-          overlayAnimation === 'entering' ? 'carousel-fading-out' : 
-          overlayAnimation === 'exiting' ? 'carousel-fading-in' : 
+          overlayAnimation === ANIMATION_STATES.HIDDEN ? 'carousel-visible' : 
+          overlayAnimation === ANIMATION_STATES.ENTERING ? 'carousel-fading-out' : 
+          overlayAnimation === ANIMATION_STATES.EXITING ? 'carousel-fading-in' : 
           'carousel-hidden'
         }`}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
       >
-        <div className="carousel-3d-container" ref={containerRef}>
+        <div className="carousel-3d-container">
           <div className="carousel-3d-stage">
             {carouselData.map((item, index) => {
               const style = getItemStyle(index);
@@ -340,10 +293,6 @@ const Carousel = () => {
                       alt={item.title} 
                       loading="lazy"
                       draggable="false"
-                      style={{
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                      }}
                     />
                   </div>
                 </div>
@@ -351,12 +300,12 @@ const Carousel = () => {
             })}
           </div>
 
-          {/* Navigation Arrows */}
+          {/* Navigation */}
           <div className="carousel-controls">
             <button 
               className="carousel-arrow" 
               onClick={goToPrev}
-              disabled={isAnimating || zoomedImage}
+              disabled={!canNavigate}
               aria-label="Previous slide"
             >
               <svg viewBox="0 0 24 24">
@@ -366,7 +315,7 @@ const Carousel = () => {
             <button 
               className="carousel-arrow" 
               onClick={goToNext}
-              disabled={isAnimating || zoomedImage}
+              disabled={!canNavigate}
               aria-label="Next slide"
             >
               <svg viewBox="0 0 24 24">
@@ -376,6 +325,7 @@ const Carousel = () => {
           </div>
         </div>
 
+        {/* Description */}
         <div className="carousel-description">
           <h3>{currentItem.title}</h3>
           <p>{currentItem.description}</p>
@@ -385,7 +335,7 @@ const Carousel = () => {
                 key={index}
                 className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
                 onClick={() => goToSlide(index)}
-                disabled={isAnimating || zoomedImage}
+                disabled={!canNavigate}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
