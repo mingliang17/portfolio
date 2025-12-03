@@ -1051,3 +1051,12 @@
     filter: blur(8px) brightness(0.4);
   }
 }
+
+  .mh1-navigation-dots {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .mh1-navigation-dots.fade-in {
+    opacity: 1;
+  }

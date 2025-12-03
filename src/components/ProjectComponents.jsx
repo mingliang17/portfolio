@@ -1,22 +1,37 @@
-// src/components/project/ProjectComponents.jsx
-import React from 'react';
 
-/**
- * Navigation Dots Component
- */
-export const NavigationDots = ({ totalSections, currentSection, onSectionChange, disabled }) => (
-  <div className="mh1-navigation-dots">
-    {Array.from({ length: totalSections }).map((_, i) => (
-      <button
-        key={i}
-        onClick={() => !disabled && onSectionChange(i)}
-        className={`mh1-nav-dot ${i === currentSection ? 'active' : ''}`}
-        aria-label={`Go to section ${i + 1}`}
-        disabled={disabled}
-      />
-    ))}
-  </div>
-);
+import React, { useEffect, useState } from 'react';
+
+
+/*Navigation Dots Component*/
+
+export const NavigationDots = ({ totalSections, currentSection, onSectionChange, disabled }) => {
+  const [isVisible, setIsVisible] = useState(false);  // Track visibility
+  const [isFadedIn, setIsFadedIn] = useState(false);  // Track fading effect
+  
+  useEffect(() => {
+    if (currentSection === 0) {
+      setIsVisible(false);  // Hide dots in section 0
+    } else if (currentSection === 1) {
+      setIsVisible(true);   // Show dots from section 1 onwards
+      setTimeout(() => setIsFadedIn(true), 100);  // Fade in after section 1
+    }
+  }, [currentSection]);
+
+  return (
+    <div className={`mh1-navigation-dots ${isFadedIn ? 'fade-in' : ''}`} style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 1s' }}>
+      {Array.from({ length: totalSections }).map((_, i) => (
+        <button
+          key={i}
+          onClick={() => !disabled && onSectionChange(i)}
+          className={`mh1-nav-dot ${i === currentSection ? 'active' : ''}`}
+          aria-label={`Go to section ${i + 1}`}
+          disabled={disabled}
+        />
+      ))}
+    </div>
+  );
+};
+
 
 /**
  * Unlock Animation Overlay
