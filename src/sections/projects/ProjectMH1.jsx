@@ -44,6 +44,7 @@ const ProjectMH1 = () => {
     if (currentSection === 1) {
       setBackgroundFade(0);
       setCurrentSection(0);
+      setStartMapAnimation(false); 
       
       setTimeout(() => {
         let reverseFade = 0;
@@ -122,13 +123,19 @@ const ProjectMH1 = () => {
           </section>
         )}
 
-        {/* Section 1: Map */}
+        {/* Section 1: Map with Sidebars */}
         {currentSection === 1 && (
-          <MapSection 
-            logos={logoMH1}
-            MapComponent={MyMap}
-            visible={true}
-          />
+          <section className="mh1-section">
+            <div className="mh1-map-layout">
+
+              {/* Map */}
+              <div className="mh1-map-container">
+                <Suspense fallback={<div className="mh1-map-loading">Loading Genetic Map...</div>}>
+                  <MyMap startAnimation={startMapAnimation} />  {/* ⭐ ADD PROP HERE */}
+                </Suspense>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Section 2: Carousel */}

@@ -1,181 +1,181 @@
-// src/hooks/useProjectAnimation.js
-import { useState, useEffect, useRef } from 'react';
+  // src/hooks/useProjectAnimation.js
+  import { useState, useEffect, useRef } from 'react';
 
-/**
- * Custom hook to manage project animation phases and drag interactions
- * Consolidates all animation logic from ProjectMH1
- */
-export const useProjectAnimation = (currentSection) => {
-  const [animationPhase, setAnimationPhase] = useState('initial');
-  const [titleOpacity, setTitleOpacity] = useState(0);
-  const [unlockProgress, setUnlockProgress] = useState(0);
-  const [gradientOpacity, setGradientOpacity] = useState(0);
-  const [backgroundFade, setBackgroundFade] = useState(0);
-  
-  const scrollAccumulator = useRef(0);
-  const touchStartY = useRef(0);
-  const isDragging = useRef(false);
-  const dragProgressRef = useRef(0);
-
-  // === ANIMATION SEQUENCE (Section 0 only) ===
-  useEffect(() => {
-    if (currentSection !== 0) return;
+  /**
+   * Custom hook to manage project animation phases and drag interactions
+   * Consolidates all animation logic from ProjectMH1
+   */
+  export const useProjectAnimation = (currentSection) => {
+    const [animationPhase, setAnimationPhase] = useState('initial');
+    const [titleOpacity, setTitleOpacity] = useState(0);
+    const [unlockProgress, setUnlockProgress] = useState(0);
+    const [gradientOpacity, setGradientOpacity] = useState(0);
+    const [backgroundFade, setBackgroundFade] = useState(0);
     
-    const runSequence = async () => {
-      // Reset states
-      setGradientOpacity(0);
-      setBackgroundFade(0);
-      setTitleOpacity(0);
-      
-      // Step 1: Fade in gradient
-      setGradientOpacity(1);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Step 2: Fade in background
-      setBackgroundFade(1);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Step 3: Fade in title and transition to waiting
-      setTitleOpacity(1);
-      setTimeout(() => setAnimationPhase('waiting'), 1000);
-    };
-    
-    runSequence();
-  }, [currentSection]);
+    const scrollAccumulator = useRef(0);
+    const touchStartY = useRef(0);
+    const isDragging = useRef(false);
+    const dragProgressRef = useRef(0);
 
-  // === DRAG INTERACTION (Waiting phase only) ===
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'waiting') return;
-
-    const updateDragUI = (progress) => {
-      dragProgressRef.current = progress;
-      setGradientOpacity(Math.max(0, 1 - progress));
-    };
-
-    const resetDrag = () => {
-      isDragging.current = false;
-      document.body.style.cursor = '';
+    // === ANIMATION SEQUENCE (Section 0 only) ===
+    useEffect(() => {
+      if (currentSection !== 0) return;
       
-      if (dragProgressRef.current > 0) {
-        const resetInterval = setInterval(() => {
-          dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
-          updateDragUI(dragProgressRef.current);
-          
-          if (dragProgressRef.current <= 0) {
-            clearInterval(resetInterval);
-            scrollAccumulator.current = 0;
-          }
-        }, 16);
-      }
-    };
-
-    const handleStart = (clientY) => {
-      isDragging.current = true;
-      touchStartY.current = clientY;
-      document.body.style.cursor = 'grabbing';
-    };
-
-    const handleMove = (clientY) => {
-      if (!isDragging.current) return;
-      
-      const deltaY = touchStartY.current - clientY;
-      
-      if (deltaY > 0) {
-        scrollAccumulator.current += deltaY;
-        const progress = Math.min(1, scrollAccumulator.current / 300);
-        updateDragUI(progress);
+      const runSequence = async () => {
+        // Reset states
+        setGradientOpacity(0);
+        setBackgroundFade(0);
+        setTitleOpacity(0);
         
-        if (scrollAccumulator.current >= 300) {
-          setAnimationPhase('unlocking');
-          scrollAccumulator.current = 0;
-          isDragging.current = false;
-          document.body.style.cursor = '';
+        // Step 1: Fade in gradient
+        setGradientOpacity(1);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Step 2: Fade in background
+        setBackgroundFade(1);
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Step 3: Fade in title and transition to waiting
+        setTitleOpacity(1);
+        setTimeout(() => setAnimationPhase('waiting'), 1000);
+      };
+      
+      runSequence();
+    }, [currentSection]);
+
+    // === DRAG INTERACTION (Waiting phase only) ===
+    useEffect(() => {
+      if (currentSection !== 0 || animationPhase !== 'waiting') return;
+
+      const updateDragUI = (progress) => {
+        dragProgressRef.current = progress;
+        setGradientOpacity(Math.max(0, 1 - progress));
+      };
+
+      const resetDrag = () => {
+        isDragging.current = false;
+        document.body.style.cursor = '';
+        
+        if (dragProgressRef.current > 0) {
+          const resetInterval = setInterval(() => {
+            dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
+            updateDragUI(dragProgressRef.current);
+            
+            if (dragProgressRef.current <= 0) {
+              clearInterval(resetInterval);
+              scrollAccumulator.current = 0;
+            }
+          }, 16);
         }
-        
+      };
+
+      const handleStart = (clientY) => {
+        isDragging.current = true;
         touchStartY.current = clientY;
-      }
+        document.body.style.cursor = 'grabbing';
+      };
+
+      const handleMove = (clientY) => {
+        if (!isDragging.current) return;
+        
+        const deltaY = touchStartY.current - clientY;
+        
+        if (deltaY > 0) {
+          scrollAccumulator.current += deltaY;
+          const progress = Math.min(1, scrollAccumulator.current / 300);
+          updateDragUI(progress);
+          
+          if (scrollAccumulator.current >= 300) {
+            setAnimationPhase('unlocking');
+            scrollAccumulator.current = 0;
+            isDragging.current = false;
+            document.body.style.cursor = '';
+          }
+          
+          touchStartY.current = clientY;
+        }
+      };
+
+      // Event handlers
+      const handleTouchStart = (e) => handleStart(e.touches[0].clientY);
+      const handleTouchMove = (e) => handleMove(e.touches[0].clientY);
+      const handleTouchEnd = resetDrag;
+      const handleMouseDown = (e) => handleStart(e.clientY);
+      const handleMouseMove = (e) => handleMove(e.clientY);
+      const handleMouseUp = resetDrag;
+
+      // Attach listeners
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+      window.addEventListener('touchend', handleTouchEnd);
+      window.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
+        window.removeEventListener('mousedown', handleMouseDown);
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+      };
+    }, [animationPhase, currentSection]);
+
+    // === UNLOCK ANIMATION ===
+    useEffect(() => {
+      if (currentSection !== 0 || animationPhase !== 'unlocking') return;
+
+      let progress = 0;
+      const unlockInterval = setInterval(() => {
+        progress += 0.02;
+        setUnlockProgress(progress);
+        setTitleOpacity(Math.max(0, 1 - progress * 2));
+        
+        if (progress >= 1) {
+          clearInterval(unlockInterval);
+          setAnimationPhase('fadeout');
+        }
+      }, 20);
+
+      return () => clearInterval(unlockInterval);
+    }, [animationPhase, currentSection]);
+
+    // === FADEOUT ANIMATION ===
+    useEffect(() => {
+      if (currentSection !== 0 || animationPhase !== 'fadeout') return;
+
+      let fadeProgress = 0;
+      const fadeInterval = setInterval(() => {
+        fadeProgress += 0.05;
+        setBackgroundFade(Math.max(0, 1 - fadeProgress));
+        
+        if (fadeProgress >= 1) {
+          clearInterval(fadeInterval);
+          setAnimationPhase('completed');
+        }
+      }, 20);
+
+      return () => clearInterval(fadeInterval);
+    }, [animationPhase, currentSection]);
+
+    return {
+      animationPhase,
+      titleOpacity,
+      unlockProgress,
+      gradientOpacity,
+      backgroundFade,
+      dragProgressRef,
+      setAnimationPhase,
+      setTitleOpacity,
+      setGradientOpacity,
+      setBackgroundFade,
+      setUnlockProgress,
+      scrollAccumulator,
+      dragProgressRef
     };
-
-    // Event handlers
-    const handleTouchStart = (e) => handleStart(e.touches[0].clientY);
-    const handleTouchMove = (e) => handleMove(e.touches[0].clientY);
-    const handleTouchEnd = resetDrag;
-    const handleMouseDown = (e) => handleStart(e.clientY);
-    const handleMouseMove = (e) => handleMove(e.clientY);
-    const handleMouseUp = resetDrag;
-
-    // Attach listeners
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-    };
-  }, [animationPhase, currentSection]);
-
-  // === UNLOCK ANIMATION ===
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'unlocking') return;
-
-    let progress = 0;
-    const unlockInterval = setInterval(() => {
-      progress += 0.02;
-      setUnlockProgress(progress);
-      setTitleOpacity(Math.max(0, 1 - progress * 2));
-      
-      if (progress >= 1) {
-        clearInterval(unlockInterval);
-        setAnimationPhase('fadeout');
-      }
-    }, 20);
-
-    return () => clearInterval(unlockInterval);
-  }, [animationPhase, currentSection]);
-
-  // === FADEOUT ANIMATION ===
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'fadeout') return;
-
-    let fadeProgress = 0;
-    const fadeInterval = setInterval(() => {
-      fadeProgress += 0.05;
-      setBackgroundFade(Math.max(0, 1 - fadeProgress));
-      
-      if (fadeProgress >= 1) {
-        clearInterval(fadeInterval);
-        setAnimationPhase('completed');
-      }
-    }, 20);
-
-    return () => clearInterval(fadeInterval);
-  }, [animationPhase, currentSection]);
-
-  return {
-    animationPhase,
-    titleOpacity,
-    unlockProgress,
-    gradientOpacity,
-    backgroundFade,
-    dragProgressRef,
-    setAnimationPhase,
-    setTitleOpacity,
-    setGradientOpacity,
-    setBackgroundFade,
-    setUnlockProgress,
-    scrollAccumulator,
-    dragProgressRef
   };
-};
 
 /**
  * Custom hook to manage section navigation
@@ -183,6 +183,16 @@ export const useProjectAnimation = (currentSection) => {
 export const useSectionNavigation = (totalSections, animationPhase, onGoBack) => {
   const [currentSection, setCurrentSection] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [startMapAnimation, setStartMapAnimation] = useState(false);
+
+    // Trigger map animation when entering section 1
+  useEffect(() => {
+    console.log('📍 Section changed to:', currentSection);
+    if (currentSection === 1 && !startMapAnimation) {
+      console.log('🎯 Setting startMapAnimation to TRUE');
+      setStartMapAnimation(true);
+    }
+  }, [currentSection, startMapAnimation]);
 
   useEffect(() => {
     if (animationPhase !== 'completed') return;
