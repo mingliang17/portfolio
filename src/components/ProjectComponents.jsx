@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 export const NavigationDots = ({ totalSections, currentSection, onSectionChange, disabled }) => {
   const [isVisible, setIsVisible] = useState(false);  // Track visibility
   const [isFadedIn, setIsFadedIn] = useState(false);  // Track fading effect
+  const [startMapAnimation, setStartMapAnimation] = useState(false);
   
   useEffect(() => {
     if (currentSection === 0) {

@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// ============================================
-// MYMAP COMPONENT WITH EXTERNAL TRIGGER
-// ============================================
 const MyMap = ({ startAnimation = false }) => {
   const [opacityA, setOpacityA] = useState(0);
   const [opacityB, setOpacityB] = useState(0);
@@ -18,6 +15,7 @@ const MyMap = ({ startAnimation = false }) => {
   const hasStartedRef = useRef(false);
   const prevStartAnimationRef = useRef(startAnimation);
   
+  // Animation variables
   const zoomFactor = 10;
   const globalScale = 1.5;
   const animationDuration = 3000;
@@ -25,12 +23,13 @@ const MyMap = ({ startAnimation = false }) => {
   const moveDistanceA = 100;
   const moveDistanceB = moveDistanceA;
 
+  // Image paths
   const imagePaths = {
-    A: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop',
-    B: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=200&fit=crop',
-    C: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=300&h=200&fit=crop',
-    D: 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=300&h=200&fit=crop',
-    E: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=300&h=200&fit=crop',
+    A: 'assets/projects/projectMH1/map_0.svg',
+    B: 'assets/projects/projectMH1/map_1.svg', 
+    C: 'assets/projects/projectMH1/map_2.svg',
+    D: 'assets/projects/projectMH1/map_3.svg',
+    E: 'assets/projects/projectMH1/map_4.svg',
   };
 
   const runAnimation = () => {
@@ -40,7 +39,7 @@ const MyMap = ({ startAnimation = false }) => {
       return;
     }
     hasStartedRef.current = true;
-
+    
     setOpacityA(0);
     setOpacityB(0);
     setOpacityC(0);
@@ -142,10 +141,12 @@ const MyMap = ({ startAnimation = false }) => {
     <div style={{
       width: '100%',
       height: '100%',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'transparent',
       position: 'relative',
       overflow: 'hidden',
     }}>
+      
+      {/* Main container */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -155,6 +156,7 @@ const MyMap = ({ startAnimation = false }) => {
         overflow: 'hidden',
         zIndex: 1
       }}>
+        
         {/* Image A */}
         <div style={{
           position: 'absolute',
@@ -171,7 +173,15 @@ const MyMap = ({ startAnimation = false }) => {
           <img 
             src={imagePaths.A}
             alt="Image A"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              console.log('Image A failed to load');
+              e.target.style.display = 'none';
+            }}
           />
         </div>
 
@@ -191,7 +201,15 @@ const MyMap = ({ startAnimation = false }) => {
           <img 
             src={imagePaths.B}
             alt="Image B"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              console.log('Image B failed to load');
+              e.target.style.display = 'none';
+            }}
           />
         </div>
 
@@ -211,7 +229,15 @@ const MyMap = ({ startAnimation = false }) => {
           <img 
             src={imagePaths.C}
             alt="Image C"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              console.log('Image C failed to load');
+              e.target.style.display = 'none';
+            }}
           />
         </div>
 
@@ -231,7 +257,15 @@ const MyMap = ({ startAnimation = false }) => {
           <img 
             src={imagePaths.D}
             alt="Image D"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              console.log('Image D failed to load');
+              e.target.style.display = 'none';
+            }}
           />
         </div>
 
@@ -251,17 +285,27 @@ const MyMap = ({ startAnimation = false }) => {
           <img 
             src={imagePaths.E}
             alt="Image E"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              console.log('Image E failed to load');
+              e.target.style.display = 'none';
+            }}
           />
         </div>
+
       </div>
 
+      {/* Debug info overlay */}
       <div style={{
         position: 'absolute',
         top: '10px',
         left: '10px',
         color: 'white',
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.3)',
         padding: '12px',
         borderRadius: '4px',
         fontSize: '12px',
@@ -269,11 +313,24 @@ const MyMap = ({ startAnimation = false }) => {
         fontFamily: 'monospace',
         minWidth: '250px'
       }}>
-        <div><strong>MAP ANIMATION</strong></div>
+        <div><strong>ANIMATION DEBUG</strong></div>
         <div>Progress: {(animationProgress * 100).toFixed(0)}%</div>
-        <div>Status: {animationProgress >= 1 ? 'Complete' : 'Animating'}</div>
+        <div>Zoom C: {zoomC.toFixed(1)}x</div>
+        <div>Global Scale: {globalScale}x</div>
+        <div>Total Zoom: {(zoomC * globalScale).toFixed(1)}x</div>
+        <div>Position C: {positionC.x.toFixed(0)}, {positionC.y.toFixed(0)}</div>
+        <div>Position A: {positionA.toFixed(0)}px</div>
+        <div>Position B: {positionB.toFixed(0)}px</div>
+        <div style={{marginTop: '8px'}}>
+          <div style={{ color: opacityA > 0 ? '#3b82f6' : '#666' }}>● A: {(opacityA * 100).toFixed(0)}%</div>
+          <div style={{ color: opacityB > 0 ? '#22c55e' : '#666' }}>● B: {(opacityB * 100).toFixed(0)}%</div>
+          <div style={{ color: opacityC > 0 ? '#ef4444' : '#666' }}>● C: {(opacityC * 100).toFixed(0)}%</div>
+          <div style={{ color: opacityD > 0 ? '#a855f7' : '#666' }}>● D: {(opacityD * 100).toFixed(0)}%</div>
+          <div style={{ color: opacityE > 0 ? '#f59e0b' : '#666' }}>● E: {(opacityE * 100).toFixed(0)}%</div>
+        </div>
       </div>
     </div>
   );
 };
+
 export default MyMap;
