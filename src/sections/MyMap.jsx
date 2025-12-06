@@ -13,7 +13,7 @@ const MyMap = ({ startAnimation = false }) => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const animationRef = useRef(null);
   const hasStartedRef = useRef(false);
-  const prevStartAnimationRef = useRef(startAnimation);
+  const isMountedRef = useRef(false); // ⭐ NEW: Track if component is mounted
   
   // Animation variables
   const zoomFactor = 10;
@@ -108,24 +108,39 @@ const MyMap = ({ startAnimation = false }) => {
     animationRef.current = requestAnimationFrame(animate);
   };
 
-  // Watch for changes in startAnimation prop
+  // ⭐ NEW: Mark component as mounted
   useEffect(() => {
-    console.log('🔍 MyMap prop changed:', { 
-      startAnimation, 
-      prevValue: prevStartAnimationRef.current,
+    console.log('✅ MyMap component mounted');
+    isMountedRef.current = true;
+    
+    return () => {
+      console.log('❌ MyMap component unmounting');
+      isMountedRef.current = false;
+      hasStartedRef.current = false; // Reset on unmount
+    };
+  }, []);
+
+  // ⭐ FIXED: Simplified animation trigger logic
+  useEffect(() => {
+    console.log('🔍 MyMap animation check:', { 
+      startAnimation,
+      isMounted: isMountedRef.current,
       hasStarted: hasStartedRef.current 
     });
     
-    // Trigger animation when prop changes from false to true
-    if (startAnimation && !prevStartAnimationRef.current && !hasStartedRef.current) {
-      console.log('🚀 Triggering animation from prop change');
-      // Small delay to ensure component is mounted
-      setTimeout(() => {
+    // Only run animation if:
+    // 1. Component is fully mounted
+    // 2. startAnimation is true
+    // 3. Animation hasn't started yet
+    if (isMountedRef.current && startAnimation && !hasStartedRef.current) {
+      console.log('🚀 Triggering animation');
+      // Small delay to ensure all state is initialized
+      const timeoutId = setTimeout(() => {
         runAnimation();
-      }, 100);
+      }, 150);
+      
+      return () => clearTimeout(timeoutId);
     }
-    
-    prevStartAnimationRef.current = startAnimation;
   }, [startAnimation]);
 
   // Cleanup on unmount

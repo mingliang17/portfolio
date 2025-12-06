@@ -25,15 +25,25 @@ const ProjectMH1 = () => {
   const hideNavbar = () => window.dispatchEvent(new CustomEvent('projectMH1-navbar-hide'));
   const showNavbar = () => window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
 
-  // ⭐ NEW: Trigger map animation when entering section 1
+  // ⭐ FIXED: Trigger map animation when entering section 1
   useEffect(() => {
     console.log('📍 Section changed to:', currentSection);
-    if (currentSection === 1 && !startMapAnimation) {
-      console.log('🎯 Setting startMapAnimation to TRUE');
-      setStartMapAnimation(true);
-    }
-  }, [currentSection, startMapAnimation]);
-
+    
+    if (currentSection === 1) {
+      // Always trigger animation when entering section 1
+      // Small delay to ensure MyMap is mounted
+      const timeoutId = setTimeout(() => {
+        console.log('🎯 Setting startMapAnimation to TRUE');
+        setStartMapAnimation(true);
+      }, 100);
+      
+    return () => clearTimeout(timeoutId);
+  } else if (currentSection !== 1 && startMapAnimation) {
+    // Reset animation state when leaving section 1
+    console.log('🔄 Resetting startMapAnimation to FALSE');
+    setStartMapAnimation(false);
+  }
+}, [currentSection]);
   // Enhanced animation sequence - ONLY for section 0
   useEffect(() => {
     if (currentSection !== 0) return;
@@ -255,9 +265,14 @@ const ProjectMH1 = () => {
 
     const handleGoBack = () => {
       if (currentSection === 1) {
+        // Going back from section 1 to section 0
+        console.log('⬅️ Going back to section 0');
+        
+        // ⭐ FIXED: Reset map animation immediately
+        setStartMapAnimation(false);
+        
         setBackgroundFade(0);
         setCurrentSection(0);
-        setStartMapAnimation(false); // ⭐ RESET ANIMATION STATE
         
         setTimeout(() => {
           let reverseFade = 0;
@@ -458,9 +473,12 @@ const ProjectMH1 = () => {
           <section className="mh1-section">
             <div className="mh1-map-layout">
 
-              {/* Map - ⭐ KEY CHANGE: Added startAnimation prop */}
+              {/* Map - ⭐ FIXED: Added key prop to force remounting */}
               <div className="mh1-map-container">
-                <Suspense fallback={<div className="mh1-map-loading">Loading Genetic Map...</div>}>
+                <Suspense 
+                  key={`map-${currentSection}-${startMapAnimation}`}
+                  fallback={<div className="mh1-map-loading">Loading Genetic Map...</div>}
+                >
                   <MyMap startAnimation={startMapAnimation} />
                 </Suspense>
               </div>
@@ -479,7 +497,7 @@ const ProjectMH1 = () => {
               </div>
 
               {/* Right Sidebar */} 
-              <div className="mh1-sidebar">
+              <div className="mh1-sidebar"> 
                 <h2>Data Metrics</h2>
                 <div className="mh1-description-grid">
                   <div className="mh1-description-value">Collaborators</div>
