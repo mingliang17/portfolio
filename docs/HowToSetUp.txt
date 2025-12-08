@@ -61,3 +61,31 @@ npm install d3-geo topojson-client world-atlas
 
 Zustand Clsx
 npm i zustand clsx
+
+How To Add Assets in Public Folder
+1. Add file to public/
+   └→ public/assets/projects/mh1/hero.jpg
+
+2. Register path in src/assets/index.js
+   └→ PROJECT_ASSETS.mh1.hero = assetPath('assets/projects/mh1/hero.jpg')
+
+3. Add to project config in src/constants/projectsData.js
+   └→ PROJECT_MH1.assets.hero = PROJECT_ASSETS.mh1.hero
+   Example:
+      import { PROJECT_ASSETS } from '../assets';
+
+    export const PROJECT_MH2 = {
+      id: 'mh2',
+      title: 'Project MH2',
+      
+      assets: {
+        hero: PROJECT_ASSETS.mh2.hero,  // ← Use the path from Step 2
+        carousel: PROJECT_ASSETS.mh2.carousel,
+      },
+    }
+
+4. Use in component
+   └→ <img src={projectData.assets.hero} />
+
+5. Vite serves it at
+   └→ https://yoursite.com/portfolio/assets/projects/mh1/hero.jpg

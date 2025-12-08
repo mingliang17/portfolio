@@ -1,0 +1,233 @@
+/* src/styles/variables.css */
+/* Centralized CSS custom properties for easy theming and maintenance */
+
+:root {
+  /* ===================================
+     NAVIGATION
+     =================================== */
+  --nav-height: 64px;
+  
+  /* ===================================
+     TYPOGRAPHY
+     =================================== */
+  --font-primary: 'KG Keep Your Head Up', Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: 'Courier New', monospace;
+  
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  
+  /* ===================================
+     COLORS - BASE PALETTE
+     =================================== */
+  
+  /* Black Shades */
+  --color-black: #000000;
+  --color-black-100: #0a0a0a;
+  --color-black-200: #1e1e1e;
+  --color-black-300: #2a2a2a;
+  --color-black-400: #333333;
+  --color-black-500: #3a3a3a;
+  --color-black-600: #4a4a4a;
+  
+  /* White Shades */
+  --color-white: #ffffff;
+  --color-white-100: #f9fafb;
+  --color-white-200: #f3f4f6;
+  --color-white-300: #e5e7eb;
+  --color-white-400: #d1d5db;
+  --color-white-500: #9ca3af;
+  --color-white-600: #6b7280;
+  
+  /* Gray Shades */
+  --color-gray-100: #f7fafc;
+  --color-gray-200: #edf2f7;
+  --color-gray-300: #e2e8f0;
+  --color-gray-400: #cbd5e1;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #64748b;
+  --color-gray-700: #475569;
+  --color-gray-800: #334155;
+  --color-gray-900: #1e293b;
+  
+  /* ===================================
+     COLORS - ACCENT & BRAND
+     =================================== */
+  
+  /* Primary (Orange/Amber) */
+  --color-primary-light: #fbbf24;
+  --color-primary: #f59e0b;
+  --color-primary-dark: #d97706;
+  
+  /* Secondary (Blue) */
+  --color-secondary-light: #60a5fa;
+  --color-secondary: #3b82f6;
+  --color-secondary-dark: #2563eb;
+  
+  /* Success (Green) */
+  --color-success-light: #34d399;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  
+  /* Danger (Red) */
+  --color-danger-light: #f87171;
+  --color-danger: #ef4444;
+  --color-danger-dark: #dc2626;
+  
+  /* Warning (Yellow) */
+  --color-warning-light: #fde047;
+  --color-warning: #facc15;
+  --color-warning-dark: #eab308;
+  
+  /* Info (Cyan) */
+  --color-info-light: #22d3ee;
+  --color-info: #06b6d4;
+  --color-info-dark: #0891b2;
+  
+  /* ===================================
+     SPACING
+     =================================== */
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+  --spacing-4xl: 6rem;      /* 96px */
+  
+  /* ===================================
+     BORDER RADIUS
+     =================================== */
+  --radius-sm: 0.25rem;     /* 4px */
+  --radius-md: 0.375rem;    /* 6px */
+  --radius-lg: 0.5rem;      /* 8px */
+  --radius-xl: 0.75rem;     /* 12px */
+  --radius-2xl: 1rem;       /* 16px */
+  --radius-3xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;
+  
+  /* ===================================
+     SHADOWS
+     =================================== */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  
+  /* Glow Shadows */
+  --shadow-glow-primary: 0 0 20px rgba(245, 158, 11, 0.6);
+  --shadow-glow-secondary: 0 0 20px rgba(59, 130, 246, 0.6);
+  --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.6);
+  
+  /* ===================================
+     TRANSITIONS
+     =================================== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* ===================================
+     Z-INDEX LAYERS
+     =================================== */
+  --z-background: 0;
+  --z-content: 1;
+  --z-overlay: 10;
+  --z-navigation: 50;
+  --z-modal: 100;
+  --z-popup: 200;
+  --z-tooltip: 300;
+  --z-max: 9999;
+  
+  /* ===================================
+     BACKDROP FILTERS
+     =================================== */
+  --backdrop-blur-sm: blur(4px);
+  --backdrop-blur-md: blur(8px);
+  --backdrop-blur-lg: blur(12px);
+  --backdrop-blur-xl: blur(16px);
+  
+  /* ===================================
+     GRADIENTS
+     =================================== */
+  --gradient-primary: linear-gradient(45deg, #f59e0b, #fbbf24, #f59e0b);
+  --gradient-secondary: linear-gradient(45deg, #3b82f6, #60a5fa, #3b82f6);
+  --gradient-text: linear-gradient(to right, #BEC1CF 60%, #D5D8EA 60%, #D5D8EA 100%);
+  --gradient-dark: linear-gradient(to bottom, rgba(15, 23, 42, 0.8) 30%, rgba(15, 23, 42, 0.2) 100%);
+  
+  /* ===================================
+     PROJECT-SPECIFIC COLORS
+     =================================== */
+  --project-hero-gradient-start: rgba(15, 23, 42, 0.8);
+  --project-hero-gradient-mid: rgba(15, 23, 42, 0.7);
+  --project-hero-gradient-end: rgba(15, 23, 42, 0.2);
+  
+  /* ===================================
+     ANIMATION DURATIONS
+     =================================== */
+  --anim-duration-fast: 0.2s;
+  --anim-duration-normal: 0.3s;
+  --anim-duration-slow: 0.5s;
+  --anim-duration-very-slow: 1s;
+  
+  /* ===================================
+     RESPONSIVE BREAKPOINTS (for reference)
+     =================================== */
+  /* These are used in media queries, not as CSS variables */
+  /* --breakpoint-sm: 640px; */
+  /* --breakpoint-md: 768px; */
+  /* --breakpoint-lg: 1024px; */
+  /* --breakpoint-xl: 1280px; */
+  /* --breakpoint-2xl: 1536px; */
+}
+
+/* ===================================
+   DARK MODE OVERRIDES (Optional)
+   =================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Adjust colors for dark mode if needed */
+  }
+}
+
+/* ===================================
+   UTILITY CLASSES USING VARIABLES
+   =================================== */
+
+/* Text Colors */
+.text-primary { color: var(--color-primary); }
+.text-secondary { color: var(--color-secondary); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-gray { color: var(--color-gray-500); }
+
+/* Background Colors */
+.bg-primary { background-color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-dark { background-color: var(--color-black-200); }
+
+/* Border Radius */
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-glow-primary { box-shadow: var(--shadow-glow-primary); }
+
+/* Transitions */
+.transition-fast { transition: all var(--transition-fast); }
+.transition-base { transition: all var(--transition-base); }
+.transition-slow { transition: all var(--transition-slow); }
