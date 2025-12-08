@@ -1,6 +1,5 @@
 import React from 'react'
 import {Html, useProgress} from '@react-three/drei'
-import { assetPath } from '../utils/assetPath.js'; 
 
 const CanvasLoader = () => {
     const { progress } = useProgress();

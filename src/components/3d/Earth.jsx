@@ -3,7 +3,6 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { TextureLoader, ShaderMaterial, Vector2, Vector3, Euler } from 'three';
 import * as solar from 'solar-calculator';
 import { Html } from '@react-three/drei';
-import { assetPath } from '../utils/assetPath.js';
 
 const VELOCITY = 1; // minutes per frame
 
@@ -157,9 +156,9 @@ const Earth = ({
   const [globeRotation] = useState(new Vector2(0, 0));
 
   // Load textures
-  const dayTexture = useLoader(TextureLoader, assetPath('textures/earth-day.jpg'));
-  const nightTexture = useLoader(TextureLoader, assetPath('textures/earth-night.jpg'));
-  const normalMap = useLoader(TextureLoader, assetPath('textures/earth-normal.jpg'));
+  const dayTexture = useLoader(TextureLoader, TEXTURES.earth.day);
+  const nightTexture = useLoader(TextureLoader, TEXTURES.earth.night);
+  const normalMap = useLoader(TextureLoader, TEXTURES.earth.normal);
 
   // Create shader material
   const material = useMemo(() => {

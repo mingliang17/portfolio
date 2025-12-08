@@ -2,15 +2,15 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect, useRef } from "react";
 
 import Navbar from "./sections/Navbar.jsx";
-import Hero from "./sections/Hero.jsx";
-import About from "./sections/About.jsx";
-import Projects from "./sections/Projects.jsx";
-import Clients from "./sections/Clients.jsx";
-import Contact from "./sections/Contact.jsx";
-import Footer from "./sections/Footer.jsx";
-import Experience from "./sections/Experience.jsx";
-import Home from "./sections/Home.jsx";
-import ProjectMH1 from "./sections/projects/ProjectMH1.jsx";
+// import Hero from "./sections/Hero.jsx";
+// import About from "./sections/About.jsx";
+// import Projects from "./sections/Projects.jsx";
+// import Clients from "./sections/Clients.jsx";
+// import Contact from "./sections/Contact.jsx";
+// import Footer from "./sections/Footer.jsx";
+// import Experience from "./sections/Experience.jsx";
+import Home from "./pages/Home.jsx";
+import Mh1 from "./pages/projects/Mh1.jsx";
 
 const App = () => {
   const navRef = useRef(null);
@@ -60,13 +60,13 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/hero" element={<Hero />} />
+          {/* <Route path="/hero" element={<Hero />} />
           <Route path="/about" element={<About />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/work" element={<Experience />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/projects/MH1" element={<ProjectMH1 />} />
+          <Route path="/contact" element={<Contact />} /> */}
+          <Route path="/projects/mh1" element={ <Mh1 />} />
           <Route path="*" element={<h1>404 Not Found</h1>} />
           {/* <Route path="/footer" element={<Footer />} /> */}
         </Routes>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const MyMap = ({ startAnimation = false }) => {
+const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null }) => {
   const [opacityA, setOpacityA] = useState(0);
   const [opacityB, setOpacityB] = useState(0);
   const [opacityC, setOpacityC] = useState(0);
@@ -15,6 +15,7 @@ const MyMap = ({ startAnimation = false }) => {
   const hasStartedRef = useRef(false);
   const isMountedRef = useRef(false); // ⭐ NEW: Track if component is mounted
   
+  
   // Animation variables
   const zoomFactor = 10;
   const globalScale = 1.5;
@@ -24,14 +25,14 @@ const MyMap = ({ startAnimation = false }) => {
   const moveDistanceB = moveDistanceA;
 
   // Image paths
-  const imagePaths = {
-    A: 'assets/projects/projectMH1/map_0.svg',
-    B: 'assets/projects/projectMH1/map_1.svg', 
-    C: 'assets/projects/projectMH1/map_2.svg',
-    D: 'assets/projects/projectMH1/map_3.svg',
-    E: 'assets/projects/projectMH1/map_4.svg',
+  const imagePaths = mapImages || defaultImagePaths || {
+    A: '',
+    B: '',
+    C: '',
+    D: '',
+    E: '',
   };
-
+  
   const runAnimation = () => {
     console.log('🎬 Starting MyMap animation');
     if (hasStartedRef.current) {

@@ -1,7 +1,7 @@
-// src/sections/Carousel.jsx - REFACTORED VERSION
+// src/sections/Carousel.jsx - UPDATED REUSABLE VERSION
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { carouselMH1 } from '../constants/projects.js';
+import PropTypes from 'prop-types'; // Optional: for type checking
 
 // Position configurations as constants
 const POSITION_CONFIG = {
@@ -19,7 +19,29 @@ const ANIMATION_STATES = {
   EXITING: 'exiting'
 };
 
-const Carousel = () => {
+// ==============================================
+// REUSABLE CAROUSEL COMPONENT
+// ==============================================
+const Carousel = ({ 
+  carouselData = [],           // Required: Array of carousel items
+  title = "Carousel",          // Optional: Carousel title
+  autoPlay = false,            // Optional: Auto-play feature
+  autoPlayInterval = 5000,     // Optional: Auto-play interval
+  showControls = true,         // Optional: Show navigation controls
+  showIndicators = true,       // Optional: Show slide indicators
+  className = "",              // Optional: Additional CSS classes
+}) => {
+  // Validate data
+  if (!Array.isArray(carouselData) || carouselData.length === 0) {
+    console.warn('Carousel: No carousel data provided or data is empty');
+    return (
+      <div className={`carousel-empty ${className}`}>
+        <p>No carousel items to display</p>
+      </div>
+    );
+  }
+
+  // Component state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [targetIndex, setTargetIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -31,11 +53,11 @@ const Carousel = () => {
   const timeoutRefs = useRef({
     hover: null,
     closeHover: null,
-    animation: null
+    animation: null,
+    autoPlay: null
   });
   const itemRefs = useRef([]);
   
-  const carouselData = carouselMH1;
   const totalItems = carouselData.length;
 
   // === UTILITY: Clear all timeouts ===
@@ -43,7 +65,12 @@ const Carousel = () => {
     Object.values(timeoutRefs.current).forEach(timeout => {
       if (timeout) clearTimeout(timeout);
     });
-    timeoutRefs.current = { hover: null, closeHover: null, animation: null };
+    timeoutRefs.current = { 
+      hover: null, 
+      closeHover: null, 
+      animation: null,
+      autoPlay: null 
+    };
   }, []);
 
   // === NAVIGATION ===
@@ -63,6 +90,24 @@ const Carousel = () => {
     if (!canNavigate || index === currentIndex) return;
     setTargetIndex(index);
   }, [canNavigate, currentIndex]);
+
+  // === AUTO-PLAY ===
+  useEffect(() => {
+    if (!autoPlay || zoomedImage) return;
+
+    const playNext = () => {
+      goToNext();
+      timeoutRefs.current.autoPlay = setTimeout(playNext, autoPlayInterval);
+    };
+
+    timeoutRefs.current.autoPlay = setTimeout(playNext, autoPlayInterval);
+    
+    return () => {
+      if (timeoutRefs.current.autoPlay) {
+        clearTimeout(timeoutRefs.current.autoPlay);
+      }
+    };
+  }, [autoPlay, autoPlayInterval, goToNext, zoomedImage]);
 
   // === ZOOM MANAGEMENT ===
   const openZoom = useCallback((image) => {
@@ -264,20 +309,23 @@ const Carousel = () => {
 
       {/* CAROUSEL */}
       <div 
-        className={`carousel-main-container ${
+        className={`carousel-main-container ${className} ${
           overlayAnimation === ANIMATION_STATES.HIDDEN ? 'carousel-visible' : 
           overlayAnimation === ANIMATION_STATES.ENTERING ? 'carousel-fading-out' : 
           overlayAnimation === ANIMATION_STATES.EXITING ? 'carousel-fading-in' : 
           'carousel-hidden'
         }`}
       >
+        {/* Optional Title */}
+        {title && <h2 className="carousel-title">{title}</h2>}
+        
         <div className="carousel-3d-container">
           <div className="carousel-3d-stage">
             {carouselData.map((item, index) => {
               const style = getItemStyle(index);
               return (
                 <div
-                  key={item.id}
+                  key={item.id || index}
                   ref={el => itemRefs.current[index] = el}
                   className={`carousel-3d-item ${style.className}`}
                   style={{
@@ -290,7 +338,7 @@ const Carousel = () => {
                   <div className="carousel-3d-item-inner">
                     <img 
                       src={item.image} 
-                      alt={item.title} 
+                      alt={item.title || `Carousel item ${index + 1}`} 
                       loading="lazy"
                       draggable="false"
                     />
@@ -300,50 +348,85 @@ const Carousel = () => {
             })}
           </div>
 
-          {/* Navigation */}
-          <div className="carousel-controls">
-            <button 
-              className="carousel-arrow" 
-              onClick={goToPrev}
-              disabled={!canNavigate}
-              aria-label="Previous slide"
-            >
-              <svg viewBox="0 0 24 24">
-                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-              </svg>
-            </button>
-            <button 
-              className="carousel-arrow" 
-              onClick={goToNext}
-              disabled={!canNavigate}
-              aria-label="Next slide"
-            >
-              <svg viewBox="0 0 24 24">
-                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-              </svg>
-            </button>
-          </div>
+          {/* Navigation Controls (Conditional) */}
+          {showControls && (
+            <div className="carousel-controls">
+              <button 
+                className="carousel-arrow" 
+                onClick={goToPrev}
+                disabled={!canNavigate}
+                aria-label="Previous slide"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+              </button>
+              <button 
+                className="carousel-arrow" 
+                onClick={goToNext}
+                disabled={!canNavigate}
+                aria-label="Next slide"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Description */}
+        {/* Description & Indicators */}
         <div className="carousel-description">
-          <h3>{currentItem.title}</h3>
-          <p>{currentItem.description}</p>
-          <div className="carousel-indicators">
-            {carouselData.map((_, index) => (
-              <button
-                key={index}
-                className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => goToSlide(index)}
-                disabled={!canNavigate}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+          <h3>{currentItem?.title || ''}</h3>
+          <p>{currentItem?.description || ''}</p>
+          
+          {/* Slide Indicators (Conditional) */}
+          {showIndicators && (
+            <div className="carousel-indicators">
+              {carouselData.map((_, index) => (
+                <button
+                  key={index}
+                  className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                  disabled={!canNavigate}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
   );
+};
+
+// Prop Types for documentation and validation (optional)
+Carousel.propTypes = {
+  carouselData: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      image: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      description: PropTypes.string,
+    })
+  ).isRequired,
+  title: PropTypes.string,
+  autoPlay: PropTypes.bool,
+  autoPlayInterval: PropTypes.number,
+  showControls: PropTypes.bool,
+  showIndicators: PropTypes.bool,
+  className: PropTypes.string,
+};
+
+// Default Props
+Carousel.defaultProps = {
+  carouselData: [],
+  title: "Carousel",
+  autoPlay: false,
+  autoPlayInterval: 5000,
+  showControls: true,
+  showIndicators: true,
+  className: "",
 };
 
 export default Carousel;
