@@ -1,4 +1,6 @@
 // src/pages/projects/Mh1.jsx
+// FULLY FIXED VERSION - Proper state initialization and hook dependencies
+
 import React, { Suspense, lazy } from 'react';
 import ProjectLayout from '../../components/project/ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
@@ -13,10 +15,15 @@ const Mh1 = () => {
   const projectData = getProjectById('mh1');
   const totalSections = 3;
 
-  console.log('🔵 Mh1 mounted, projectData:', projectData);
+  console.log('🔵 Mh1 component rendered');
 
-  // ✅ FIXED: Correct function signature for handleGoBack
-  function handleGoBack(section, setSectionCallback) {
+  // ⭐ FIXED: Initialize all state in parent component FIRST
+  const [animationPhase, setAnimationPhase] = React.useState('initial');
+  const [currentSection, setCurrentSection] = React.useState(0);
+  const [startMapAnimation, setStartMapAnimation] = React.useState(false);
+
+  // ⭐ FIXED: Define handleGoBack before passing to navigation hook
+  const handleGoBack = React.useCallback((section, setSectionCallback) => {
     console.log('⬅️ Going back from section', section);
     
     if (section === 1) {
@@ -42,31 +49,41 @@ const Mh1 = () => {
     } else {
       setSectionCallback(prev => prev - 1);
     }
-  }
+  }, []);
 
-  const { 
-    currentSection, 
-    setCurrentSection,
-    startMapAnimation,
-    setStartMapAnimation 
-  } = useProjectNavigation(totalSections, null, handleGoBack);
+  // ⭐ FIXED: Animation completion callback
+  const handleAnimationComplete = React.useCallback(() => {
+    console.log('🎉 Animation complete callback triggered');
+    console.log('📍 Changing section from 0 to 1');
+    setCurrentSection(1);
+  }, []);
 
+  // ⭐ FIXED: Get animation state from hook
   const {
-    animationPhase,
     titleOpacity,
     unlockProgress,
     gradientOpacity,
     backgroundFade,
     dragProgress,
-    setAnimationPhase,
     setBackgroundFade,
     setTitleOpacity,
     setGradientOpacity,
-  } = useProjectAnimation(currentSection);
+  } = useProjectAnimation(currentSection, handleAnimationComplete, setAnimationPhase);
+
+  // ⭐ FIXED: Navigation hook now receives ALL required parameters
+  useProjectNavigation(
+    totalSections, 
+    animationPhase,  // ⭐ This is now properly tracked!
+    handleGoBack,
+    currentSection,
+    setCurrentSection,
+    startMapAnimation,
+    setStartMapAnimation
+  );
 
   useNavbarControl(currentSection, animationPhase);
 
-  // ✅ FIXED: Map description using correct data structure
+  // Map description
   const mapDescription = {
     title: 'Data Metrics',
     metrics: [
@@ -77,9 +94,14 @@ const Mh1 = () => {
     disclaimer: projectData.metadata.disclaimer,
   };
 
-  console.log('🔵 Current section:', currentSection);
-  console.log('🔵 Start map animation:', startMapAnimation);
-  console.log('🔵 Map images:', projectData.assets.map);
+  console.log('🔍 Current State:', { 
+    currentSection, 
+    animationPhase,
+    startMapAnimation,
+    backgroundFade: backgroundFade?.toFixed(2),
+    titleOpacity: titleOpacity?.toFixed(2),
+    dragProgress: dragProgress?.toFixed(2)
+  });
 
   return (
     <ProjectLayout

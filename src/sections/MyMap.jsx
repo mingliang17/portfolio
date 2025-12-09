@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null }) => {
+const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null }) => {
   const [opacityA, setOpacityA] = useState(0);
   const [opacityB, setOpacityB] = useState(0);
   const [opacityC, setOpacityC] = useState(0);
@@ -13,19 +13,17 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
   const [animationProgress, setAnimationProgress] = useState(0);
   const animationRef = useRef(null);
   const hasStartedRef = useRef(false);
-  const isMountedRef = useRef(false); // ⭐ NEW: Track if component is mounted
+  const isMountedRef = useRef(false);
   
-  
-  // Animation variables
+  // Animation variables - ⭐ FIXED: Removed globalScale
   const zoomFactor = 10;
-  const globalScale = 1.5;
   const animationDuration = 3000;
   const targetPositionC = { x: -300, y: 150 };
   const moveDistanceA = 100;
   const moveDistanceB = moveDistanceA;
 
   // Image paths
-  const imagePaths = mapImages || defaultImagePaths || {
+  const imagePaths = mapImages || defaultImagePath || {
     A: '',
     B: '',
     C: '',
@@ -109,7 +107,7 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
     animationRef.current = requestAnimationFrame(animate);
   };
 
-  // ⭐ NEW: Mark component as mounted
+  // Mark component as mounted
   useEffect(() => {
     console.log('✅ MyMap component mounted');
     isMountedRef.current = true;
@@ -117,11 +115,11 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
     return () => {
       console.log('❌ MyMap component unmounting');
       isMountedRef.current = false;
-      hasStartedRef.current = false; // Reset on unmount
+      hasStartedRef.current = false;
     };
   }, []);
 
-  // ⭐ FIXED: Simplified animation trigger logic
+  // Trigger animation
   useEffect(() => {
     console.log('🔍 MyMap animation check:', { 
       startAnimation,
@@ -129,13 +127,8 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
       hasStarted: hasStartedRef.current 
     });
     
-    // Only run animation if:
-    // 1. Component is fully mounted
-    // 2. startAnimation is true
-    // 3. Animation hasn't started yet
     if (isMountedRef.current && startAnimation && !hasStartedRef.current) {
       console.log('🚀 Triggering animation');
-      // Small delay to ensure all state is initialized
       const timeoutId = setTimeout(() => {
         runAnimation();
       }, 150);
@@ -173,12 +166,12 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
         zIndex: 1
       }}>
         
-        {/* Image A */}
+        {/* Image A - ⭐ FIXED: Removed globalScale multiplication */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(-50%, -50%) translateY(${positionA}px) scale(${globalScale})`,
+          transform: `translate(-50%, -50%) translateY(${positionA}px) scale(1)`,
           width: '300px',
           height: '200px',
           opacity: opacityA,
@@ -201,12 +194,12 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
           />
         </div>
 
-        {/* Image B */}
+        {/* Image B - ⭐ FIXED: Removed globalScale multiplication */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(-50%, -50%) translateY(${positionB}px) scale(${globalScale})`,
+          transform: `translate(-50%, -50%) translateY(${positionB}px) scale(1)`,
           width: '300px',
           height: '200px',
           opacity: opacityB,
@@ -229,12 +222,12 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
           />
         </div>
 
-        {/* Image C */}
+        {/* Image C - ⭐ FIXED: Removed globalScale multiplication */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC * globalScale})`,
+          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
           width: '300px',
           height: '200px',
           opacity: opacityC,
@@ -257,12 +250,12 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
           />
         </div>
 
-        {/* Image D */}
+        {/* Image D - ⭐ FIXED: Removed globalScale multiplication */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC * globalScale})`,
+          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
           width: '300px',
           height: '200px',
           opacity: opacityD,
@@ -285,12 +278,12 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
           />
         </div>
 
-        {/* Image E */}
+        {/* Image E - ⭐ FIXED: Removed globalScale multiplication */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC * globalScale})`,
+          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
           width: '300px',
           height: '200px',
           opacity: opacityE,
@@ -332,8 +325,6 @@ const MyMap = ({ startAnimation = false, mapImages ={}, defaultImagePath=null })
         <div><strong>ANIMATION DEBUG</strong></div>
         <div>Progress: {(animationProgress * 100).toFixed(0)}%</div>
         <div>Zoom C: {zoomC.toFixed(1)}x</div>
-        <div>Global Scale: {globalScale}x</div>
-        <div>Total Zoom: {(zoomC * globalScale).toFixed(1)}x</div>
         <div>Position C: {positionC.x.toFixed(0)}, {positionC.y.toFixed(0)}</div>
         <div>Position A: {positionA.toFixed(0)}px</div>
         <div>Position B: {positionB.toFixed(0)}px</div>

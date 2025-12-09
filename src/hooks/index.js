@@ -1,23 +1,21 @@
 // src/hooks/index.js
-// Consolidated hooks for project pages
+// FULLY FIXED VERSION - Proper state management and dependencies
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 // ===================================
-// ANIMATION HOOK
+// ANIMATION HOOK - FIXED
 // ===================================
 
 /**
  * useProjectAnimation - Manages project animation sequences
  * 
- * Handles:
- * - Initial fade-in sequence
- * - Drag-to-unlock interaction
- * - Unlock animation
- * - Fade-out transition
+ * @param {number} currentSection - Current section index
+ * @param {function} onAnimationComplete - Callback when unlock animation finishes
+ * @param {function} setAnimationPhase - State setter from parent
  */
-export const useProjectAnimation = (currentSection) => {
-  const [animationPhase, setAnimationPhase] = useState('initial');
+export const useProjectAnimation = (currentSection, onAnimationComplete, setAnimationPhase) => {
+  const [animationPhase, setLocalAnimationPhase] = useState('initial');
   const [titleOpacity, setTitleOpacity] = useState(0);
   const [unlockProgress, setUnlockProgress] = useState(0);
   const [gradientOpacity, setGradientOpacity] = useState(0);
@@ -28,10 +26,18 @@ export const useProjectAnimation = (currentSection) => {
   const isDragging = useRef(false);
   const dragProgressRef = useRef(0);
 
+  // Sync local state with parent state setter
+  useEffect(() => {
+    if (setAnimationPhase) {
+      setAnimationPhase(animationPhase);
+    }
+  }, [animationPhase, setAnimationPhase]);
+
   // Initial animation sequence (section 0 only)
   useEffect(() => {
     if (currentSection !== 0) return;
     
+    console.log('🎬 Starting initial animation sequence');
     const runSequence = async () => {
       setGradientOpacity(0);
       setBackgroundFade(0);
@@ -47,13 +53,16 @@ export const useProjectAnimation = (currentSection) => {
       
       // Step 3: Fade in title and transition to waiting
       setTitleOpacity(1);
-      setTimeout(() => setAnimationPhase('waiting'), 1000);
+      setTimeout(() => {
+        console.log('✅ Initial sequence complete, entering waiting phase');
+        setLocalAnimationPhase('waiting');
+      }, 1000);
     };
     
     runSequence();
   }, [currentSection]);
 
-  // Drag interaction (waiting phase only)
+  // Handle drag during waiting phase
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'waiting') return;
 
@@ -96,7 +105,8 @@ export const useProjectAnimation = (currentSection) => {
         updateDragUI(progress);
         
         if (scrollAccumulator.current >= 300) {
-          setAnimationPhase('unlocking');
+          console.log('🎯 Drag threshold reached (300px), starting unlock animation');
+          setLocalAnimationPhase('unlocking');
           scrollAccumulator.current = 0;
           isDragging.current = false;
           document.body.style.cursor = '';
@@ -135,6 +145,7 @@ export const useProjectAnimation = (currentSection) => {
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'unlocking') return;
 
+    console.log('🔓 Starting unlock animation (circle expanding)');
     let progress = 0;
     const unlockInterval = setInterval(() => {
       progress += 0.02;
@@ -143,73 +154,95 @@ export const useProjectAnimation = (currentSection) => {
       
       if (progress >= 1) {
         clearInterval(unlockInterval);
-        setAnimationPhase('fadeout');
+        console.log('✅ Unlock animation complete (100%), starting fadeout');
+        setLocalAnimationPhase('fadeout');
       }
     }, 20);
 
     return () => clearInterval(unlockInterval);
   }, [animationPhase, currentSection]);
 
-  // Fade-out animation
+  // Fade out and trigger section transition
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'fadeout') return;
 
+    console.log('🌅 Starting fadeout animation (background fading out)');
     let fadeProgress = 0;
     const fadeInterval = setInterval(() => {
       fadeProgress += 0.05;
-      setBackgroundFade(Math.max(0, 1 - fadeProgress));
+      const newFade = Math.max(0, 1 - fadeProgress);
+      setBackgroundFade(newFade);
+      
+      console.log(`📉 Fadeout progress: ${(fadeProgress * 100).toFixed(0)}%, backgroundFade: ${newFade.toFixed(2)}`);
       
       if (fadeProgress >= 1) {
         clearInterval(fadeInterval);
-        setAnimationPhase('completed');
+        console.log('✅ Fadeout complete (100%), setting phase to completed');
+        setLocalAnimationPhase('completed');
+        
+        // Trigger section change
+        if (onAnimationComplete) {
+          setTimeout(() => {
+            console.log('🚀 Calling onAnimationComplete to change section');
+            onAnimationComplete();
+          }, 100);
+        }
       }
     }, 20);
 
     return () => clearInterval(fadeInterval);
-  }, [animationPhase, currentSection]);
+  }, [animationPhase, currentSection, onAnimationComplete]);
 
   return {
-    animationPhase,
     titleOpacity,
     unlockProgress,
     gradientOpacity,
     backgroundFade,
     dragProgress: dragProgressRef.current,
-    setAnimationPhase,
+    setBackgroundFade,
     setTitleOpacity,
     setGradientOpacity,
-    setBackgroundFade,
   };
 };
 
 // ===================================
-// NAVIGATION HOOK
+// NAVIGATION HOOK - FIXED
 // ===================================
 
 /**
  * useProjectNavigation - Manages section navigation
- * 
- * Handles:
- * - Scroll/wheel navigation
- * - Keyboard navigation
- * - Touch/drag navigation
- * - Section transitions
+ * Now handles state internally and returns nothing (uses passed state setters)
  */
-export const useProjectNavigation = (totalSections, animationPhase, onGoBack) => {
-  const [currentSection, setCurrentSection] = useState(0);
+export const useProjectNavigation = (
+  totalSections, 
+  animationPhase, 
+  onGoBack,
+  currentSection,
+  setCurrentSection,
+  startMapAnimation,
+  setStartMapAnimation
+) => {
   const [isScrolling, setIsScrolling] = useState(false);
-  const [startMapAnimation, setStartMapAnimation] = useState(false);
 
   // Trigger map animation when entering section 1
   useEffect(() => {
+    console.log('📍 Navigation: currentSection changed to', currentSection);
     if (currentSection === 1 && !startMapAnimation) {
+      console.log('🗺️ Triggering map animation');
       setStartMapAnimation(true);
     }
-  }, [currentSection, startMapAnimation]);
+  }, [currentSection, startMapAnimation, setStartMapAnimation]);
 
   // Navigation event handlers (only after animation completes)
   useEffect(() => {
-    if (animationPhase !== 'completed') return;
+    console.log('🎮 Navigation listeners check - animationPhase:', animationPhase);
+    
+    if (animationPhase !== 'completed') {
+      console.log('⏸️ Navigation disabled, waiting for animation to complete');
+      return;
+    }
+
+    console.log('✅ Navigation ENABLED - setting up event listeners');
 
     let lastScrollTime = Date.now();
     let accumulatedDelta = 0;
@@ -227,9 +260,11 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
       
       if (Math.abs(accumulatedDelta) > 100 && !isScrolling) {
         if (accumulatedDelta > 0 && currentSection < totalSections - 1) {
+          console.log('⬇️ Scrolling down to section', currentSection + 1);
           setCurrentSection(prev => prev + 1);
           accumulatedDelta = 0;
         } else if (accumulatedDelta < 0 && currentSection > 0) {
+          console.log('⬆️ Scrolling up to section', currentSection - 1);
           onGoBack(currentSection, setCurrentSection);
           accumulatedDelta = 0;
         }
@@ -239,8 +274,10 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
     const handleKeyDown = (e) => {
       if (isScrolling) return;
       if (e.key === 'ArrowDown' && currentSection < totalSections - 1) {
+        console.log('⬇️ Arrow down pressed, going to section', currentSection + 1);
         setCurrentSection(prev => prev + 1);
       } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        console.log('⬆️ Arrow up pressed, going to section', currentSection - 1);
         onGoBack(currentSection, setCurrentSection);
       }
     };
@@ -257,9 +294,11 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
       
       if (Math.abs(deltaY) > 50) {
         if (deltaY > 0 && currentSection < totalSections - 1) {
+          console.log('👆 Drag down detected, going to section', currentSection + 1);
           setCurrentSection(prev => prev + 1);
           isDragging = false;
         } else if (deltaY < 0 && currentSection > 0) {
+          console.log('👇 Drag up detected, going to section', currentSection - 1);
           onGoBack(currentSection, setCurrentSection);
           isDragging = false;
         }
@@ -283,6 +322,7 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
     window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      console.log('🧹 Cleaning up navigation listeners');
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('touchstart', handleTouchStart);
@@ -292,7 +332,7 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [currentSection, isScrolling, animationPhase, totalSections, onGoBack]);
+  }, [currentSection, isScrolling, animationPhase, totalSections, onGoBack, setCurrentSection]);
 
   // Scroll throttling
   useEffect(() => {
@@ -302,22 +342,13 @@ export const useProjectNavigation = (totalSections, animationPhase, onGoBack) =>
     return () => clearTimeout(timeout);
   }, [currentSection, animationPhase]);
 
-  return { 
-    currentSection, 
-    setCurrentSection, 
-    isScrolling,
-    startMapAnimation,
-    setStartMapAnimation
-  };
+  // Hook doesn't return anything now - uses passed state setters
 };
 
 // ===================================
 // NAVBAR CONTROL HOOK
 // ===================================
 
-/**
- * useNavbarControl - Manages navbar visibility
- */
 export const useNavbarControl = (currentSection, animationPhase) => {
   const hideNavbar = useCallback(() => {
     window.dispatchEvent(new CustomEvent('projectMH1-navbar-hide'));
@@ -335,10 +366,6 @@ export const useNavbarControl = (currentSection, animationPhase) => {
 
   return { hideNavbar, showNavbar };
 };
-
-// ===================================
-// DEFAULT EXPORT
-// ===================================
 
 export default {
   useProjectAnimation,

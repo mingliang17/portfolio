@@ -41,11 +41,6 @@ export const ICONS = {
 // ===================================
 
 export const MODELS = {
-  cube: assetPath('models/cube.glb'),
-  computer: assetPath('models/computer.glb'),
-  hackerRoom: assetPath('models/hacker-room.glb'),
-  react: assetPath('models/react.glb'),
-  target: assetPath('models/target.gltf'),
   
   human: {
     developer: assetPath('models/human/developer.glb'),
@@ -61,21 +56,10 @@ export const MODELS = {
 };
 
 export const TEXTURES = {
-  cube: assetPath('textures/cube.png'),
-  rings: assetPath('textures/rings.png'),
   earth:{
     day: assetPath('textures/earth-day.jpg'),
     night: assetPath('textures/earth-night.jpg'),
     normal: assetPath('textures/earth-normal.jpg'),
-  },
-  
-  //to delete
-  projects: {
-    project1: assetPath('textures/project/project1.mp4'),
-    project2: assetPath('textures/project/project2.mp4'),
-    project3: assetPath('textures/project/project3.mp4'),
-    project4: assetPath('textures/project/project4.mp4'),
-    project5: assetPath('textures/project/project5.mp4'),
   },
 };
 
@@ -102,14 +86,6 @@ export const PROJECT_ASSETS = {
       layer4: assetPath('assets/projects/mh1/maps/4.svg'),
     },
   },
-  
-  // Template for adding new projects
-  // [projectId]: {
-  //   hero: assetPath(`assets/projects/${projectId}/hero.jpg`),
-  //   carousel: [...],
-  //   map: {...},
-  //   logos: [...],
-  // },
 };
 
 // ===================================

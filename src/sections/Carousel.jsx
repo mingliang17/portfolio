@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types'; // Optional: for type checking
+import { ICONS } from '../assets/index.js';
 
 // Position configurations as constants
 const POSITION_CONFIG = {
@@ -292,9 +293,7 @@ const Carousel = ({
               }}
               aria-label="Close zoom view"
             >
-              <svg viewBox="0 0 24 24">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
+              <img src={ICONS.icons.close} alt="Close" />
             </button>
             
             <img 
