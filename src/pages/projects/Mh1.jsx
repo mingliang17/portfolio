@@ -1,67 +1,26 @@
-// src/pages/projects/ProjectMH1.jsx
-// Refactored version using new modular structure
-
+// src/pages/projects/Mh1.jsx
 import React, { Suspense, lazy } from 'react';
 import ProjectLayout from '../../components/project/ProjectLayout.jsx';
-import { HeroContent, HeroBackground, } from '../../components/project/ProjectComponents.jsx';
-import { ScrollPrompt, MapSection, } from '../../components/common/LayoutComponents.jsx';
-
-import Carousel from '../../sections/Carousel';
-
+import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
+import { ScrollPrompt, MapSection } from '../../components/common/LayoutComponents.jsx';
+import Carousel from '../../sections/Carousel.jsx';
 import { useProjectAnimation, useProjectNavigation, useNavbarControl } from '../../hooks/index.js';
-
 import { getProjectById } from '../../constants/projectsData.js';
-import { CAROUSEL_DATA } from '../../constants/carouselData.js';
 
-// Lazy load MyMap to prevent early mounting
-const MyMap = lazy(() => {
-  console.log('Loading MyMap component...');
-  return import('../../sections/MyMap.jsx').then(module => {
-    console.log('MyMap loaded successfully');
-    return module;
-  }).catch(error => {
-    console.error('Failed to load MyMap:', error);
-    throw error;
-  });
-});
+const MyMap = lazy(() => import('../../sections/MyMap.jsx'));
 
 const Mh1 = () => {
-  // Get project configuration
   const projectData = getProjectById('mh1');
-  const totalSections = 3; // Hero, Map, Carousel
+  const totalSections = 3;
 
-  console.log('🔵 Mh1 component mounted');
-  console.log('🔵 Initial projectData:', projectData);
+  console.log('🔵 Mh1 mounted, projectData:', projectData);
 
-  // Custom hooks for state management
-  const { 
-    currentSection, 
-    setCurrentSection,
-    startMapAnimation,
-    setStartMapAnimation 
-  } = useProjectNavigation(totalSections, null, handleGoBack);
-
-  console.log('🔵 currentSection from hook:', currentSection);
-
-  const {
-    animationPhase,
-    titleOpacity,
-    unlockProgress,
-    gradientOpacity,
-    backgroundFade,
-    dragProgress,
-    setAnimationPhase,
-  } = useProjectAnimation(currentSection);
-
-  const { hideNavbar, showNavbar } = useNavbarControl(currentSection, animationPhase);
-
-  /**
-   * Handle going back to previous section
-   * Special handling for section 0 to reset animations
-   */
+  // ✅ FIXED: Correct function signature for handleGoBack
   function handleGoBack(section, setSectionCallback) {
+    console.log('⬅️ Going back from section', section);
+    
     if (section === 1) {
-      // Going back from section 1 to section 0
+      // Reset map animation
       setStartMapAnimation(false);
       setBackgroundFade(0);
       setSectionCallback(0);
@@ -85,7 +44,29 @@ const Mh1 = () => {
     }
   }
 
-  // Prepare map section description
+  const { 
+    currentSection, 
+    setCurrentSection,
+    startMapAnimation,
+    setStartMapAnimation 
+  } = useProjectNavigation(totalSections, null, handleGoBack);
+
+  const {
+    animationPhase,
+    titleOpacity,
+    unlockProgress,
+    gradientOpacity,
+    backgroundFade,
+    dragProgress,
+    setAnimationPhase,
+    setBackgroundFade,
+    setTitleOpacity,
+    setGradientOpacity,
+  } = useProjectAnimation(currentSection);
+
+  useNavbarControl(currentSection, animationPhase);
+
+  // ✅ FIXED: Map description using correct data structure
   const mapDescription = {
     title: 'Data Metrics',
     metrics: [
@@ -96,6 +77,10 @@ const Mh1 = () => {
     disclaimer: projectData.metadata.disclaimer,
   };
 
+  console.log('🔵 Current section:', currentSection);
+  console.log('🔵 Start map animation:', startMapAnimation);
+  console.log('🔵 Map images:', projectData.assets.map);
+
   return (
     <ProjectLayout
       currentSection={currentSection}
@@ -105,12 +90,9 @@ const Mh1 = () => {
       dragProgress={dragProgress}
       onSectionChange={setCurrentSection}
     >
-      {/* ============================
-          SECTION 0: HERO
-          ============================ */}
+      {/* SECTION 0: HERO */}
       {currentSection === 0 && (
         <section className="mh1-section mh1-hero-section">
-          {/* Background Image with Gradient */}
           <HeroBackground
             imagePath={projectData.assets.hero}
             backgroundFade={backgroundFade}
@@ -118,14 +100,12 @@ const Mh1 = () => {
             visible={true}
           />
 
-          {/* Hero Title & Subtitle */}
           <HeroContent
             title={projectData.sections.hero.title}
             subtitle={projectData.sections.hero.subtitle}
             titleOpacity={titleOpacity}
           />
 
-          {/* Scroll Prompt (only during waiting phase) */}
           <ScrollPrompt
             dragProgress={dragProgress}
             visible={animationPhase === 'waiting'}
@@ -133,41 +113,34 @@ const Mh1 = () => {
         </section>
       )}
 
-      {/* ============================
-          SECTION 1: MAP
-          ============================ */}
+      {/* SECTION 1: MAP */}
       {currentSection === 1 && (
         <MapSection
-          logos={projectData.assets.logos  || []}
-          MapComponent={<MyMap startAnimation={startMapAnimation} mapImages={projectData.assets.map} />}          
+          logos={projectData.assets.logos || []}
+          MapComponent={
+            <Suspense fallback={<div className="mh1-map-loading">Loading Map...</div>}>
+              <MyMap 
+                startAnimation={startMapAnimation} 
+                mapImages={projectData.assets.map}
+              />
+            </Suspense>
+          }          
           description={mapDescription}
           visible={true}
         />
       )}
 
-      {/* ============================
-          SECTION 2: CAROUSEL
-          ============================ */}
+      {/* SECTION 2: CAROUSEL */}
       {currentSection === 2 && (
         <section className="mh1-section mh1-carousel-section-wrapper">
           <Carousel 
-            carouselData={CAROUSEL_DATA.mh1}
+            carouselData={projectData.assets.carousel}
             title="Project Gallery"
             autoPlay={false}
             showControls={true}
             showIndicators={true}
             className="mh1-carousel"
           />
-        </section>
-      )}
-
-
-      {/* ============================
-          SECTION 3: CAROUSEL
-          ============================ */}
-      {currentSection === 3 && (
-        <section className="mh1-section mh1-carousel-section-wrapper">
-          Testing its the new one
         </section>
       )}
     </ProjectLayout>

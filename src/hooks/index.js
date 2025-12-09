@@ -176,6 +176,9 @@ export const useProjectAnimation = (currentSection) => {
     backgroundFade,
     dragProgress: dragProgressRef.current,
     setAnimationPhase,
+    setTitleOpacity,
+    setGradientOpacity,
+    setBackgroundFade,
   };
 };
 

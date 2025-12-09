@@ -3,6 +3,7 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { TextureLoader, ShaderMaterial, Vector2, Vector3, Euler } from 'three';
 import * as solar from 'solar-calculator';
 import { Html } from '@react-three/drei';
+import { TEXTURES } from '../../assets/index.js';
 
 const VELOCITY = 1; // minutes per frame
 

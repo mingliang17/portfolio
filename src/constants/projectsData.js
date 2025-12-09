@@ -2,53 +2,13 @@
 // Centralized project data structure for easy scaling
 
 import { PROJECT_ASSETS } from '../assets/index.js';
-
 // ===================================
-// PROJECT CONFIGURATION TEMPLATE
-// ===================================
-
-/**
- * Project Data Structure Template
- * 
- * Each project should follow this structure for consistency:
- * {
- *   id: string,              // Unique identifier (used in URLs)
- *   title: string,           // Project display name
- *   subtitle: string,        // Hero subtitle
- *   category: string,        // Project category/type
- *   
- *   assets: {
- *     hero: string,         // Hero background image
- *     carousel: array,      // Carousel images
- *     map: object,          // Map layers (if applicable)
- *     logos: array,         // Technology/partner logos
- *   },
- *   
- *   sections: {
- *     hero: object,         // Hero section config
- *     map: object,          // Map section config
- *     carousel: object,     // Carousel section config
- *     timeline: object,     // Timeline section config (optional)
- *   },
- *   
- *   metadata: {
- *     collaborators: string,
- *     type: string,
- *     description: string,
- *     disclaimer: string,
- *   }
- * }
- */
-
-// ===================================
-// PROJECT: MH1
-// ===================================
-
+// PROJECT MH1 CONFIGURATION
 export const PROJECT_MH1 = {
   id: 'mh1',
   title: 'Project MH1',
   subtitle: 'Redefining Agriculture Tested 1 Through Genetic Innovation(Project Card/Listing Page',
-  category: 'Biotechnology',
+  category: 'Biotechnology',  
   
   assets: {
     hero: PROJECT_ASSETS.mh1.hero,
@@ -68,7 +28,16 @@ export const PROJECT_MH1 = {
         'Breakthrough developments in crop science.',
       ][index] || '',
     })),
-    map: PROJECT_ASSETS.mh1.map,
+    // ✅ FIXED: Map images properly structured
+    map: {
+      A: PROJECT_ASSETS.mh1.map.layer0,
+      B: PROJECT_ASSETS.mh1.map.layer1,
+      C: PROJECT_ASSETS.mh1.map.layer2,
+      D: PROJECT_ASSETS.mh1.map.layer3,
+      E: PROJECT_ASSETS.mh1.map.layer4,
+    },
+    
+    // ✅ FIXED: Logos using centralized structure
     logos: PROJECT_ASSETS.mh1.logos,
   },
   
