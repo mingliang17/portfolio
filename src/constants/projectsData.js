@@ -29,13 +29,13 @@ export const PROJECT_MH1 = {
       ][index] || '',
     })),
     // ✅ FIXED: Map images properly structured
-    map: {
-      A: PROJECT_ASSETS.mh1.map.layer0,
-      B: PROJECT_ASSETS.mh1.map.layer1,
-      C: PROJECT_ASSETS.mh1.map.layer2,
-      D: PROJECT_ASSETS.mh1.map.layer3,
-      E: PROJECT_ASSETS.mh1.map.layer4,
-    },
+      map: {
+        A: PROJECT_ASSETS.mh1.map.layer0,
+        B: PROJECT_ASSETS.mh1.map.layer1,
+        C: PROJECT_ASSETS.mh1.map.layer2,
+        D: PROJECT_ASSETS.mh1.map.layer3,
+        E: PROJECT_ASSETS.mh1.map.layer4,
+      },
     
     // ✅ FIXED: Logos using centralized structure
     logos: PROJECT_ASSETS.mh1.logos,
