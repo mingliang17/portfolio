@@ -2,8 +2,7 @@ import { useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useMediaQuery } from 'react-responsive';
 import { PerspectiveCamera } from '@react-three/drei';
-
-import CanvasLoader from '../components/CanvasLoader.jsx';
+import { CanvasLoader } from '../components/common/LayoutComponents.jsx';
 import HackerRoom from '../components/HackerRoom.jsx';
 import { calculateSizes } from '../constants/index.js';
 import Target from '../components/Target.jsx';

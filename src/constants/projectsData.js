@@ -28,8 +28,8 @@ export const PROJECT_MH1 = {
         'Breakthrough developments in crop science.',
       ][index] || '',
     })),
-    // ✅ FIXED: Map images properly structured
-      map: {
+
+    map: {
         A: PROJECT_ASSETS.mh1.map.layer0,
         B: PROJECT_ASSETS.mh1.map.layer1,
         C: PROJECT_ASSETS.mh1.map.layer2,
@@ -37,7 +37,6 @@ export const PROJECT_MH1 = {
         E: PROJECT_ASSETS.mh1.map.layer4,
       },
     
-    // ✅ FIXED: Logos using centralized structure
     logos: PROJECT_ASSETS.mh1.logos,
   },
   
@@ -77,54 +76,6 @@ export const PROJECT_MH1 = {
 };
 
 // ===================================
-// PROJECT TEMPLATE FOR NEW PROJECTS
-// ===================================
-
-export const PROJECT_TEMPLATE = {
-  id: 'project-id',
-  title: 'Project Title',
-  subtitle: 'Project Subtitle',
-  category: 'Category',
-  
-  assets: {
-    hero: '/path/to/hero.jpg',
-    carousel: [],
-    map: null,
-    logos: [],
-  },
-  
-  sections: {
-    hero: {
-      enabled: true,
-      title: 'Project Title',
-      subtitle: 'Project Subtitle',
-      animationType: 'fade',
-    },
-    map: {
-      enabled: false,
-      title: 'Project Location',
-      component: null,
-      animateOnEntry: false,
-    },
-    carousel: {
-      enabled: true,
-      title: 'Project Gallery',
-      items: 0,
-    },
-  },
-  
-  metadata: {
-    collaborators: 'Collaborator Name',
-    type: 'Project Type',
-    description: 'Project description',
-    disclaimer: '',
-    duration: 'YYYY-YYYY',
-    status: 'Ongoing/Completed',
-    tags: [],
-  },
-};
-
-// ===================================
 // ALL PROJECTS REGISTRY
 // ===================================
 
@@ -134,42 +85,22 @@ export const PROJECT_TEMPLATE = {
  */
 export const ALL_PROJECTS = {
   mh1: PROJECT_MH1,
-  // mh2: PROJECT_MH2,
-  // Add more projects here...
+  mh2: PROJECT_MH2,
 };
-
-/**
- * Get project configuration by ID
- * @param {string} projectId - Project identifier
- * @returns {object|null} Project configuration or null if not found
- */
 export const getProjectById = (projectId) => {
   return ALL_PROJECTS[projectId] || null;
 };
 
-/**
- * Get all project IDs
- * @returns {array} Array of project IDs
- */
 export const getProjectIds = () => {
   return Object.keys(ALL_PROJECTS);
 };
 
-/**
- * Get projects by category
- * @param {string} category - Category name
- * @returns {array} Array of projects in that category
- */
 export const getProjectsByCategory = (category) => {
   return Object.values(ALL_PROJECTS).filter(
     project => project.category === category
   );
 };
 
-/**
- * Get project preview data for listings
- * @returns {array} Array of project preview objects
- */
 export const getProjectPreviews = () => {
   return Object.values(ALL_PROJECTS).map(project => ({
     id: project.id,
@@ -181,7 +112,6 @@ export const getProjectPreviews = () => {
     status: project.metadata.status,
   }));
 };
-
 
 // ===================================
 // DEFAULT EXPORT

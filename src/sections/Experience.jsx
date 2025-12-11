@@ -2,7 +2,7 @@ import { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Developer from '../components/Developer.jsx';
-import CanvasLoader from '../components/CanvasLoader.jsx';
+import { CanvasLoader } from '../components/common/LayoutComponents.jsx';
 import { workExperiences } from '../constants/index.js';
 import { assetPath } from '../utils/assetPath.js'; 
 

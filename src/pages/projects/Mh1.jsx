@@ -1,7 +1,7 @@
 // src/pages/projects/Mh1.jsx
-// FULLY FIXED VERSION - Proper state initialization and hook dependencies
+// FIXED VERSION - Proper navbar visibility control
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useCallback } from 'react';
 import ProjectLayout from '../../components/project/ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
 import { ScrollPrompt, MapSection } from '../../components/common/LayoutComponents.jsx';
@@ -17,13 +17,19 @@ const Mh1 = () => {
 
   console.log('🔵 Mh1 component rendered');
 
-  // ⭐ FIXED: Initialize all state in parent component FIRST
-  const [animationPhase, setAnimationPhase] = React.useState('initial');
-  const [currentSection, setCurrentSection] = React.useState(0);
-  const [startMapAnimation, setStartMapAnimation] = React.useState(false);
+  // ⭐ State initialization
+  const [animationPhase, setAnimationPhase] = useState('initial');
+  const [currentSection, setCurrentSection] = useState(0);
+  const [startMapAnimation, setStartMapAnimation] = useState(false);
 
-  // ⭐ FIXED: Define handleGoBack before passing to navigation hook
-  const handleGoBack = React.useCallback((section, setSectionCallback) => {
+  // ⭐ Animation completion callback
+  const handleAnimationComplete = useCallback(() => {
+    console.log('🎉 Animation complete, transitioning to section 1');
+    setCurrentSection(1);
+  }, []);
+
+  // ⭐ Go back handler
+  const handleGoBack = useCallback((section, setSectionCallback) => {
     console.log('⬅️ Going back from section', section);
     
     if (section === 1) {
@@ -51,14 +57,7 @@ const Mh1 = () => {
     }
   }, []);
 
-  // ⭐ FIXED: Animation completion callback
-  const handleAnimationComplete = React.useCallback(() => {
-    console.log('🎉 Animation complete callback triggered');
-    console.log('📍 Changing section from 0 to 1');
-    setCurrentSection(1);
-  }, []);
-
-  // ⭐ FIXED: Get animation state from hook
+  // ⭐ Get animation state from hook
   const {
     titleOpacity,
     unlockProgress,
@@ -70,10 +69,10 @@ const Mh1 = () => {
     setGradientOpacity,
   } = useProjectAnimation(currentSection, handleAnimationComplete, setAnimationPhase);
 
-  // ⭐ FIXED: Navigation hook now receives ALL required parameters
+  // ⭐ Navigation hook
   useProjectNavigation(
     totalSections, 
-    animationPhase,  // ⭐ This is now properly tracked!
+    animationPhase,
     handleGoBack,
     currentSection,
     setCurrentSection,
@@ -81,7 +80,8 @@ const Mh1 = () => {
     setStartMapAnimation
   );
 
-  useNavbarControl(currentSection, animationPhase);
+  // ⭐ FIXED: Pass dragProgress to navbar control
+  useNavbarControl(currentSection, animationPhase, dragProgress);
 
   // Map description
   const mapDescription = {
@@ -97,10 +97,8 @@ const Mh1 = () => {
   console.log('🔍 Current State:', { 
     currentSection, 
     animationPhase,
-    startMapAnimation,
-    backgroundFade: backgroundFade?.toFixed(2),
-    titleOpacity: titleOpacity?.toFixed(2),
-    dragProgress: dragProgress?.toFixed(2)
+    dragProgress: dragProgress?.toFixed(2),
+    titleOpacity: titleOpacity?.toFixed(2)
   });
 
   return (
