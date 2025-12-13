@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';  
 
 export const useProjectAnimation = (currentSection, onAnimationComplete, setAnimationPhase) => {
   const [animationPhase, setLocalAnimationPhase] = useState('initial');
@@ -11,6 +11,7 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
   const touchStartY = useRef(0);
   const isDragging = useRef(false);
   const dragProgressRef = useRef(0);
+  const hasInitialized = useRef(false);
 
   // Sync local state with parent state setter
   useEffect(() => {
@@ -21,28 +22,37 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
 
   // Initial animation sequence (section 0 only)
   useEffect(() => {
-    if (currentSection !== 0) return;
+    if (currentSection !== 0 || hasInitialized.current) return;
     
     console.log('🎬 Starting initial animation sequence');
+    hasInitialized.current = true;
+    
+    // Reset all states
+    setGradientOpacity(0);
+    setBackgroundFade(0);
+    setTitleOpacity(0);
+    
     const runSequence = async () => {
-      setGradientOpacity(0);
-      setBackgroundFade(0);
-      setTitleOpacity(0);
+      // Wait a moment for image to start loading
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Step 1: Fade in gradient
-      setGradientOpacity(1);
+      // Step 1: Fade in background (0.8s)
+      console.log('📸 Step 1: Fading in background');
+      setBackgroundFade(1);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      // Step 2: Fade in gradient overlay (0.6s)
+      console.log('🌈 Step 2: Fading in gradient');
+      setGradientOpacity(1);  
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Step 3: Fade in title (1s) and transition to waiting
+      console.log('✍️ Step 3: Fading in title');
+      setTitleOpacity(1);
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Step 2: Fade in background
-      setBackgroundFade(1);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Step 3: Fade in title and transition to waiting
-      setTitleOpacity(1);
-      setTimeout(() => {
-        console.log('✅ Initial sequence complete, entering waiting phase');
-        setLocalAnimationPhase('waiting');
-      }, 1000);
+      console.log('✅ Initial sequence complete, entering waiting phase');
+      setLocalAnimationPhase('waiting');
     };
     
     runSequence();
@@ -54,6 +64,7 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
 
     const updateDragUI = (progress) => {
       dragProgressRef.current = progress;
+      // Fade out gradient as user drags
       setGradientOpacity(Math.max(0, 1 - progress));
     };
 
@@ -91,7 +102,7 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
         updateDragUI(progress);
         
         if (scrollAccumulator.current >= 300) {
-          console.log('🎯 Drag threshold reached (300px), starting unlock animation');
+          console.log('🎯 Drag threshold reached, starting unlock animation');
           setLocalAnimationPhase('unlocking');
           scrollAccumulator.current = 0;
           isDragging.current = false;
@@ -127,20 +138,21 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
     };
   }, [animationPhase, currentSection]);
 
-  // Unlock animation
+  // Unlock animation (circle expanding)
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'unlocking') return;
 
-    console.log('🔓 Starting unlock animation (circle expanding)');
+    console.log('🔓 Starting unlock animation');
     let progress = 0;
     const unlockInterval = setInterval(() => {
       progress += 0.02;
       setUnlockProgress(progress);
+      // Fade out title faster than circle grows
       setTitleOpacity(Math.max(0, 1 - progress * 2));
       
       if (progress >= 1) {
         clearInterval(unlockInterval);
-        console.log('✅ Unlock animation complete (100%), starting fadeout');
+        console.log('✅ Unlock animation complete, starting fadeout');
         setLocalAnimationPhase('fadeout');
       }
     }, 20);
@@ -148,36 +160,40 @@ export const useProjectAnimation = (currentSection, onAnimationComplete, setAnim
     return () => clearInterval(unlockInterval);
   }, [animationPhase, currentSection]);
 
-  // Fade out and trigger section transition
+  // Fade out background before section change
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'fadeout') return;
 
-    console.log('🌅 Starting fadeout animation (background fading out)');
+    console.log('🌅 Starting fadeout animation');
     let fadeProgress = 0;
     const fadeInterval = setInterval(() => {
-      fadeProgress += 0.05;
+      fadeProgress += 0.05; // Faster fade out
       const newFade = Math.max(0, 1 - fadeProgress);
       setBackgroundFade(newFade);
       
-      console.log(`📉 Fadeout progress: ${(fadeProgress * 100).toFixed(0)}%, backgroundFade: ${newFade.toFixed(2)}`);
-      
       if (fadeProgress >= 1) {
         clearInterval(fadeInterval);
-        console.log('✅ Fadeout complete (100%), setting phase to completed');
+        console.log('✅ Fadeout complete, transitioning to section 1');
         setLocalAnimationPhase('completed');
         
-        // Trigger section change
-        if (onAnimationComplete) {
-          setTimeout(() => {
-            console.log('🚀 Calling onAnimationComplete to change section');
+        // Small delay before section change for smooth transition
+        setTimeout(() => {
+          if (onAnimationComplete) {
             onAnimationComplete();
-          }, 100);
-        }
+          }
+        }, 100);
       }
     }, 20);
 
     return () => clearInterval(fadeInterval);
   }, [animationPhase, currentSection, onAnimationComplete]);
+
+  // Reset when returning to section 0
+  useEffect(() => {
+    if (currentSection === 0 && animationPhase === 'completed') {
+      hasInitialized.current = false;
+    }
+  }, [currentSection, animationPhase]);
 
   return {
     titleOpacity,

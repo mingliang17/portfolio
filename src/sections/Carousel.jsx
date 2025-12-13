@@ -176,6 +176,7 @@ const Carousel = ({
     if (currentIndex === targetIndex) return;
 
     setIsAnimating(true);
+    console.log(`🎠 Carousel: Animating from ${currentIndex} to ${targetIndex}`);
     
     let diff = targetIndex - currentIndex;
     if (Math.abs(diff) > totalItems / 2) {
@@ -188,10 +189,15 @@ const Carousel = ({
     
     const animateStep = () => {
       if (step < steps) {
-        setCurrentIndex(prev => (prev + direction + totalItems) % totalItems);
+        setCurrentIndex(prev => {
+          const next = (prev + direction + totalItems) % totalItems;
+          console.log(`🎠 Step ${step + 1}/${steps}: Moving to index ${next}`);
+          return next;
+        });
         step++;
-        setTimeout(animateStep, 400);
+        setTimeout(animateStep, 600); // Smoother 600ms transitions
       } else {
+        console.log('✅ Carousel animation complete');
         setIsAnimating(false);
       }
     };
@@ -323,13 +329,14 @@ const Carousel = ({
             {carouselData.map((item, index) => {
               const style = getItemStyle(index);
               return (
-                <div
+              <div
                   key={item.id || index}
                   ref={el => itemRefs.current[index] = el}
                   className={`carousel-3d-item ${style.className}`}
                   style={{
                     ...style,
                     pointerEvents: zoomedImage ? 'none' : 'auto',
+                    transition: 'all 0.6s cubic-bezier(0.645, 0.045, 0.355, 1)', // Smooth transitions
                   }}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}

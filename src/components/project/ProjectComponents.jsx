@@ -6,40 +6,82 @@ import React, { useState, useEffect, useRef } from 'react';
 // HERO SECTION
 // ===================================
 
-
-//Hero Section Background
-
 export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) => {
-    console.log('HeroBackground RENDERING with:', { 
-      backgroundFade, 
-      gradientOpacity, 
-      imagePath,
-      hasImagePath: !!imagePath 
-    });
-    
-    return (
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleImageLoad = () => {
+    console.log('✅ Hero image loaded successfully');
+    setIsLoading(false);
+  };
+
+  const handleImageError = () => {
+    console.error('❌ Hero image failed to load:', imagePath);
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  return (
+    <>
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="mh1-loading-overlay">
+          <div className="mh1-loading-spinner" />
+          <p className="mh1-loading-text">Loading Experience...</p>
+        </div>
+      )}
+
+      {/* Background Image */}
       <div 
         className="mh1-background-wrapper"
-        style={{ opacity: backgroundFade }}
+        style={{ 
+          opacity: isLoading ? 0 : backgroundFade,
+          transition: 'opacity 0.8s ease-out'
+        }}
       >
         <div 
           className="mh1-background-image"
           style={{ backgroundImage: `url('${imagePath}')` }}
-        />
+        >
+          {/* Hidden image for preloading */}
+          <img
+            src={imagePath}
+            alt="Hero background"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            style={{ display: 'none' }}
+          />
+        </div>
+        
         <div 
           className="mh1-background-gradient-mask"
-          style={{ opacity: gradientOpacity }}
+          style={{ 
+            opacity: gradientOpacity,
+            transition: 'opacity 0.5s ease-out'
+          }}
         />
-    </div>
+      </div>
+
+      {/* Error State */}
+      {hasError && (
+        <div className="mh1-background-error">
+          <p>Failed to load background image</p>
+        </div>
+      )}
+    </>
   );
 };
 
- // Hero Content (Animated Title & Subtitle)
-
+// Hero Content (Animated Title & Subtitle)
 export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => (
   <div 
     className="mh1-content-center"
-    style={{ opacity: titleOpacity }}
+    style={{ 
+      opacity: titleOpacity,
+      transition: 'opacity 0.8s ease-out',
+      transform: `translateY(${(1 - titleOpacity) * 20}px)`, // Subtle move up
+      willChange: 'opacity, transform'
+    }}
   >
     <h1 className="mh1-hero-title unselectable">
       {title}
@@ -50,10 +92,10 @@ export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => (
   </div>
 );
 
+
 // ===================================
 // IMAGE SLIDER SECTION
 // ===================================
-
 
 export const ImageSlider = () => {
   const [sliderPosition, setSliderPosition] = useState(50);

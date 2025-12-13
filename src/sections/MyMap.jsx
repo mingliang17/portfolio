@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null }) => {
   const [opacityA, setOpacityA] = useState(0);
@@ -11,11 +11,13 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
   const [positionC, setPositionC] = useState({ x: 0, y: 0 });
   const [zoomC, setZoomC] = useState(1);
   const [animationProgress, setAnimationProgress] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(false); // ⭐ NEW: Control sidebar visibility
+  
   const animationRef = useRef(null);
   const hasStartedRef = useRef(false);
   const isMountedRef = useRef(false);
   
-  // Animation variables - ⭐ FIXED: Removed globalScale
+  // Animation variables
   const zoomFactor = 10;
   const animationDuration = 3000;
   const targetPositionC = { x: -300, y: 150 };
@@ -39,6 +41,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
     }
     hasStartedRef.current = true;
     
+    // Reset everything
     setOpacityA(0);
     setOpacityB(0);
     setOpacityC(0);
@@ -49,26 +52,41 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
     setPositionC({ x: 0, y: 0 });
     setZoomC(1);
     setAnimationProgress(0);
+    setSidebarVisible(false); // ⭐ Hide sidebar initially
     
     let startTime = null;
 
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
-      const progress = (timestamp - startTime) / animationDuration;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / animationDuration, 1);
       setAnimationProgress(progress);
       
       if (progress < 1) {
+        // Phase 1 (0-25%): Fade in Image A
         if (progress < 0.25) {
-          setOpacityA(progress * 4);
-        } else if (progress < 0.5) {
+          const fadeProgress = progress * 4; // 0 to 1 over first 25%
+          setOpacityA(fadeProgress);
+          console.log(`📸 Phase 1: Image A opacity = ${fadeProgress.toFixed(2)}`);
+        } 
+        // Phase 2 (25-50%): Fade in Images B and C
+        else if (progress < 0.5) {
           setOpacityA(1);
-          const bcProgress = (progress - 0.25) * 4;
+          const bcProgress = (progress - 0.25) * 4; // 0 to 1 over next 25%
           setOpacityB(bcProgress);
           setOpacityC(bcProgress);
-        } else {
-          const movementProgress = (progress - 0.5) * 2;
-          const easeProgress = 1 - Math.pow(1 - movementProgress, 3);
+          console.log(`📸 Phase 2: Images B&C opacity = ${bcProgress.toFixed(2)}`);
+        } 
+        // Phase 3 (50-100%): Move and zoom, fade in D and E
+        else {
+          setOpacityA(1);
+          setOpacityB(1);
+          setOpacityC(1);
           
+          const movementProgress = (progress - 0.5) * 2; // 0 to 1 over last 50%
+          const easeProgress = 1 - Math.pow(1 - movementProgress, 3); // Ease out cubic
+          
+          // Move images
           setPositionA(-easeProgress * moveDistanceA);
           setPositionB(-easeProgress * moveDistanceB);
           
@@ -77,19 +95,30 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           setPositionC({ x: currentX, y: currentY });
           setZoomC(1 + (easeProgress * (zoomFactor - 1)));
           
+          // Fade in Image D (60-80%)
           if (movementProgress > 0.6) {
-            const dProgress = (movementProgress - 0.6) / 0.2;
-            setOpacityD(Math.min(1, dProgress));
+            const dProgress = Math.min(1, (movementProgress - 0.6) / 0.2);
+            setOpacityD(dProgress);
+            console.log(`📸 Phase 3a: Image D opacity = ${dProgress.toFixed(2)}`);
           }
           
+          // Fade in Image E (80-100%)
           if (movementProgress > 0.8) {
-            const eProgress = (movementProgress - 0.8) / 0.2;
-            setOpacityE(Math.min(1, eProgress));
+            const eProgress = Math.min(1, (movementProgress - 0.8) / 0.2);
+            setOpacityE(eProgress);
+            console.log(`📸 Phase 3b: Image E opacity = ${eProgress.toFixed(2)}`);
+          }
+          
+          // ⭐ Show sidebar only after Image E reaches 80% opacity (at ~96% total progress)
+          if (movementProgress > 0.92 && !sidebarVisible) {
+            console.log('📊 Showing sidebar');
+            setSidebarVisible(true);
           }
         }
         
         animationRef.current = requestAnimationFrame(animate);
       } else {
+        // Animation complete
         console.log('✅ MyMap animation complete');
         setOpacityA(1);
         setOpacityB(1);
@@ -101,6 +130,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         setPositionC(targetPositionC);
         setZoomC(zoomFactor);
         setAnimationProgress(1);
+        setSidebarVisible(true); // Ensure sidebar is visible
       }
     };
 
@@ -116,6 +146,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
       console.log('❌ MyMap component unmounting');
       isMountedRef.current = false;
       hasStartedRef.current = false;
+      setSidebarVisible(false);
     };
   }, []);
 
@@ -128,7 +159,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
     });
     
     if (isMountedRef.current && startAnimation && !hasStartedRef.current) {
-      console.log('🚀 Triggering animation');
+      console.log('🚀 Triggering animation after delay');
       const timeoutId = setTimeout(() => {
         runAnimation();
       }, 150);
@@ -145,6 +176,13 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
       }
     };
   }, []);
+
+  // ⭐ Emit sidebar visibility event for parent components
+  useEffect(() => {
+    if (sidebarVisible) {
+      window.dispatchEvent(new CustomEvent('map-sidebar-visible'));
+    }
+  }, [sidebarVisible]);
 
   return (
     <div style={{
@@ -166,7 +204,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         zIndex: 1
       }}>
         
-        {/* Image A - ⭐ FIXED: Removed globalScale multiplication */}
+        {/* Image A - Fades in first */}
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -177,7 +215,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           opacity: opacityA,
           zIndex: 1,
           transformOrigin: 'center center',
-          willChange: 'transform'
+          transition: 'opacity 0.3s ease-out',
+          willChange: 'transform, opacity'
         }}>
           <img 
             src={imagePaths.A}
@@ -194,7 +233,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           />
         </div>
 
-        {/* Image B - ⭐ FIXED: Removed globalScale multiplication */}
+        {/* Image B */}
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -205,7 +244,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           opacity: opacityB,
           zIndex: 2,
           transformOrigin: 'center center',
-          willChange: 'transform'
+          transition: 'opacity 0.3s ease-out',
+          willChange: 'transform, opacity'
         }}>
           <img 
             src={imagePaths.B}
@@ -222,7 +262,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           />
         </div>
 
-        {/* Image C - ⭐ FIXED: Removed globalScale multiplication */}
+        {/* Image C */}
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -233,7 +273,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           opacity: opacityC,
           zIndex: 3,
           transformOrigin: 'center center',
-          willChange: 'transform'
+          transition: 'opacity 0.3s ease-out',
+          willChange: 'transform, opacity'
         }}>
           <img 
             src={imagePaths.C}
@@ -250,7 +291,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           />
         </div>
 
-        {/* Image D - ⭐ FIXED: Removed globalScale multiplication */}
+        {/* Image D */}
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -261,7 +302,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           opacity: opacityD,
           zIndex: 4,
           transformOrigin: 'center center',
-          willChange: 'transform'
+          transition: 'opacity 0.3s ease-out',
+          willChange: 'transform, opacity'
         }}>
           <img 
             src={imagePaths.D}
@@ -278,7 +320,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           />
         </div>
 
-        {/* Image E - ⭐ FIXED: Removed globalScale multiplication */}
+        {/* Image E */}
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -289,7 +331,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           opacity: opacityE,
           zIndex: 5,
           transformOrigin: 'center center',
-          willChange: 'transform'
+          transition: 'opacity 0.3s ease-out',
+          willChange: 'transform, opacity'
         }}>
           <img 
             src={imagePaths.E}
@@ -314,7 +357,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         top: '10px',
         left: '10px',
         color: 'white',
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.7)',
         padding: '12px',
         borderRadius: '4px',
         fontSize: '12px',
@@ -324,10 +367,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
       }}>
         <div><strong>ANIMATION DEBUG</strong></div>
         <div>Progress: {(animationProgress * 100).toFixed(0)}%</div>
-        <div>Zoom C: {zoomC.toFixed(1)}x</div>
-        <div>Position C: {positionC.x.toFixed(0)}, {positionC.y.toFixed(0)}</div>
-        <div>Position A: {positionA.toFixed(0)}px</div>
-        <div>Position B: {positionB.toFixed(0)}px</div>
+        <div>Sidebar: {sidebarVisible ? '✅ VISIBLE' : '❌ HIDDEN'}</div>
         <div style={{marginTop: '8px'}}>
           <div style={{ color: opacityA > 0 ? '#3b82f6' : '#666' }}>● A: {(opacityA * 100).toFixed(0)}%</div>
           <div style={{ color: opacityB > 0 ? '#22c55e' : '#666' }}>● B: {(opacityB * 100).toFixed(0)}%</div>

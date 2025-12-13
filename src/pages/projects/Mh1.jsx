@@ -120,6 +120,7 @@ const Mh1 = () => {
             visible={true}
           />
 
+
           <HeroContent
             title={projectData.sections.hero.title}
             subtitle={projectData.sections.hero.subtitle}

@@ -146,12 +146,30 @@ export const ProjectBackground = ({
 // MAP SECTION LAYOUT - Layout for Site Map
 // ===================================
 
+// Map Section Layout with Animated Sidebar
 export const MapSection = ({ 
   logos, 
   MapComponent, 
   description,
   visible = true 
 }) => {
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+
+  // Listen for map animation completion
+  useEffect(() => {
+    const handleSidebarShow = () => {
+      console.log('📊 MapSection: Received sidebar show event');
+      setSidebarVisible(true);
+    };
+
+    window.addEventListener('map-sidebar-visible', handleSidebarShow);
+    
+    return () => {
+      window.removeEventListener('map-sidebar-visible', handleSidebarShow);
+      setSidebarVisible(false);
+    };
+  }, []);
+
   if (!visible) return null;
 
   return (
@@ -164,7 +182,7 @@ export const MapSection = ({
           </React.Suspense>
         </div>
 
-        {/* Logos */}
+        {/* Logos - Always visible */}
         <div className="mh1-logo-container">
           {logos.map((logo, index) => (
             <img 
@@ -177,20 +195,38 @@ export const MapSection = ({
           ))}
         </div>
 
-        {/* Description Sidebar */}
-        <div className="mh1-sidebar">
+        {/* Description Sidebar - Animated */}
+        <div 
+          className="mh1-sidebar"
+          style={{
+            opacity: sidebarVisible ? 1 : 0,
+            transform: sidebarVisible ? 'translateX(0)' : 'translateX(50px)',
+            transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+            pointerEvents: sidebarVisible ? 'auto' : 'none'
+          }}
+        >
           <h2>{description.title || 'Project Details'}</h2>
           
           {description.metrics && description.metrics.map((metric, index) => (
             <MetricItem 
               key={index}
               label={metric.label} 
-              value={metric.value} 
+              value={metric.value}
+              delay={index * 0.1} // Stagger animation
+              visible={sidebarVisible}
             />
           ))}
           
           {description.disclaimer && (
-            <p className="mh1-description-label">{description.disclaimer}</p>
+            <p 
+              className="mh1-description-label"
+              style={{
+                opacity: sidebarVisible ? 1 : 0,
+                transition: 'opacity 0.6s ease-out 0.4s'
+              }}
+            >
+              {description.disclaimer}
+            </p>
           )}
         </div>
       </div>
@@ -198,25 +234,28 @@ export const MapSection = ({
   );
 };
 
-/**
- * MetricItem - Individual metric display
- */
-const MetricItem = ({ label, value }) => (
-  <div className="mh1-description-grid">
+// MetricItem with staggered animation
+const MetricItem = ({ label, value, delay = 0, visible }) => (
+  <div 
+    className="mh1-description-grid"
+    style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(10px)',
+      transition: `opacity 0.5s ease-out ${delay}s, transform 0.5s ease-out ${delay}s`
+    }}
+  >
     <div className="mh1-description-value">{label}</div>
     <div className="mh1-description-label">{value}</div>
   </div>
 );
 
-/**
- * MapLoading - Loading state for maps
- */
+// MapLoading component
 const MapLoading = () => (
   <div className="mh1-map-loading">
-    Loading Map...
+    <div className="mh1-loading-spinner" />
+    <p>Loading Map...</p>
   </div>
 );
-
 
 // ===================================
 // CANVAS LOADER
