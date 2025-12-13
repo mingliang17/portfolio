@@ -75,6 +75,8 @@ export const PROJECT_MH1 = {
   },
 };
 
+export const PROJECT_MH2 = {}
+
 // ===================================
 // ALL PROJECTS REGISTRY
 // ===================================

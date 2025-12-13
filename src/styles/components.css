@@ -1,0 +1,354 @@
+/* =================================
+   BUTTON COMPONENTS
+   ================================= */
+
+/* Base Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--color-black-300);
+  color: white;
+  font-weight: 500;
+  transition: var(--transition-base);
+  cursor: pointer;
+  border: none;
+  user-select: none;
+}
+
+.btn:hover {
+  background: var(--color-black-500);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+/* Button Variants */
+.btn-primary {
+  background: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary-dark);
+  box-shadow: var(--shadow-glow-secondary);
+}
+
+/* Ping Animation Button */
+.btn-ping {
+  position: relative;
+}
+
+.btn-ping::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgb(74 222 128 / 0.75);
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.btn-ping_dot {
+  position: relative;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: rgb(34 197 94);
+}
+
+/* Arrow Button */
+.arrow-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  background-image: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0.1) 10%, 
+    rgba(255, 255, 255, 0.025) 50%
+  );
+  transition: var(--transition-base);
+}
+
+.arrow-btn:hover {
+  transform: scale(1.1);
+}
+
+.arrow-btn:active {
+  transform: scale(0.95);
+}
+
+/* Field Button (Forms) */
+.field-btn {
+  background: var(--color-black-500);
+  padding: 0.5rem 1.25rem;
+  min-height: 3rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2xl);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--text-lg);
+  color: white;
+  gap: 0.75rem;
+}
+
+/* =================================
+   NAVIGATION COMPONENTS
+   ================================= */
+
+/* Navbar Header */
+.navbar-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-navigation);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: var(--backdrop-blur-lg);
+}
+
+.navbar-header.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.navbar-header.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* Container & Inner */
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.navbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+/* Brand */
+.navbar-brand {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: white;
+  transition: color var(--transition-fast);
+}
+
+.navbar-brand:hover {
+  color: var(--color-primary);
+}
+
+/* Desktop Navigation */
+.navbar-desktop-nav {
+  display: none;
+}
+
+.navbar-desktop-ul {
+  display: flex;
+  gap: 2rem;
+}
+
+.navbar-desktop-link {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: var(--transition-fast);
+}
+
+.navbar-desktop-link:hover {
+  color: white;
+}
+
+.navbar-desktop-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  transition: width var(--transition-base);
+}
+
+.navbar-desktop-link:hover::after {
+  width: 100%;
+}
+
+/* Mobile Menu Button */
+.navbar-mobile-button {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition-fast);
+}
+
+.navbar-mobile-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Mobile Overlay */
+.navbar-mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: var(--backdrop-blur-xl);
+  z-index: calc(var(--z-navigation) + 10);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.navbar-mobile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+.navbar-mobile-ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  text-align: center;
+}
+
+.navbar-mobile-link {
+  font-size: var(--text-2xl);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  transition: var(--transition-fast);
+}
+
+.navbar-mobile-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Navigation Dots (Project Pages) */
+.mh1-navigation-dots {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-navigation);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.mh1-nav-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.mh1-nav-dot:hover {
+  background: #94a3b8;
+  transform: scale(1.1);
+}
+
+.mh1-nav-dot.active {
+  background: var(--color-primary);
+  transform: scale(1.25);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .navbar-desktop-nav { display: block; }
+  .navbar-mobile-button,
+  .navbar-mobile-overlay { display: none; }
+}
+
+/* =================================
+   CARD COMPONENTS
+   ================================= */
+
+.grid-container {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--color-black-300);
+  background: var(--color-black-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.grid-headtext {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.grid-subtext {
+  color: #afb0b6;
+  font-size: var(--text-base);
+}
+
+/* Tech Logo Badge */
+.tech-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--backdrop-blur-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Social Icon */
+.social-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-black-300);
+  border: 1px solid var(--color-black-200);
+  transition: var(--transition-base);
+}
+
+.social-icon:hover {
+  background: var(--color-black-500);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 640px) {
+  .grid-container {
+    padding: 1.75rem;
+  }
+}

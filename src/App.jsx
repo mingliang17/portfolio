@@ -1,13 +1,17 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HashRouter } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 
 import React, { useEffect, useRef } from 'react';
 import {useNavbarHeight} from './hooks/index.js';
 import Navbar from './sections/Navbar.jsx';
-import Home from './pages/Home.jsx';
-import Mh1 from './pages/projects/Mh1.jsx';
 import Contact from './sections/Contact.jsx'
+
+const Home = lazy(() => import('./pages/Home.jsx'));
+const Mh1 = lazy(() => import('./pages/projects/Mh1.jsx'));
+
+const Earth = lazy(() => import('./components/3d/Earth.jsx'));
 
 const App = () => {
   const navRef = useRef(null);

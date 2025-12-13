@@ -8,9 +8,7 @@ import { StrictMode } from 'react'
 
 //1. Create Root
 import { createRoot } from 'react-dom/client'
-import './styles/index.css'
-import './styles/mh1.css'
-import './styles/navbar.css'
+import './styles/index.css';  
 
 import App from './App.jsx';
 
