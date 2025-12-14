@@ -28,7 +28,7 @@ const ProjectLayout = ({
   className = '',
 }) => {
   return (
-    <div className={`mh1-base-container ${className}`}>
+    <div className="project-base-container">
       {/* Navigation Dots - Always visible */}
       <NavigationDots
         totalSections={totalSections}
@@ -50,7 +50,7 @@ const ProjectLayout = ({
       />
 
       {/* Main Content Container */}
-      <div className="mh1-section-container">
+      <div className="project-section-container">
         {children}
       </div>
     </div>

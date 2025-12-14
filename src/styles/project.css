@@ -1,0 +1,383 @@
+/* ========================================
+   MH1 PROJECT - OPTIMIZED STYLES
+   ======================================== */
+
+/* === BASE LAYOUT === */
+.project-base-container { 
+  background: rgba(139, 92, 246, 1); 
+}
+
+/* Background System - Reusable */
+.project-background-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  transition: opacity 0.5s ease-out;
+  overflow: hidden;
+}
+
+.project-background-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.project-background-gradient-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, 
+    rgba(15, 23, 42, 1) 30%, 
+    /* rgba(15, 23, 42, 0.8) 10%,
+    rgba(15, 23, 42, 0.6) 80%,  */
+    rgba(15, 23, 42, 0.5) 100%);
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+/* === SECTIONS === */
+.project-section-container {
+  transition: transform 1s cubic-bezier(0.65, 0, 0.355, 1);
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.project-section {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+/* === CONTENT CONTAINERS === */
+.project-content-center
+{
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+  text-align: center; 
+}
+
+/* === HERO SECTION === */
+.project-hero-title {
+  font-size: clamp(2rem, 6vw, 10rem);
+  font-weight: 700;
+  background: linear-gradient(to right, #fbbf24, #f59e0b, #ea6608);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: -18rem 0 -3rem;
+  transition: opacity 0.8s ease-out;
+  line-height: 2;
+}
+
+.project-hero-subtitle {
+  font-size: clamp(1rem, 10vw, 2rem);
+  color: #cbd5e1;
+  margin-top: 5rem;
+  transition: opacity 0.8s ease-out;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(90vw, 40ch); /* wraps after ~40 characters */
+  white-space: normal;
+} 
+
+/* === SCROLL PROMPT === */
+.project-scroll-prompt {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.project-scroll-arrow {
+  width: 30px;
+  height: 50px;
+  border: 3px solid #f59e0b;
+  border-radius: 25px;
+  position: relative;
+  margin: 0 auto;
+  animation: project-scroll-bounce 2s infinite;
+}
+
+.project-scroll-arrow::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: project-scroll-dot 2s infinite;
+}
+
+.project-drag-arrow {
+  transform: rotate(180deg);
+  cursor: grab;
+  border-left: none !important;
+  border-top: none !important;
+  transition: border-right-color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.project-drag-text {
+  cursor: grab;
+  color: #f59e0b;
+  margin-top: 1rem;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.project-drag-text:hover,
+.project-drag-arrow:hover {
+  color: #fbbf24;
+  border-right-color: #fbbf24 !important;
+  border-bottom-color: #fbbf24 !important;
+}
+
+/* === UNLOCK OVERLAY === */
+.project-unlock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.project-unlock-circle {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.4), transparent);
+  animation: project-unlock-pulse 1s ease-out;
+}
+
+.project-unlock-ring {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border: 3px solid #f59e0b;
+  border-radius: 50%;
+  border-top-color: transparent;
+  border-right-color: transparent;
+}
+
+/* === MAP LAYOUT === */
+.map-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  justify-content: space-around;
+}
+
+.project-sidebar {
+  flex: 0 0 30%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(10px);
+  justify-content: center;
+}
+
+.project-logo-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 16px;
+}
+
+.project-logo {
+  width: 50px;
+  height: auto;
+  margin-bottom: 4px;
+}
+
+.project-map-container {
+  flex: 0 0 40%;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-map-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: white;
+  font-size: 18px;
+}
+
+/* === DRAG PROGRESS === */
+.project-drag-progress {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  text-align: center;
+  color: #f59e0b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.project-drag-progress-bar {
+  width: 120px;
+  height: 4px;
+  background: rgba(245, 158, 11, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+  overflow: hidden;
+}
+
+.project-drag-progress-fill {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+  .map-layout {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .project-sidebar {
+    flex: 0 0 auto;
+    max-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-map-container {
+    flex: 0 0 50vh;
+    order: -1;
+  }
+
+  .project-hero-title {
+    font-size: clamp(2rem, 10vw, 5rem);
+    margin-top: -10rem;
+  }
+
+  .project-hero-subtitle {
+    font-size: clamp(1rem, 5vw, 2rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .project-scroll-prompt {
+    bottom: 2rem;
+  }
+
+  .map-layout {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .project-sidebar {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-hero-title {
+    margin: -5rem 0 -1rem;
+  }
+
+  .project-drag-progress {
+    bottom: 4rem;
+    font-size: 0.8rem;
+  }
+
+  .project-drag-progress-bar {
+    width: 100px;
+  }
+}
+
+.project-sidebar {
+  flex: 0 0 30%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(10px);
+  justify-content: center;
+}
+
+.project-sidebar h2 {
+  font-size: 1.5rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.project-description-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.project-description-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f59e0b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.project-description-label {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.project-scroll-indicator {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+}
+
+.project-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.project-hero {
+  text-align: center;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  position: relative;
+  z-index: 1;
+}
+

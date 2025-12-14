@@ -4,6 +4,7 @@
 
 /* === CORE STYLES === */
 @import './core.css';
+@import './base.css';
 
 /* === COMPONENT STYLES === */
 @import './components.css';
@@ -12,7 +13,8 @@
 @import './utils.css';
 
 /* === PROJECT-SPECIFIC === */
-@import './projects/project-base.css';
+@import './projects/carousel.css';
+@import './projects/projects.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';
@@ -21,7 +23,7 @@
 @import './variables.css';
 
 /* === NEED TO MIGRATE FROM MH1.CSS === */
-@import './mh1.css';
+@import './project.css';
 
 /* ========================================
    LEGACY SUPPORT (Remove after migration)
@@ -229,8 +231,7 @@
 
 @media print {
   .navbar-header,
-  .mh1-navigation-dots,
-  .carousel-controls,
+  .nav-dots,
   button {
     display: none !important;
   }

@@ -348,33 +348,6 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
             }}
           />
         </div>
-
-      </div>
-
-      {/* Debug info overlay */}
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        color: 'white',
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        padding: '12px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        zIndex: 100,
-        fontFamily: 'monospace',
-        minWidth: '250px'
-      }}>
-        <div><strong>ANIMATION DEBUG</strong></div>
-        <div>Progress: {(animationProgress * 100).toFixed(0)}%</div>
-        <div>Sidebar: {sidebarVisible ? '✅ VISIBLE' : '❌ HIDDEN'}</div>
-        <div style={{marginTop: '8px'}}>
-          <div style={{ color: opacityA > 0 ? '#3b82f6' : '#666' }}>● A: {(opacityA * 100).toFixed(0)}%</div>
-          <div style={{ color: opacityB > 0 ? '#22c55e' : '#666' }}>● B: {(opacityB * 100).toFixed(0)}%</div>
-          <div style={{ color: opacityC > 0 ? '#ef4444' : '#666' }}>● C: {(opacityC * 100).toFixed(0)}%</div>
-          <div style={{ color: opacityD > 0 ? '#a855f7' : '#666' }}>● D: {(opacityD * 100).toFixed(0)}%</div>
-          <div style={{ color: opacityE > 0 ? '#f59e0b' : '#666' }}>● E: {(opacityE * 100).toFixed(0)}%</div>
-        </div>
       </div>
     </div>
   );

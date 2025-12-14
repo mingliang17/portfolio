@@ -1,16 +1,65 @@
-// src/sections/Carousel.jsx - UPDATED REUSABLE VERSION
+// src/sections/Carousel.jsx - LIQUID GLASS VERSION
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import PropTypes from 'prop-types'; // Optional: for type checking
-import { ICONS } from '../assets/index.js';
+import PropTypes from 'prop-types';
 
-// Position configurations as constants
-const POSITION_CONFIG = {
-  '-2': { translateX: -100, translateZ: -500, rotateY: -40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
-  '-1': { translateX: -70, translateZ: -300, rotateY: -30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
-  0: { translateX: 0, translateZ: 0, rotateY: 0, scale: 1, zIndex: 10, opacity: 1, brightness: 1 },
-  1: { translateX: 70, translateZ: -300, rotateY: 30, scale: 0.85, zIndex: 5, opacity: 1, brightness: 0.6 },
-  2: { translateX: 100, translateZ: -500, rotateY: 40, scale: 0.7, zIndex: 3, opacity: 0.7, brightness: 0.4 },
+// Liquid-inspired position configurations
+const LIQUID_POSITION_CONFIG = {
+  '-2': { 
+    translateX: -100, 
+    translateZ: -500, 
+    rotateY: -35, 
+    scale: 0.65, 
+    zIndex: 3, 
+    opacity: 0.5, 
+    blur: 8,
+    brightness: 0.4,
+    saturation: 0.8
+  },
+  '-1': { 
+    translateX: -70, 
+    translateZ: -250, 
+    rotateY: -20, 
+    scale: 0.8, 
+    zIndex: 5, 
+    opacity: 0.8, 
+    blur: 4,
+    brightness: 0.7,
+    saturation: 0.9
+  },
+  0: { 
+    translateX: 0, 
+    translateZ: 0, 
+    rotateY: 0, 
+    scale: 1, 
+    zIndex: 10, 
+    opacity: 1, 
+    blur: 0,
+    brightness: 1,
+    saturation: 1.1
+  },
+  1: { 
+    translateX: 70, 
+    translateZ: -250, 
+    rotateY: 20, 
+    scale: 0.8, 
+    zIndex: 5, 
+    opacity: 0.8, 
+    blur: 4,
+    brightness: 0.7,
+    saturation: 0.9
+  },
+  2: { 
+    translateX: 100, 
+    translateZ: -500, 
+    rotateY: 35, 
+    scale: 0.65, 
+    zIndex: 3, 
+    opacity: 0.5, 
+    blur: 8,
+    brightness: 0.4,
+    saturation: 0.8
+  },
 };
 
 const ANIMATION_STATES = {
@@ -20,48 +69,73 @@ const ANIMATION_STATES = {
   EXITING: 'exiting'
 };
 
+// Liquid gradient colors for glass effect
+const LIQUID_GRADIENTS = [
+  'linear-gradient(135deg, rgba(100, 149, 237, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%)',
+  'linear-gradient(135deg, rgba(255, 105, 180, 0.2) 0%, rgba(255, 215, 0, 0.2) 100%)',
+  'linear-gradient(135deg, rgba(50, 205, 50, 0.2) 0%, rgba(32, 178, 170, 0.2) 100%)',
+  'linear-gradient(135deg, rgba(220, 20, 60, 0.2) 0%, rgba(255, 69, 0, 0.2) 100%)',
+];
+
 // ==============================================
-// REUSABLE CAROUSEL COMPONENT
+// LIQUID GLASS CAROUSEL COMPONENT
 // ==============================================
 const Carousel = ({ 
-  carouselData = [],           // Required: Array of carousel items
-  title = "Carousel",          // Optional: Carousel title
-  autoPlay = false,            // Optional: Auto-play feature
-  autoPlayInterval = 5000,     // Optional: Auto-play interval
-  showControls = true,         // Optional: Show navigation controls
-  showIndicators = true,       // Optional: Show slide indicators
-  className = "",              // Optional: Additional CSS classes
+  carouselData = [],
+  title = "Liquid Gallery",
+  autoPlay = false,
+  autoPlayInterval = 5000,
+  showControls = true,
+  showIndicators = true,
+  className = "",
+  liquidGradientIndex = 0, // Optional: Choose gradient
 }) => {
-  // Validate data
   if (!Array.isArray(carouselData) || carouselData.length === 0) {
-    console.warn('Carousel: No carousel data provided or data is empty');
     return (
-      <div className={`carousel-empty ${className}`}>
-        <p>No carousel items to display</p>
+      <div className={`liquid-glass-empty ${className}`}>
+        <div className="liquid-bubble animate-pulse"></div>
+        <p className="text-white/60">No content to display</p>
       </div>
     );
   }
 
-  // Component state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [targetIndex, setTargetIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [overlayAnimation, setOverlayAnimation] = useState(ANIMATION_STATES.HIDDEN);
   const [isHoveringCloseArea, setIsHoveringCloseArea] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [activeGradient] = useState(LIQUID_GRADIENTS[liquidGradientIndex % LIQUID_GRADIENTS.length]);
   
-  // Consolidated refs
   const timeoutRefs = useRef({
     hover: null,
     closeHover: null,
     animation: null,
-    autoPlay: null
+    autoPlay: null,
+    mouseMove: null
   });
-  const itemRefs = useRef([]);
   
+  const containerRef = useRef(null);
   const totalItems = carouselData.length;
 
-  // === UTILITY: Clear all timeouts ===
+  // === LIQUID MOUSE EFFECT ===
+  const handleMouseMove = useCallback((e) => {
+    if (!containerRef.current || zoomedImage) return;
+    
+    if (timeoutRefs.current.mouseMove) {
+      clearTimeout(timeoutRefs.current.mouseMove);
+    }
+    
+    timeoutRefs.current.mouseMove = setTimeout(() => {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setMousePosition({ x, y });
+    }, 10);
+  }, [zoomedImage]);
+
+  // === CLEANUP ===
   const clearAllTimeouts = useCallback(() => {
     Object.values(timeoutRefs.current).forEach(timeout => {
       if (timeout) clearTimeout(timeout);
@@ -70,7 +144,8 @@ const Carousel = ({
       hover: null, 
       closeHover: null, 
       animation: null,
-      autoPlay: null 
+      autoPlay: null,
+      mouseMove: null 
     };
   }, []);
 
@@ -92,23 +167,36 @@ const Carousel = ({
     setTargetIndex(index);
   }, [canNavigate, currentIndex]);
 
-  // === AUTO-PLAY ===
+  // === LIQUID TRANSITION ANIMATION ===
   useEffect(() => {
-    if (!autoPlay || zoomedImage) return;
+    if (currentIndex === targetIndex) return;
 
-    const playNext = () => {
-      goToNext();
-      timeoutRefs.current.autoPlay = setTimeout(playNext, autoPlayInterval);
-    };
-
-    timeoutRefs.current.autoPlay = setTimeout(playNext, autoPlayInterval);
+    setIsAnimating(true);
     
-    return () => {
-      if (timeoutRefs.current.autoPlay) {
-        clearTimeout(timeoutRefs.current.autoPlay);
+    let diff = targetIndex - currentIndex;
+    if (Math.abs(diff) > totalItems / 2) {
+      diff = diff > 0 ? diff - totalItems : diff + totalItems;
+    }
+
+    const steps = Math.abs(diff);
+    const direction = diff > 0 ? 1 : -1;
+    let step = 0;
+    
+    const animateStep = () => {
+      if (step < steps) {
+        setCurrentIndex(prev => {
+          const next = (prev + direction + totalItems) % totalItems;
+          return next;
+        });
+        step++;
+        setTimeout(animateStep, 500); // Smooth liquid-like transition
+      } else {
+        setIsAnimating(false);
       }
     };
-  }, [autoPlay, autoPlayInterval, goToNext, zoomedImage]);
+
+    animateStep();
+  }, [targetIndex, currentIndex, totalItems]);
 
   // === ZOOM MANAGEMENT ===
   const openZoom = useCallback((image) => {
@@ -132,14 +220,14 @@ const Carousel = ({
     }, 300);
   }, [clearAllTimeouts]);
 
-  // === HOVER HANDLERS ===
+  // === LIQUID HOVER EFFECTS ===
   const handleMouseEnter = useCallback((index) => {
     if (zoomedImage) return;
     
     clearAllTimeouts();
     timeoutRefs.current.hover = setTimeout(() => {
       openZoom(carouselData[index]);
-    }, 500);
+    }, 800); // Longer delay for more fluid feel
   }, [zoomedImage, carouselData, openZoom, clearAllTimeouts]);
 
   const handleMouseLeave = useCallback(() => {
@@ -149,66 +237,11 @@ const Carousel = ({
     }
   }, []);
 
-  const handleCloseAreaEnter = useCallback(() => {
-    if (overlayAnimation !== ANIMATION_STATES.VISIBLE) return;
-    
-    setIsHoveringCloseArea(true);
-    
-    if (timeoutRefs.current.closeHover) {
-      clearTimeout(timeoutRefs.current.closeHover);
-    }
-    
-    timeoutRefs.current.closeHover = setTimeout(() => {
-      closeZoom();
-    }, 100);
-  }, [overlayAnimation, closeZoom]);
-
-  const handleCloseAreaLeave = useCallback(() => {
-    if (timeoutRefs.current.closeHover) {
-      clearTimeout(timeoutRefs.current.closeHover);
-      timeoutRefs.current.closeHover = null;
-    }
-    setIsHoveringCloseArea(false);
-  }, []);
-
-  // === ANIMATION SEQUENCE ===
-  useEffect(() => {
-    if (currentIndex === targetIndex) return;
-
-    setIsAnimating(true);
-    console.log(`🎠 Carousel: Animating from ${currentIndex} to ${targetIndex}`);
-    
-    let diff = targetIndex - currentIndex;
-    if (Math.abs(diff) > totalItems / 2) {
-      diff = diff > 0 ? diff - totalItems : diff + totalItems;
-    }
-
-    const steps = Math.abs(diff);
-    const direction = diff > 0 ? 1 : -1;
-    let step = 0;
-    
-    const animateStep = () => {
-      if (step < steps) {
-        setCurrentIndex(prev => {
-          const next = (prev + direction + totalItems) % totalItems;
-          console.log(`🎠 Step ${step + 1}/${steps}: Moving to index ${next}`);
-          return next;
-        });
-        step++;
-        setTimeout(animateStep, 600); // Smoother 600ms transitions
-      } else {
-        console.log('✅ Carousel animation complete');
-        setIsAnimating(false);
-      }
-    };
-
-    animateStep();
-  }, [targetIndex, currentIndex, totalItems]);
-
-  // === ITEM POSITIONING ===
+  // === ITEM POSITIONING WITH LIQUID EFFECTS ===
   const getItemStyle = useCallback((index) => {
     let position = index - currentIndex;
     
+    // Wrap-around logic
     if (position < -2) {
       const altPosition = position + totalItems;
       if (altPosition <= 2) position = altPosition;
@@ -220,193 +253,278 @@ const Carousel = ({
     
     if (position < -2 || position > 2) {
       return {
-        transform: 'translate(-50%, -50%) translateZ(-800px) scale(0.5)',
+        transform: 'translate(-50%, -50%) translateZ(-800px) scale(0.4)',
         zIndex: 1,
         opacity: 0,
-        filter: 'brightness(0.2)',
-        className: 'hidden'
+        filter: 'blur(12px) brightness(0.2) saturate(0.5)',
+        className: 'liquid-hidden'
       };
     }
 
-    const config = POSITION_CONFIG[position];
+    const config = LIQUID_POSITION_CONFIG[position];
+    const isCenter = Math.abs(position) === 0;
+    
+    // Subtle liquid wobble for center item
+    const wobble = isCenter && !isAnimating ? 
+      `rotateX(${(mousePosition.y - 50) * 0.1}deg) rotateY(${(mousePosition.x - 50) * 0.2}deg)` : 
+      '';
+    
     return {
-      transform: `translate(-50%, -50%) translateX(${config.translateX}%) translateZ(${config.translateZ}px) rotateY(${config.rotateY}deg) scale(${config.scale})`,
+      transform: `
+        translate(-50%, -50%) 
+        translateX(${config.translateX}%) 
+        translateZ(${config.translateZ}px) 
+        rotateY(${config.rotateY}deg) 
+        scale(${config.scale})
+        ${wobble}
+      `.trim(),
       zIndex: config.zIndex,
       opacity: config.opacity,
-      filter: `brightness(${config.brightness})`,
-      className: Math.abs(position) === 0 ? 'center' : 'side'
+      filter: `
+        blur(${config.blur}px) 
+        brightness(${config.brightness}) 
+        saturate(${config.saturation})
+      `.trim(),
+      className: isCenter ? 'liquid-center' : 'liquid-side',
+      '--liquid-blur': `${config.blur}px`,
     };
-  }, [currentIndex, totalItems]);
+  }, [currentIndex, totalItems, isAnimating, mousePosition]);
 
-  // === KEYBOARD NAVIGATION ===
-  useEffect(() => {
-    if (zoomedImage) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') goToPrev();
-      if (e.key === 'ArrowRight') goToNext();
-      if (e.key === 'Escape' && overlayAnimation === ANIMATION_STATES.VISIBLE) closeZoom();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToPrev, goToNext, zoomedImage, overlayAnimation, closeZoom]);
-
-  // === CLEANUP ===
-  useEffect(() => clearAllTimeouts, [clearAllTimeouts]);
-
+  // === RENDER ===
   const currentItem = carouselData[currentIndex];
 
   return (
     <>
-      {/* ZOOM OVERLAY */}
+      {/* LIQUID GLASS ZOOM OVERLAY */}
       {(zoomedImage || overlayAnimation !== ANIMATION_STATES.HIDDEN) && createPortal(
         <div 
-          className={`zoom-overlay zoom-overlay-${overlayAnimation}`}
+          className={`liquid-zoom-overlay liquid-overlay-${overlayAnimation}`}
           onClick={() => overlayAnimation === ANIMATION_STATES.VISIBLE && closeZoom()}
         >
-          <div className={`zoom-background zoom-background-${overlayAnimation}`} />
+          {/* Animated liquid background */}
+          <div className="liquid-background-animation">
+            {[1, 2, 3].map(i => (
+              <div 
+                key={i}
+                className={`liquid-bubble bubble-${i}`}
+                style={{
+                  background: activeGradient,
+                  animationDelay: `${i * 0.5}s`
+                }}
+              />
+            ))}
+          </div>
           
-          {/* Close Areas */}
+          {/* Glass overlay */}
+          <div className={`liquid-glass-overlay glass-${overlayAnimation}`} 
+               style={{ background: activeGradient }} />
+          
+          {/* Close Areas with liquid effect */}
           {['top', 'bottom', 'left', 'right'].map(side => (
             <div 
               key={side}
-              className={`zoom-close-area zoom-close-${side} zoom-close-area-${overlayAnimation}`}
-              onMouseEnter={handleCloseAreaEnter}
-              onMouseLeave={handleCloseAreaLeave}
-            />
-          ))}
-
-          {/* Hover Indicator */}
-          {isHoveringCloseArea && overlayAnimation === ANIMATION_STATES.VISIBLE && (
-            <div className="zoom-close-indicator">
-              <div className="zoom-close-icon">✕</div>
-              <span>Release to close</span>
-            </div>
-          )}
-          
-          {/* Image Container */}
-          <div 
-            className={`zoom-image-container zoom-image-container-${overlayAnimation}`}
-            onClick={(e) => e.stopPropagation()}
-            onMouseEnter={handleCloseAreaLeave}
-          >
-            <button 
-              className={`zoom-close-btn zoom-close-btn-${overlayAnimation}`}
+              className={`liquid-close-area liquid-close-${side} liquid-area-${overlayAnimation}`}
+              onMouseEnter={() => overlayAnimation === ANIMATION_STATES.VISIBLE && setIsHoveringCloseArea(true)}
+              onMouseLeave={() => setIsHoveringCloseArea(false)}
               onClick={(e) => {
                 e.stopPropagation();
                 closeZoom();
               }}
-              aria-label="Close zoom view"
-            >
-              <img src={ICONS.icons.close} alt="Close" />
-            </button>
+            />
+          ))}
+
+          {/* Liquid close indicator */}
+          {isHoveringCloseArea && overlayAnimation === ANIMATION_STATES.VISIBLE && (
+            <div className="liquid-close-indicator">
+              <div className="liquid-close-ripple"></div>
+              <span>Release to close</span>
+            </div>
+          )}
+          
+          {/* Glass image container */}
+          <div 
+            className={`liquid-image-container liquid-container-${overlayAnimation}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="liquid-glass-border"></div>
             
             <img 
               src={zoomedImage?.image}
               alt={zoomedImage?.title}
-              className={`zoom-image zoom-image-${overlayAnimation}`}
+              className={`liquid-zoom-image liquid-image-${overlayAnimation}`}
             />
+            
+            {/* Liquid reflection effect */}
+            <div className="liquid-reflection"></div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* CAROUSEL */}
+      {/* MAIN LIQUID CAROUSEL */}
       <div 
-        className={`carousel-main-container ${className} ${
-          overlayAnimation === ANIMATION_STATES.HIDDEN ? 'carousel-visible' : 
-          overlayAnimation === ANIMATION_STATES.ENTERING ? 'carousel-fading-out' : 
-          overlayAnimation === ANIMATION_STATES.EXITING ? 'carousel-fading-in' : 
-          'carousel-hidden'
+        ref={containerRef}
+        className={`liquid-carousel-container ${className} ${
+          overlayAnimation === ANIMATION_STATES.HIDDEN ? 'liquid-visible' : 
+          overlayAnimation === ANIMATION_STATES.ENTERING ? 'liquid-fading' : 
+          'liquid-hidden'
         }`}
+        onMouseMove={handleMouseMove}
       >
-        {/* Optional Title */}
-        {title && <h2 className="carousel-title">{title}</h2>}
+        {/* Liquid glass title */}
+        {title && (
+          <div className="liquid-title-container">
+            <h2 className="liquid-glass-title">{title}</h2>
+            <div className="liquid-title-underline"></div>
+          </div>
+        )}
         
-        <div className="carousel-3d-container">
-          <div className="carousel-3d-stage">
+        {/* 3D Carousel Stage */}
+        <div className="liquid-3d-stage">
+          {/* Ambient liquid lights */}
+          <div className="liquid-ambient-light" style={{ 
+            left: `${mousePosition.x}%`,
+            top: `${mousePosition.y}%`,
+            background: activeGradient.replace('0.2)', '0.1)')
+          }}></div>
+          
+          {/* Carousel Items */}
+          <div className="liquid-3d-track">
             {carouselData.map((item, index) => {
               const style = getItemStyle(index);
+              const isCenter = Math.abs(index - currentIndex) === 0;
+              
               return (
-              <div
+                <div
                   key={item.id || index}
-                  ref={el => itemRefs.current[index] = el}
-                  className={`carousel-3d-item ${style.className}`}
+                  className={`liquid-3d-item ${style.className}`}
                   style={{
                     ...style,
                     pointerEvents: zoomedImage ? 'none' : 'auto',
-                    transition: 'all 0.6s cubic-bezier(0.645, 0.045, 0.355, 1)', // Smooth transitions
+                    transition: isCenter 
+                      ? 'all 0.8s cubic-bezier(0.19, 1, 0.22, 1)' 
+                      : 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    '--liquid-glow': isCenter ? '1' : '0.3',
                   }}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <div className="carousel-3d-item-inner">
+                  {/* Liquid glass frame */}
+                  <div className="liquid-glass-frame" style={{ background: activeGradient }}>
+                    <div className="liquid-inner-glow"></div>
+                  </div>
+                  
+                  {/* Image with liquid border */}
+                  <div className="liquid-image-wrapper">
                     <img 
                       src={item.image} 
-                      alt={item.title || `Carousel item ${index + 1}`} 
+                      alt={item.title || `Slide ${index + 1}`}
                       loading="lazy"
                       draggable="false"
+                      className="liquid-item-image"
                     />
+                    <div className="liquid-image-overlay"></div>
                   </div>
+                  
+                  {/* Floating label for center item */}
+                  {isCenter && (
+                    <div className="liquid-item-label">
+                      <span>{item.title}</span>
+                      <div className="liquid-label-tail"></div>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Navigation Controls (Conditional) */}
+          {/* Liquid Navigation Controls */}
           {showControls && (
-            <div className="carousel-controls">
+            <div className="liquid-controls">
               <button 
-                className="carousel-arrow" 
+                className="liquid-control-btn liquid-control-prev"
                 onClick={goToPrev}
                 disabled={!canNavigate}
                 aria-label="Previous slide"
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
+                <div className="liquid-control-inner">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" 
+                          fill="currentColor"/>
+                  </svg>
+                  <div className="liquid-control-ripple"></div>
+                </div>
               </button>
+              
+              <div className="liquid-control-center">
+                <div className="liquid-control-orb"></div>
+              </div>
+              
               <button 
-                className="carousel-arrow" 
+                className="liquid-control-btn liquid-control-next"
                 onClick={goToNext}
                 disabled={!canNavigate}
                 aria-label="Next slide"
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
+                <div className="liquid-control-inner">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" 
+                          fill="currentColor"/>
+                  </svg>
+                  <div className="liquid-control-ripple"></div>
+                </div>
               </button>
             </div>
           )}
         </div>
 
-        {/* Description & Indicators */}
-        <div className="carousel-description">
-          <h3>{currentItem?.title || ''}</h3>
-          <p>{currentItem?.description || ''}</p>
-          
-          {/* Slide Indicators (Conditional) */}
-          {showIndicators && (
-            <div className="carousel-indicators">
-              {carouselData.map((_, index) => (
-                <button
-                  key={index}
-                  className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
-                  onClick={() => goToSlide(index)}
-                  disabled={!canNavigate}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
+        {/* Liquid Description Panel */}
+        <div className="liquid-description-panel">
+          <div className="liquid-glass-panel" style={{ background: activeGradient }}>
+            <div className="liquid-panel-content">
+              <h3 className="liquid-item-title">{currentItem?.title || ''}</h3>
+              <p className="liquid-item-description">{currentItem?.description || ''}</p>
+              
+              {/* Liquid Indicators */}
+              {showIndicators && (
+                <div className="liquid-indicators">
+                  {carouselData.map((_, index) => {
+                    const isActive = index === currentIndex;
+                    return (
+                      <button
+                        key={index}
+                        className={`liquid-indicator ${isActive ? 'liquid-indicator-active' : ''}`}
+                        onClick={() => goToSlide(index)}
+                        disabled={!canNavigate}
+                        aria-label={`Go to slide ${index + 1}`}
+                      >
+                        <div className="liquid-indicator-inner">
+                          <div className="liquid-indicator-drop"></div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          
+          {/* Liquid drip effect at bottom */}
+          <div className="liquid-drip-effect">
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={i} 
+                className="liquid-drip"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              ></div>
+            ))}
+          </div>
         </div>
       </div>
     </>
   );
 };
 
-// Prop Types for documentation and validation (optional)
 Carousel.propTypes = {
   carouselData: PropTypes.arrayOf(
     PropTypes.shape({
@@ -422,17 +540,18 @@ Carousel.propTypes = {
   showControls: PropTypes.bool,
   showIndicators: PropTypes.bool,
   className: PropTypes.string,
+  liquidGradientIndex: PropTypes.number,
 };
 
-// Default Props
 Carousel.defaultProps = {
   carouselData: [],
-  title: "Carousel",
+  title: "Liquid Gallery",
   autoPlay: false,
   autoPlayInterval: 5000,
   showControls: true,
   showIndicators: true,
   className: "",
+  liquidGradientIndex: 0,
 };
 
 export default Carousel;

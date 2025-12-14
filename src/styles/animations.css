@@ -82,13 +82,13 @@
 }
 
 /* Scroll Bounce (Project Pages) */
-@keyframes mh1-scroll-bounce {
+@keyframes project-scroll-bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(15px); }
 }
 
 /* Scroll Dot Animation */
-@keyframes mh1-scroll-dot {
+@keyframes project-scroll-dot {
   0% {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -104,7 +104,7 @@
 }
 
 /* Unlock Pulse */
-@keyframes mh1-unlock-pulse {
+@keyframes project-unlock-pulse {
   0% {
     transform: scale(0);
     opacity: 1;

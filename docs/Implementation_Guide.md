@@ -223,7 +223,7 @@ const ProjectMH2 = () => {
     >
       {/* Section 0: Hero */}
       {currentSection === 0 && (
-        <section className="mh1-section mh1-hero-section">
+        <section className="project-section mh1-hero-section">
           <ProjectBackground
             imagePath={projectData.assets.hero}
             backgroundFade={backgroundFade}
@@ -258,7 +258,7 @@ const ProjectMH2 = () => {
 
       {/* Section 2: Carousel */}
       {currentSection === 2 && (
-        <section className="mh1-section mh1-carousel-section-wrapper">
+        <section className="project-section carousel-wrapper-wrapper">
           <Carousel />
         </section>
       )}

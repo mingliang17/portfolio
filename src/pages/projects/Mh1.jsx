@@ -1,6 +1,3 @@
-// src/pages/projects/Mh1.jsx
-// FIXED VERSION - Proper navbar visibility control
-
 import React, { Suspense, lazy, useState, useCallback } from 'react';
 import ProjectLayout from '../../components/project/ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
@@ -28,35 +25,6 @@ const Mh1 = () => {
     setCurrentSection(1);
   }, []);
 
-  // ⭐ Go back handler
-  const handleGoBack = useCallback((section, setSectionCallback) => {
-    console.log('⬅️ Going back from section', section);
-    
-    if (section === 1) {
-      // Reset map animation
-      setStartMapAnimation(false);
-      setBackgroundFade(0);
-      setSectionCallback(0);
-      
-      setTimeout(() => {
-        let reverseFade = 0;
-        const reverseFadeInterval = setInterval(() => {
-          reverseFade += 0.05;
-          setBackgroundFade(Math.min(1, reverseFade));
-          
-          if (reverseFade >= 1) {
-            clearInterval(reverseFadeInterval);
-            setAnimationPhase('waiting');
-            setTitleOpacity(1);
-            setGradientOpacity(1);
-          }
-        }, 20);
-      }, 500);
-    } else {
-      setSectionCallback(prev => prev - 1);
-    }
-  }, []);
-
   // ⭐ Get animation state from hook
   const {
     titleOpacity,
@@ -64,10 +32,30 @@ const Mh1 = () => {
     gradientOpacity,
     backgroundFade,
     dragProgress,
-    setBackgroundFade,
-    setTitleOpacity,
-    setGradientOpacity,
-  } = useProjectAnimation(currentSection, handleAnimationComplete, setAnimationPhase);
+    handleReturnToHero,
+  } = useProjectAnimation(
+    currentSection, 
+    handleAnimationComplete, 
+    setAnimationPhase
+  );
+
+  // ⭐ Go back handler
+  const handleGoBack = useCallback((section, setSectionCallback) => {
+    console.log('⬅️ Going back from section', section);
+    
+    if (section === 1) {
+      // Reset map animation
+      setStartMapAnimation(false);
+      
+      // Reset animation states
+      handleReturnToHero();
+      
+      // Set section to 0 (hero)
+      setCurrentSection(0);
+    } else {
+      setSectionCallback(prev => prev - 1);
+    }
+  }, [handleReturnToHero, setCurrentSection]);
 
   // ⭐ Navigation hook
   useProjectNavigation(
@@ -80,8 +68,8 @@ const Mh1 = () => {
     setStartMapAnimation
   );
 
-  // ⭐ FIXED: Pass dragProgress to navbar control
-  useNavbarControl(currentSection, animationPhase, dragProgress);
+  // ⭐ Navbar control - TEMPORARILY COMMENTED FOR DEBUGGING
+  // useNavbarControl(currentSection, animationPhase, dragProgress);
 
   // Map description
   const mapDescription = {
@@ -98,73 +86,121 @@ const Mh1 = () => {
     currentSection, 
     animationPhase,
     dragProgress: dragProgress?.toFixed(2),
-    titleOpacity: titleOpacity?.toFixed(2)
+    titleOpacity: titleOpacity?.toFixed(2),
+    backgroundFade: backgroundFade?.toFixed(2),
+    gradientOpacity: gradientOpacity?.toFixed(2)
   });
 
   return (
-    <ProjectLayout
-      currentSection={currentSection}
-      totalSections={totalSections}
-      animationPhase={animationPhase}
-      unlockProgress={unlockProgress}
-      dragProgress={dragProgress}
-      onSectionChange={setCurrentSection}
-    >
-      {/* SECTION 0: HERO */}
-      {currentSection === 0 && (
-        <section className="mh1-section mh1-hero-section">
-          <HeroBackground
-            imagePath={projectData.assets.hero}
-            backgroundFade={backgroundFade}
-            gradientOpacity={gradientOpacity}
+    <>
+      {/* Debug overlay - ALWAYS VISIBLE */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        left: '10px',
+        zIndex: 99999,
+        background: 'rgba(0, 0, 0, 0.85)',
+        color: 'white',
+        padding: '15px',
+        borderRadius: '8px',
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        pointerEvents: 'none',
+        maxWidth: '300px',
+        border: '2px solid #00ff00'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#00ff00' }}>
+          🔧 DEBUG OVERLAY
+        </div>
+        <div>Section: <strong>{currentSection}</strong></div>
+        <div>Phase: <strong>{animationPhase}</strong></div>
+        <div>Title Opacity: <strong>{titleOpacity?.toFixed(3)}</strong></div>
+        <div>Background Fade: <strong>{backgroundFade?.toFixed(3)}</strong></div>
+        <div>Gradient Opacity: <strong>{gradientOpacity?.toFixed(3)}</strong></div>
+        <div>Drag Progress: <strong>{dragProgress?.toFixed(3)}</strong></div>
+        <div style={{ marginTop: '8px', fontSize: '12px', color: '#aaa' }}>
+          Check console for detailed logs
+        </div>
+      </div>
+
+      <ProjectLayout
+        currentSection={currentSection}
+        totalSections={totalSections}
+        animationPhase={animationPhase}
+        unlockProgress={unlockProgress}
+        dragProgress={dragProgress}
+        onSectionChange={setCurrentSection}
+      >
+        {/* SECTION 0: HERO */}
+        {currentSection === 0 && (
+          <section className="project-section" style={{ position: 'relative', zIndex: 1 }}>
+            <HeroBackground
+              imagePath={projectData.assets.hero}
+              backgroundFade={backgroundFade}
+              gradientOpacity={gradientOpacity}
+              visible={true}
+            />
+
+            <HeroContent
+              title={projectData.sections.hero.title}
+              subtitle={projectData.sections.hero.subtitle}
+              titleOpacity={titleOpacity}
+            />
+
+            <ScrollPrompt
+              dragProgress={dragProgress}
+              visible={animationPhase === 'waiting'}
+            />
+            
+            {/* Visual indicator of background fade */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: 'white',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              opacity: 0.7,
+              pointerEvents: 'none'
+            }}>
+              Background: {backgroundFade?.toFixed(2)}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION 1: MAP */}
+        {currentSection === 1 && (
+          <MapSection
+            logos={projectData.assets.logos || []}
+            MapComponent={
+              <Suspense fallback={<div className="project-map-loading">Loading Map...</div>}>
+                <MyMap 
+                  startAnimation={startMapAnimation} 
+                  mapImages={projectData.assets.map}
+                />
+              </Suspense>
+            }          
+            description={mapDescription}
             visible={true}
           />
+        )}
 
-
-          <HeroContent
-            title={projectData.sections.hero.title}
-            subtitle={projectData.sections.hero.subtitle}
-            titleOpacity={titleOpacity}
-          />
-
-          <ScrollPrompt
-            dragProgress={dragProgress}
-            visible={animationPhase === 'waiting'}
-          />
-        </section>
-      )}
-
-      {/* SECTION 1: MAP */}
-      {currentSection === 1 && (
-        <MapSection
-          logos={projectData.assets.logos || []}
-          MapComponent={
-            <Suspense fallback={<div className="mh1-map-loading">Loading Map...</div>}>
-              <MyMap 
-                startAnimation={startMapAnimation} 
-                mapImages={projectData.assets.map}
-              />
-            </Suspense>
-          }          
-          description={mapDescription}
-          visible={true}
-        />
-      )}
-
-      {/* SECTION 2: CAROUSEL */}
-      {currentSection === 2 && (
-        <section className="mh1-section mh1-carousel-section-wrapper">
-          <Carousel 
-            carouselData={projectData.assets.carousel}
-            title="Project Gallery"
-            autoPlay={false}
-            showControls={true}
-            showIndicators={true}
-            className="mh1-carousel"
-          />
-        </section>
-      )}
-    </ProjectLayout>
+        {/* SECTION 2: CAROUSEL */}
+        {currentSection === 2 && (
+          <section className="project-section carousel-wrapper-wrapper">
+            <Carousel 
+              carouselData={projectData.assets.carousel}
+              title="Project Gallery"
+              autoPlay={false}
+              showControls={true}
+              showIndicators={true}
+              className="mh1-carousel"
+            />
+          </section>
+        )}
+      </ProjectLayout>
+    </>
   );
 };
 

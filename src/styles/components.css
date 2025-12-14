@@ -250,18 +250,24 @@
 }
 
 /* Navigation Dots (Project Pages) */
-.mh1-navigation-dots {
+.nav-dots {
   position: fixed;
   right: 2rem;
   top: 50%;
   transform: translateY(-50%);
-  z-index: var(--z-navigation);
+  z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-}
+  gap: 1rem;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  }
 
-.mh1-nav-dot {
+.nav-dots.fade-in {
+    opacity: 1;
+  }
+
+.nav-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -270,12 +276,12 @@
   cursor: pointer;
 }
 
-.mh1-nav-dot:hover {
+.nav-dot:hover {
   background: #94a3b8;
   transform: scale(1.1);
 }
 
-.mh1-nav-dot.active {
+.nav-dot.active {
   background: var(--color-primary);
   transform: scale(1.25);
 }

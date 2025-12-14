@@ -33,14 +33,14 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
 
       {/* Background Image */}
       <div 
-        className="mh1-background-wrapper"
+        className="project-background-wrapper"
         style={{ 
           opacity: isLoading ? 0 : backgroundFade,
           transition: 'opacity 0.8s ease-out'
         }}
       >
         <div 
-          className="mh1-background-image"
+          className="project-background-image"
           style={{ backgroundImage: `url('${imagePath}')` }}
         >
           {/* Hidden image for preloading */}
@@ -54,7 +54,7 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
         </div>
         
         <div 
-          className="mh1-background-gradient-mask"
+          className="project-background-gradient-mask"
           style={{ 
             opacity: gradientOpacity,
             transition: 'opacity 0.5s ease-out'
@@ -75,7 +75,7 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
 // Hero Content (Animated Title & Subtitle)
 export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => (
   <div 
-    className="mh1-content-center"
+    className="project-content-center"
     style={{ 
       opacity: titleOpacity,
       transition: 'opacity 0.8s ease-out',
@@ -83,10 +83,10 @@ export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => (
       willChange: 'opacity, transform'
     }}
   >
-    <h1 className="mh1-hero-title unselectable">
+    <h1 className="project-hero-title unselectable">
       {title}
     </h1>
-    <p className="mh1-hero-subtitle unselectable">
+    <p className="project-hero-subtitle unselectable">
       {subtitle}
     </p>
   </div>
