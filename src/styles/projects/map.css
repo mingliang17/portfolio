@@ -1,0 +1,199 @@
+
+.my-map-section {
+  width: 100%;
+  height: 500px;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background-color: red;
+  border: 1px solid turquoise;
+  z-index: 100;
+}
+
+.my-map-container {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  position: relative;
+  overflow: hidden;
+  border: red 2px solid;
+}
+
+/* Main map area */
+.my-map-main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Base image styles */
+.my-map-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  transform-origin: center center;
+  transition: opacity 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+/* Individual image positioning */
+.my-map-image.image-a {
+  z-index: 1;
+}
+
+.my-map-image.image-b {
+  z-index: 2;
+}
+
+.my-map-image.image-c {
+  z-index: 3;
+}
+
+.my-map-image.image-d {
+  z-index: 4;
+}
+
+.my-map-image.image-e {
+  z-index: 5;
+}
+
+/* Image element */
+.my-map-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Animation states */
+.my-map-image.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.my-map-image.slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.my-map-image.zoom-in {
+  animation: zoomIn 0.5s ease-out forwards;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+  }
+  to {
+    transform: translate(-50%, -50%) translateY(-100px) scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-50%, -50%) translate(-300px, 150px) scale(10);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .my-map-image {
+    width: 200px;
+    height: 150px;
+  }
+  
+  @keyframes zoomIn {
+    from {
+      transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    }
+    to {
+      transform: translate(-50%, -50%) translate(-150px, 75px) scale(5);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .my-map-image {
+    width: 150px;
+    height: 100px;
+  }
+  
+  @keyframes zoomIn {
+    from {
+      transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    }
+    to {
+      transform: translate(-50%, -50%) translate(-100px, 50px) scale(3);
+    }
+  }
+}
+
+/* Loading state */
+.my-map-image.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Error state */
+.my-map-image.error {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px dashed rgba(255, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-map-image.error::after {
+  content: 'Image failed to load';
+  color: rgba(255, 0, 0, 0.5);
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* Performance optimizations */
+.my-map-image {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Debug borders (remove in production) */
+.my-map-container.debug {
+  border: 1px solid red;
+}
+
+.my-map-main.debug {
+  border: 1px solid blue;
+}
+
+.my-map-image.debug {
+  border: 1px solid green;
+}

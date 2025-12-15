@@ -15,6 +15,7 @@
 /* === PROJECT-SPECIFIC === */
 @import './projects/carousel.css';
 @import './projects/projects.css';
+@import './projects/map.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';

@@ -1,43 +1,49 @@
-/*MH1*/   
-   
-   export const CAROUSEL_DATA  = {
+
+import { PROJECT_ASSETS } from "../assets";
+
+export const CAROUSEL_TITLE = {
+  mh1:"Renders",
+  mh2:""
+
+}
+
+export const CAROUSEL_DATA  = {
   mh1:[
     {
       id: 1,
-      image: 'assets/projects/projectMH1/imageMH1_1.jpg',
+      image: PROJECT_ASSETS.mh1.carousel[0],
       title: 'Innovation in Agriculture',
-      description: 'Pioneering genetic research for sustainable farming solutions.'
+      description: 'Pioneering genetic research for sustainable farming solutions.',
+      information: 'Date: January 2024\nLocation: Research Lab A\nClient: AgriTech Corp\n',
     },
     {
       id: 2,
-      image: 'assets/projects/projectMH1/imageMH1_2.jpg',
+      image: PROJECT_ASSETS.mh1.carousel[1],
       title: 'Sustainable Farming',
-      description: 'Environmentally conscious methods preserving resources.'
+      description: 'Environmentally conscious methods preserving resources.',
+      information: 'Additional details about Sustainable Farming.',
     },
     {
       id: 3,
-      image: 'assets/projects/projectMH1/imageMH1_3.jpg',
+      image:  PROJECT_ASSETS.mh1.carousel[2],
       title: 'Genetic Excellence',
-      description: 'Advanced crop genetics for climate challenges.'
+      description: 'Advanced crop genetics for climate challenges.',
+      information: 'Additional details about Genetic Excellence.',
     },
     {
       id: 4,
-      image: 'assets/projects/projectMH1/imageMH1_4.jpg',
+      image:  PROJECT_ASSETS.mh1.carousel[3],
       title: 'Future Harvest',
-      description: 'Breakthrough developments in crop science.'
+      description: 'Breakthrough developments in crop science.',
+      information: 'Additional details about Future Harvest.',
     },
     {
       id: 5,
-      image: 'assets/projects/projectMH1/imageMH1_1.jpg',
+      image: PROJECT_ASSETS.mh1.carousel[4],
       title: 'Climate Resilience',
-      description: 'Engineering crops for diverse conditions.'
+      description: 'Engineering crops for diverse conditions.',
+      information: 'Additional details about Climate Resilience.',
     },
-    {
-      id: 6,
-      image: 'assets/projects/projectMH1/imageMH1_2.jpg',
-      title: 'Global Impact',
-      description: 'Modern agricultural solutions worldwide.'
-    }
   ],
 
   mh2:[

@@ -1,207 +1,293 @@
-import React, { Suspense, lazy, useState, useCallback } from 'react';
-import ProjectLayout from '../../components/project/ProjectLayout.jsx';
-import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
-import { ScrollPrompt, MapSection } from '../../components/common/LayoutComponents.jsx';
-import Carousel from '../../sections/Carousel.jsx';
-import { useProjectAnimation, useProjectNavigation, useNavbarControl } from '../../hooks/index.js';
-import { getProjectById } from '../../constants/projectsData.js';
+// src/pages/projects/Mh1.jsx
+// ============================================
+// MH1 PROJECT - ALL YOUR EDITS GO HERE
+// ============================================
+// ✏️ EDIT THIS FILE to customize your project
+// Change titles, images, sections, etc.
+// The ProjectTemplate.jsx handles all the logic
+// ============================================
 
+import React, { lazy } from 'react';
+import ProjectTemplate from '../../components/project/ProjectTemplate.jsx';
+import { getProjectById } from '../../constants/projectsData.js';
+import Carousel from '../../sections/Carousel.jsx';
+import { MapSection } from '../../sections/MapSection.jsx';
+
+// Lazy load heavy components for better performance
 const MyMap = lazy(() => import('../../sections/MyMap.jsx'));
 
+// ============================================
+// 📝 STEP 1: SET PROJECT ID
+// ============================================
+// Change this to match your project in projectsData.js
+const PROJECT_ID = 'mh1';
+
+// ============================================
+// 📝 STEP 2: CONFIGURE YOUR SECTIONS
+// ============================================
+// Add, remove, or reorder sections as needed
+// Each section is an object with a 'type' and configuration
+
 const Mh1 = () => {
-  const projectData = getProjectById('mh1');
-  const totalSections = 3;
+  // ========================================
+  // LOAD PROJECT DATA
+  // ========================================
+  const projectData = getProjectById(PROJECT_ID);
 
-  console.log('🔵 Mh1 component rendered');
+  // Handle missing project data
+  if (!projectData) {
+    console.error(`❌ Project not found: ${PROJECT_ID}`);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        color: 'white',
+        fontSize: '1.5rem',
+      }}>
+        ❌ Project "{PROJECT_ID}" not found
+      </div>
+    );
+  }
 
-  // ⭐ State initialization
-  const [animationPhase, setAnimationPhase] = useState('initial');
-  const [currentSection, setCurrentSection] = useState(0);
-  const [startMapAnimation, setStartMapAnimation] = useState(false);
-
-  // ⭐ Animation completion callback
-  const handleAnimationComplete = useCallback(() => {
-    console.log('🎉 Animation complete, transitioning to section 1');
-    setCurrentSection(1);
-  }, []);
-
-  // ⭐ Get animation state from hook
-  const {
-    titleOpacity,
-    unlockProgress,
-    gradientOpacity,
-    backgroundFade,
-    dragProgress,
-    handleReturnToHero,
-  } = useProjectAnimation(
-    currentSection, 
-    handleAnimationComplete, 
-    setAnimationPhase
-  );
-
-  // ⭐ Go back handler
-  const handleGoBack = useCallback((section, setSectionCallback) => {
-    console.log('⬅️ Going back from section', section);
-    
-    if (section === 1) {
-      // Reset map animation
-      setStartMapAnimation(false);
-      
-      // Reset animation states
-      handleReturnToHero();
-      
-      // Set section to 0 (hero)
-      setCurrentSection(0);
-    } else {
-      setSectionCallback(prev => prev - 1);
-    }
-  }, [handleReturnToHero, setCurrentSection]);
-
-  // ⭐ Navigation hook
-  useProjectNavigation(
-    totalSections, 
-    animationPhase,
-    handleGoBack,
-    currentSection,
-    setCurrentSection,
-    startMapAnimation,
-    setStartMapAnimation
-  );
-
-  // ⭐ Navbar control - TEMPORARILY COMMENTED FOR DEBUGGING
-  // useNavbarControl(currentSection, animationPhase, dragProgress);
-
-  // Map description
+  // ========================================
+  // CONFIGURE MAP DESCRIPTION (Optional)
+  // ========================================
+  // Edit this if you have a map section
   const mapDescription = {
     title: 'Data Metrics',
     metrics: [
-      { label: 'Collaborators', value: projectData.metadata.collaborators },
-      { label: 'Type', value: projectData.metadata.type },
-      { label: 'Description', value: projectData.metadata.description },
+      { 
+        label: 'Collaborators',
+        value: projectData.metadata.collaborators 
+      },
+      { 
+        label: 'Type',
+        value: projectData.metadata.type 
+      },
+      { 
+        label: 'Description',
+        value: projectData.metadata.description 
+      },
     ],
     disclaimer: projectData.metadata.disclaimer,
   };
 
-  console.log('🔍 Current State:', { 
-    currentSection, 
-    animationPhase,
-    dragProgress: dragProgress?.toFixed(2),
-    titleOpacity: titleOpacity?.toFixed(2),
-    backgroundFade: backgroundFade?.toFixed(2),
-    gradientOpacity: gradientOpacity?.toFixed(2)
-  });
+  // ========================================
+  // CONFIGURE SECTIONS
+  // ========================================
+  // This array defines your project structure
+  // Section order matters: [0] = first, [1] = second, etc.
 
-  return (
-    <>
-      {/* Debug overlay - ALWAYS VISIBLE */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        left: '10px',
-        zIndex: 99999,
-        background: 'rgba(0, 0, 0, 0.85)',
-        color: 'white',
-        padding: '15px',
-        borderRadius: '8px',
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        pointerEvents: 'none',
-        maxWidth: '300px',
-        border: '2px solid #00ff00'
-      }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#00ff00' }}>
-          🔧 DEBUG OVERLAY
-        </div>
-        <div>Section: <strong>{currentSection}</strong></div>
-        <div>Phase: <strong>{animationPhase}</strong></div>
-        <div>Title Opacity: <strong>{titleOpacity?.toFixed(3)}</strong></div>
-        <div>Background Fade: <strong>{backgroundFade?.toFixed(3)}</strong></div>
-        <div>Gradient Opacity: <strong>{gradientOpacity?.toFixed(3)}</strong></div>
-        <div>Drag Progress: <strong>{dragProgress?.toFixed(3)}</strong></div>
-        <div style={{ marginTop: '8px', fontSize: '12px', color: '#aaa' }}>
-          Check console for detailed logs
-        </div>
-      </div>
+  const sections = [
+    
+    // ----------------------------------------
+    // SECTION 0: HERO (Required - Must be first)
+    // ----------------------------------------
+    // Animated landing section with drag-to-unlock
+    // 
+    // EDIT THESE:
+    // - title: Main heading text
+    // - subtitle: Secondary text below title
+    // - backgroundImage: Path to background image
+    {
+      type: 'hero',
+      title: projectData.sections.hero.title,           // e.g., "Amazing Project"
+      subtitle: projectData.sections.hero.subtitle,     // e.g., "Building the future"
+      backgroundImage: projectData.assets.hero,         // e.g., "/images/hero.jpg"
+    },
 
-      <ProjectLayout
-        currentSection={currentSection}
-        totalSections={totalSections}
-        animationPhase={animationPhase}
-        unlockProgress={unlockProgress}
-        dragProgress={dragProgress}
-        onSectionChange={setCurrentSection}
-      >
-        {/* SECTION 0: HERO */}
-        {currentSection === 0 && (
-          <section className="project-section" style={{ position: 'relative', zIndex: 1 }}>
-            <HeroBackground
-              imagePath={projectData.assets.hero}
-              backgroundFade={backgroundFade}
-              gradientOpacity={gradientOpacity}
-              visible={true}
-            />
+    // ----------------------------------------
+    // SECTION 1: MAP (Optional)
+    // ----------------------------------------
+    // Interactive map with logos and metrics
+    // 
+    // EDIT THESE:
+    // - component: Your map component
+    // - logos: Array of logo image paths
+    // - description: Uses mapDescription defined above
+    {
+    type: 'map',
+    component: (
+      <MapSection
+        // Pass the actual MyMap component here
+        MapComponent={<MyMap mapImages={projectData.assets.map} />}
+        
+        // Logos should be an array of objects with src, alt, title
+        logos={projectData.assets.logos || []}
+        
+        // Description from your configuration
+        description={mapDescription}
+        
+        // Optional: control visibility
+        visible={true}
+      />
+    ),
+  },
 
-            <HeroContent
-              title={projectData.sections.hero.title}
-              subtitle={projectData.sections.hero.subtitle}
-              titleOpacity={titleOpacity}
-            />
+    // ----------------------------------------
+    // SECTION 2: CAROUSEL (Optional)
+    // ----------------------------------------
+    // 3D image gallery with navigation
+    // 
+    // EDIT THESE:
+    // - carouselData: Array of images with titles/descriptions
+    // - title: Carousel section title
+    // - autoPlay: true/false
+    // - showControls: true/false (arrow buttons)
+    // - showIndicators: true/false (dots)
+    // - className: Custom CSS class
+    {
+      type: 'carousel',
+      component: (
+        <Carousel 
+          carouselData={projectData.assets.carousel}    // Image data array
+          title="Project Gallery"                       // Section title
+          autoPlay={false}                              // Auto-advance slides?
+          showControls={true}                           // Show arrow buttons?
+          showIndicators={true}                         // Show dots?
+          className="mh1-carousel"                      // Custom CSS class
+          projectID={PROJECT_ID}
+        />
+      ),
+    },
 
-            <ScrollPrompt
-              dragProgress={dragProgress}
-              visible={animationPhase === 'waiting'}
-            />
-            
-            {/* Visual indicator of background fade */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: 'white',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              opacity: 0.7,
-              pointerEvents: 'none'
-            }}>
-              Background: {backgroundFade?.toFixed(2)}
-            </div>
-          </section>
-        )}
+    // ----------------------------------------
+    // ADD MORE SECTIONS HERE
+    // ----------------------------------------
+    // Copy one of the sections above or create a custom one
+    
+    // EXAMPLE: Custom section
+    // {
+    //   type: 'custom',
+    //   className: 'my-custom-section',
+    //   component: (
+    //     <div>
+    //       <h2>My Custom Content</h2>
+    //       <p>Add any React component here!</p>
+    //     </div>
+    //   ),
+    // },
 
-        {/* SECTION 1: MAP */}
-        {currentSection === 1 && (
-          <MapSection
-            logos={projectData.assets.logos || []}
-            MapComponent={
-              <Suspense fallback={<div className="project-map-loading">Loading Map...</div>}>
-                <MyMap 
-                  startAnimation={startMapAnimation} 
-                  mapImages={projectData.assets.map}
-                />
-              </Suspense>
-            }          
-            description={mapDescription}
-            visible={true}
-          />
-        )}
+    // EXAMPLE: Another carousel
+    // {
+    //   type: 'carousel',
+    //   component: (
+    //     <Carousel 
+    //       carouselData={[
+    //         { id: 1, image: '/img1.jpg', title: 'Image 1', description: 'Desc 1' },
+    //         { id: 2, image: '/img2.jpg', title: 'Image 2', description: 'Desc 2' },
+    //       ]}
+    //       title="Behind the Scenes"
+    //       autoPlay={true}
+    //     />
+    //   ),
+    // },
+  ];
 
-        {/* SECTION 2: CAROUSEL */}
-        {currentSection === 2 && (
-          <section className="project-section carousel-wrapper-wrapper">
-            <Carousel 
-              carouselData={projectData.assets.carousel}
-              title="Project Gallery"
-              autoPlay={false}
-              showControls={true}
-              showIndicators={true}
-              className="mh1-carousel"
-            />
-          </section>
-        )}
-      </ProjectLayout>
-    </>
-  );
+  // ========================================
+  // BUILD CONFIGURATION OBJECT
+  // ========================================
+  // This is what gets passed to ProjectTemplate
+  const config = {
+    // Project data from projectsData.js
+    projectData,
+    
+    // Total sections (auto-calculated)
+    totalSections: sections.length,
+    
+    // Sections array defined above
+    sections,
+      
+    // Map description (used by map section)
+    mapDescription,
+    
+    // Show/hide navbar (true = show, false = hide)
+    enableNavbar: true,
+    
+    // Callback when section changes (optional)
+    onSectionChange: (sectionIndex) => {
+      console.log(`📍 MH1: Moved to section ${sectionIndex}`);
+      
+      // Add analytics tracking here if needed:
+      // analytics.track('Project Section Viewed', {
+      //   project: PROJECT_ID,
+      //   section: sectionIndex
+      // });
+    },
+  };
+
+  // ========================================
+  // RENDER
+  // ========================================
+  // Pass configuration to ProjectTemplate
+  // The template handles all animations and logic
+  return <ProjectTemplate {...config} />;
 };
 
 export default Mh1;
+
+/*
+ * ============================================
+ * CUSTOMIZATION GUIDE
+ * ============================================
+ * 
+ * QUICK CHECKLIST:
+ * ----------------
+ * [ ] Change PROJECT_ID at top
+ * [ ] Edit hero title and subtitle
+ * [ ] Update hero background image
+ * [ ] Add/remove/reorder sections
+ * [ ] Configure each section's props
+ * [ ] Set enableNavbar (true/false)
+ * 
+ * SECTION TYPES:
+ * --------------
+ * 
+ * 1. HERO (Required, must be first)
+ *    {
+ *      type: 'hero',
+ *      title: 'Title',
+ *      subtitle: 'Subtitle',
+ *      backgroundImage: '/path.jpg'
+ *    }
+ * 
+ * 2. MAP (Optional)
+ *    {
+ *      type: 'map',
+ *      component: <MyMap />,
+ *      logos: ['/logo1.png', '/logo2.png'],
+ *      description: { title: '...', metrics: [...] }
+ *    }
+ * 
+ * 3. CAROUSEL (Optional)
+ *    {
+ *      type: 'carousel',
+ *      component: <Carousel carouselData={[...]} />
+ *    }
+ * 
+ * 4. CUSTOM (Optional)
+ *    {
+ *      type: 'custom',
+ *      className: 'my-class',
+ *      component: <YourComponent />
+ *    }
+ * 
+ * TO CREATE A NEW PROJECT:
+ * ------------------------
+ * 1. Copy this file (e.g., Mh2.jsx)
+ * 2. Change PROJECT_ID = 'mh2'
+ * 3. Customize sections array
+ * 4. Done! ProjectTemplate handles the rest
+ * 
+ * TIPS:
+ * -----
+ * - Hero section is always first (index 0)
+ * - Add unlimited sections of any type
+ * - totalSections is auto-calculated
+ * - enableNavbar controls navbar visibility
+ * - onSectionChange is optional for tracking
+ * 
+ * ============================================
+ */

@@ -8,27 +8,10 @@ export const PROJECT_MH1 = {
   id: 'mh1',
   title: 'Project MH1',
   subtitle: 'Redefining Agriculture Tested 1 Through Genetic Innovation(Project Card/Listing Page',
-  category: 'Biotechnology',  
+  category: 'Biotechnology',
   
   assets: {
     hero: PROJECT_ASSETS.mh1.hero,
-    carousel: PROJECT_ASSETS.mh1.carousel.map((img, index) => ({
-      id: index + 1,
-      image: img,
-      title: [
-        'Innovation in Agriculture',
-        'Sustainable Farming',
-        'Genetic Excellence',
-        'Future Harvest',
-      ][index] || `Image ${index + 1}`,
-      description: [
-        'Pioneering genetic research for sustainable farming solutions.',
-        'Environmentally conscious methods preserving resources.',
-        'Advanced crop genetics for climate challenges.',
-        'Breakthrough developments in crop science.',
-      ][index] || '',
-    })),
-
     map: {
         A: PROJECT_ASSETS.mh1.map.layer0,
         B: PROJECT_ASSETS.mh1.map.layer1,

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 
- //Now handles state internally and returns nothing (uses passed state setters)
-
 export const useProjectNavigation = (
   totalSections, 
   animationPhase, 
@@ -26,8 +24,12 @@ export const useProjectNavigation = (
   useEffect(() => {
     console.log('🎮 Navigation listeners check - animationPhase:', animationPhase);
     
-    if (animationPhase !== 'completed') {
-      console.log('⏸️ Navigation disabled, waiting for animation to complete');
+    // FIXED: Allow navigation when NOT in initial animations
+    if (currentSection === 0 && 
+        (animationPhase === 'initial' || 
+         animationPhase === 'unlocking' || 
+         animationPhase === 'fadeout')) {
+      console.log('⏸️ Navigation disabled during hero animation');
       return;
     }
 
@@ -123,9 +125,15 @@ export const useProjectNavigation = (
     };
   }, [currentSection, isScrolling, animationPhase, totalSections, onGoBack, setCurrentSection]);
 
-  // Scroll throttling
+  // Scroll throttling - FIXED: Allow when not in initial animations
   useEffect(() => {
-    if (animationPhase !== 'completed') return;
+    if (currentSection === 0 && 
+        (animationPhase === 'initial' || 
+         animationPhase === 'unlocking' || 
+         animationPhase === 'fadeout')) {
+      return;
+    }
+    
     setIsScrolling(true);
     const timeout = setTimeout(() => setIsScrolling(false), 1000);
     return () => clearTimeout(timeout);

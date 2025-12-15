@@ -51,7 +51,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1rem;
 }
 
 /* === CONTENT CONTAINERS === */
@@ -185,6 +184,7 @@
   padding: 20px;
   box-sizing: border-box;
   justify-content: space-around;
+  border: red 2px solid;
 }
 
 .project-sidebar {
@@ -216,6 +216,7 @@
   flex: 0 0 40%;
   position: relative;
   overflow: hidden;
+  border: palegoldenrod 2px solid;  
 }
 
 .project-map-loading {

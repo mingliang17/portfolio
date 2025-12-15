@@ -1,353 +1,187 @@
+// src/hooks/useProjectAnimation.js
+// Refactored to use a single timeline-based animation system
+// This eliminates redundant useEffects and makes the flow crystal clear
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-console.log('🚀 useProjectAnimation module loaded');
-
-// Timeline configuration - Easy to edit!
-const ANIMATION_TIMELINE = {
-  // Initial sequence (section 0 on load)
-  initial: {
-    steps: [
-      {
-        action: 'setBackgroundFade',
-        value: 1,
-        duration: 0, // Instant
-        easing: 'linear',
-      },
-      {
-        action: 'setGradientOpacity',
-        value: 1,
-        duration: 400, // Wait 400ms before title starts
-        easing: 'linear',
-      },
-      {
-        action: 'animateTitle',
-        value: 1, // Target opacity
-        duration: 2000, // Title fades in over 2 seconds
-        easing: 'easeOutCubic',
-        callback: () => {
-          console.log('✅ Title animation complete, setting phase to waiting');
-          return 'SET_PHASE_WAITING';
-        },
-      },
-    ],
-  },
-
-  // When returning to hero (from map section)
-  returnToHero: {
-    steps: [
-      {
-        action: 'setLocalAnimationPhase',
-        value: 'waiting',
-        duration: 0,
-      },
-      {
-        action: 'setGradientOpacity',
-        value: 1,
-        duration: 0,
-      },
-      {
-        action: 'animateBackground',
-        value: 1,
-        duration: 300, // Fast 300ms fade
-        easing: 'linear',
-      },
-    ],
-  },
-
-  // Unlock animation (after dragging)
-  unlock: {
-    steps: [
-      {
-        action: 'setTitleOpacity',
-        value: 0, // Immediately hide title
-        duration: 0,
-      },
-      {
-        action: 'animateUnlock',
-        value: 1,
-        duration: 1000, // Unlock animation takes 1 second
-        easing: 'linear',
-        callback: () => 'SET_PHASE_FADEOUT',
-      },
-    ],
-  },
-
-  // Background fade out (after unlock)
-  fadeout: {
-    steps: [
-      {
-        action: 'animateBackground',
-        value: 0,
-        duration: 1000, // Fade out over 1 second
-        easing: 'linear',
-        callback: () => 'SET_PHASE_COMPLETED',
-      },
-    ],
-  },
-};
-
-// Easing functions
-const EASING_FUNCTIONS = {
-  linear: (t) => t,
-  easeOutCubic: (t) => 1 - Math.pow(1 - t, 3),
-  easeInOutQuad: (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
-  easeOutExpo: (t) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
-};
-
+/**
+ * Timeline-based animation hook for project hero section
+ * 
+ * ANIMATION TIMELINE:
+ * 1. Initial:   Section loads → Start background fade
+ * 2. Background: Fade in background (0→1) over 500ms
+ * 3. Gradient:   Fade in gradient overlay (0→1) over 400ms
+ * 4. Title:      Fade in title (0→1) over 800ms
+ * 5. Waiting:    User can now drag to unlock
+ * 6. Unlocking:  Pulse animation while dragging completes
+ * 7. Fadeout:    Everything fades out (1→0) over 400ms
+ * 8. Completed:  Trigger section transition callback
+ */
 export const useProjectAnimation = (
   currentSection,
   onAnimationComplete,
   setAnimationPhase
 ) => {
-  console.log('🎬 useProjectAnimation called:', { 
-    currentSection, 
-    onAnimationComplete: !!onAnimationComplete,
-    setAnimationPhase: !!setAnimationPhase 
-  });
-
-  const [animationPhase, setLocalAnimationPhase] = useState('initial');
+  // ========================================
+  // STATE: Animation values
+  // ========================================
   const [titleOpacity, setTitleOpacity] = useState(0);
   const [unlockProgress, setUnlockProgress] = useState(0);
   const [gradientOpacity, setGradientOpacity] = useState(0);
   const [backgroundFade, setBackgroundFade] = useState(0);
+  const [animationPhase, setLocalAnimationPhase] = useState('initial');
 
-  const scrollAccumulator = useRef(0);
-  const touchStartY = useRef(0);
-  const isDragging = useRef(false);
-  const dragProgressRef = useRef(0);
-  const hasInitialized = useRef(false);
-  const isReturningToHero = useRef(false);
-  const animationTimers = useRef([]);
-  const componentMounted = useRef(false);
+  // ========================================
+  // REFS: Persistent values across renders
+  // ========================================
+  const scrollAccumulator = useRef(0);      // Tracks cumulative drag distance
+  const touchStartY = useRef(0);            // Starting Y position for drag
+  const isDragging = useRef(false);         // Is user currently dragging?
+  const dragProgressRef = useRef(0);        // Current drag progress (0-1)
+  const hasInitialized = useRef(false);     // Has initial animation run?
+  const isReturningToHero = useRef(false);  // Is this a return from another section?
+  const timelineTimeouts = useRef([]);      // Array to store all timeline timeouts for cleanup
 
-  // Helper function to clear all animations
-  const clearAllAnimations = useCallback(() => {
-    console.log('🧹 Clearing all animations');
-    animationTimers.current.forEach(timer => {
-      if (timer.interval) clearInterval(timer.interval);
-      if (timer.timeout) clearTimeout(timer.timeout);
-    });
-    animationTimers.current = [];
-  }, []);
-
-  // Helper function to execute animation steps
-  const executeTimeline = useCallback((timelineName, stepCallback) => {
-    console.log('📋 Executing timeline:', timelineName);
-    clearAllAnimations(); // Clear any existing animations
-    
-    const timeline = ANIMATION_TIMELINE[timelineName];
-    if (!timeline) {
-      console.error('❌ Timeline not found:', timelineName);
-      return;
-    }
-
-    let delayAccumulator = 0;
-
-    timeline.steps.forEach((step, index) => {
-      const timerId = setTimeout(() => {
-        console.log(`⏱️ Step ${index}: ${step.action} after ${delayAccumulator}ms`);
-        
-        switch (step.action) {
-          case 'setBackgroundFade':
-            setBackgroundFade(step.value);
-            break;
-          
-          case 'setGradientOpacity':
-            setGradientOpacity(step.value);
-            break;
-          
-          case 'setTitleOpacity':
-            setTitleOpacity(step.value);
-            break;
-          
-          case 'setLocalAnimationPhase':
-            console.log(`📊 Setting animation phase to: ${step.value}`);
-            setLocalAnimationPhase(step.value);
-            break;
-          
-          case 'animateTitle':
-            // Animate title opacity gradually
-            if (step.duration > 0) {
-              let startTime = Date.now();
-              const startValue = titleOpacity;
-              const endValue = step.value;
-              const easing = EASING_FUNCTIONS[step.easing] || EASING_FUNCTIONS.linear;
-              
-              console.log(`🎨 Animating title from ${startValue} to ${endValue} over ${step.duration}ms`);
-              
-              const intervalId = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(1, elapsed / step.duration);
-                const easedProgress = easing(progress);
-                const currentValue = startValue + (endValue - startValue) * easedProgress;
-                
-                setTitleOpacity(currentValue);
-                
-                if (progress >= 1) {
-                  console.log('✅ Title animation complete');
-                  clearInterval(intervalId);
-                  if (step.callback) {
-                    const callbackResult = step.callback();
-                    if (callbackResult === 'SET_PHASE_WAITING') {
-                      console.log('📊 Setting phase to waiting from callback');
-                      setLocalAnimationPhase('waiting');
-                    }
-                  }
-                }
-              }, 16); // ~60fps
-              
-              animationTimers.current.push({ interval: intervalId });
-            }
-            break;
-          
-          case 'animateBackground':
-            // Animate background fade
-            if (step.duration > 0) {
-              let startTime = Date.now();
-              const startValue = backgroundFade;
-              const endValue = step.value;
-              const easing = EASING_FUNCTIONS[step.easing] || EASING_FUNCTIONS.linear;
-              
-              console.log(`🎨 Animating background from ${startValue} to ${endValue} over ${step.duration}ms`);
-              
-              const intervalId = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(1, elapsed / step.duration);
-                const easedProgress = easing(progress);
-                const currentValue = startValue + (endValue - startValue) * easedProgress;
-                
-                setBackgroundFade(currentValue);
-                
-                if (progress >= 1) {
-                  console.log('✅ Background animation complete');
-                  clearInterval(intervalId);
-                  if (step.callback) {
-                    const callbackResult = step.callback();
-                    if (callbackResult === 'SET_PHASE_COMPLETED') {
-                      console.log('📊 Setting phase to completed from callback');
-                      setLocalAnimationPhase('completed');
-                    }
-                  }
-                }
-              }, 16);
-              
-              animationTimers.current.push({ interval: intervalId });
-            }
-            break;
-          
-          case 'animateUnlock':
-            // Animate unlock progress
-            if (step.duration > 0) {
-              let startTime = Date.now();
-              const startValue = unlockProgress;
-              const endValue = step.value;
-              const easing = EASING_FUNCTIONS[step.easing] || EASING_FUNCTIONS.linear;
-              
-              console.log(`🎨 Animating unlock from ${startValue} to ${endValue} over ${step.duration}ms`);
-              
-              const intervalId = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(1, elapsed / step.duration);
-                const easedProgress = easing(progress);
-                const currentValue = startValue + (endValue - startValue) * easedProgress;
-                
-                setUnlockProgress(currentValue);
-                
-                if (progress >= 1) {
-                  console.log('✅ Unlock animation complete');
-                  clearInterval(intervalId);
-                  if (step.callback) {
-                    const callbackResult = step.callback();
-                    if (callbackResult === 'SET_PHASE_FADEOUT') {
-                      console.log('📊 Setting phase to fadeout from callback');
-                      setLocalAnimationPhase('fadeout');
-                    }
-                  }
-                }
-              }, 16);
-              
-              animationTimers.current.push({ interval: intervalId });
-            }
-            break;
-        }
-      }, delayAccumulator);
-
-      animationTimers.current.push({ timeout: timerId });
-      delayAccumulator += step.duration || 0;
-    });
-  }, [titleOpacity, backgroundFade, unlockProgress, clearAllAnimations]);
-
-  // 🔁 Sync animation phase to parent
+  // ========================================
+  // SYNC: Keep parent informed of phase changes
+  // ========================================
   useEffect(() => {
-    console.log('📤 Syncing animation phase to parent:', animationPhase);
     setAnimationPhase?.(animationPhase);
   }, [animationPhase, setAnimationPhase]);
 
-  // 🎬 Handle animation phases - FIXED VERSION
+  // ========================================
+  // TIMELINE: Main animation sequence
+  // This runs when entering section 0 (hero)
+  // ========================================
   useEffect(() => {
-    console.log('🎬 Animation effect triggered:', { 
-      currentSection, 
-      animationPhase,
-      hasInitialized: hasInitialized.current,
-      isReturningToHero: isReturningToHero.current,
-      componentMounted: componentMounted.current
-    });
-
+    // Only run on section 0 (hero section)
     if (currentSection !== 0) return;
 
-    // Reset states when entering section 0
+    // Clear any existing timeline timeouts
+    timelineTimeouts.current.forEach(timeout => clearTimeout(timeout));
+    timelineTimeouts.current = [];
+
+    console.log('🎬 Starting hero animation timeline');
+
+    // RESET: Clear all animation values
     setTitleOpacity(0);
     setGradientOpacity(0);
     setBackgroundFade(0);
     setUnlockProgress(0);
+    dragProgressRef.current = 0;
 
-    const startAnimation = () => {
-      console.log('🚀 Starting animation sequence');
+    // CHECK: Fast return animation if coming back from another section
+    if (isReturningToHero.current) {
+      console.log('🔄 Quick return animation');
       
-      // ALWAYS run initial animation when in section 0 and phase is initial
-      if (animationPhase === 'initial') {
-        console.log('🎬 Running initial animation');
-        executeTimeline('initial');
-        hasInitialized.current = true;
-      }
-      // Only run return animation if specifically flagged
-      else if (isReturningToHero.current) {
-        console.log('↩️ Returning to hero animation');
-        executeTimeline('returnToHero');
-        isReturningToHero.current = false;
-        hasInitialized.current = true;
-      }
-      // If we're already waiting, just ensure values are set
-      else if (animationPhase === 'waiting') {
-        console.log('⏸️ Already in waiting phase, ensuring values');
-        // Make sure background and gradient are visible
-        setBackgroundFade(1);
-        setGradientOpacity(1);
-        setTitleOpacity(1);
-      }
+      // Skip to end state immediately
+      setLocalAnimationPhase('waiting');
+      setBackgroundFade(1);
+      setGradientOpacity(1);
+      setTitleOpacity(1);
+      
+      hasInitialized.current = true;
+      isReturningToHero.current = false;
+      return;
+    }
+
+    // TIMELINE STEP 1: Background fade in (0ms - 500ms)
+    const step1 = setTimeout(() => {
+      console.log('📍 Timeline Step 1: Background fade in');
+      
+      let bgFade = 0;
+      const bgInterval = setInterval(() => {
+        bgFade += 0.04; // Increment by 4% per frame (25 frames = 1.0)
+        setBackgroundFade(Math.min(1, bgFade));
+        
+        if (bgFade >= 1) {
+          clearInterval(bgInterval);
+          console.log('✅ Background fade complete');
+        }
+      }, 20); // 20ms = ~50fps
+    }, 0);
+
+    // TIMELINE STEP 2: Gradient overlay fade in (500ms - 900ms)
+    const step2 = setTimeout(() => {
+      console.log('📍 Timeline Step 2: Gradient fade in');
+      
+      let gradFade = 0;
+      const gradInterval = setInterval(() => {
+        gradFade += 0.05; // Increment by 5% per frame (20 frames = 1.0)
+        setGradientOpacity(Math.min(1, gradFade));
+        
+        if (gradFade >= 1) {
+          clearInterval(gradInterval);
+          console.log('✅ Gradient fade complete');
+        }
+      }, 20);
+    }, 500);
+
+    // TIMELINE STEP 3: Title fade in (900ms - 1700ms)
+    const step3 = setTimeout(() => {
+      console.log('📍 Timeline Step 3: Title fade in');
+      
+      let titleFade = 0;
+      const titleInterval = setInterval(() => {
+        titleFade += 0.025; // Slower fade for title (40 frames = 1.0)
+        setTitleOpacity(Math.min(1, titleFade));
+        
+        if (titleFade >= 1) {
+          clearInterval(titleInterval);
+          console.log('✅ Title fade complete');
+        }
+      }, 20);
+    }, 900);
+
+    // TIMELINE STEP 4: Ready for interaction (1700ms)
+    const step4 = setTimeout(() => {
+      console.log('📍 Timeline Step 4: Waiting for user interaction');
+      setLocalAnimationPhase('waiting');
+      hasInitialized.current = true;
+    }, 1700);
+
+    // Store timeouts for cleanup
+    timelineTimeouts.current = [step1, step2, step3, step4];
+
+    // CLEANUP: Clear all timeouts when component unmounts or dependencies change
+    return () => {
+      timelineTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      timelineTimeouts.current = [];
     };
+  }, [currentSection]); // Only re-run when section changes
 
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      setTimeout(startAnimation, 100);
-    });
-  }, [currentSection, animationPhase, executeTimeline]);
-
-  // 👆 Drag interaction
+  // ========================================
+  // INTERACTION: Drag-to-unlock functionality
+  // Only active when phase is 'waiting'
+  // ========================================
   useEffect(() => {
+    // Only allow dragging on section 0 in waiting phase
     if (currentSection !== 0 || animationPhase !== 'waiting') return;
 
-    console.log('👆 Setting up drag interaction');
+    console.log('👆 Drag interaction enabled');
 
+    /**
+     * Updates UI based on drag progress
+     * As user drags, gradient fades out to reveal background
+     */
     const updateDragUI = (progress) => {
       dragProgressRef.current = progress;
+      // Inverse relationship: more drag = less gradient
       setGradientOpacity(Math.max(0, 1 - progress));
     };
 
+    /**
+     * Resets drag progress when user releases
+     * Smoothly animates back to initial state
+     */
     const resetDrag = () => {
+      if (!isDragging.current) return;
+      
+      console.log('🔙 Resetting drag');
       isDragging.current = false;
       document.body.style.cursor = '';
 
+      // Animate back to 0
       const resetInterval = setInterval(() => {
         dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
         updateDragUI(dragProgressRef.current);
@@ -355,28 +189,43 @@ export const useProjectAnimation = (
         if (dragProgressRef.current <= 0) {
           clearInterval(resetInterval);
           scrollAccumulator.current = 0;
+          console.log('✅ Drag reset complete');
         }
-      }, 16);
+      }, 16); // ~60fps
     };
 
+    /**
+     * Starts drag tracking
+     */
     const handleStart = (y) => {
+      console.log('👇 Drag start');
       isDragging.current = true;
       touchStartY.current = y;
       document.body.style.cursor = 'grabbing';
     };
 
+    /**
+     * Handles drag movement
+     * Accumulates vertical distance and converts to progress (0-1)
+     */
     const handleMove = (y) => {
       if (!isDragging.current) return;
 
       const deltaY = touchStartY.current - y;
+      
+      // Only track downward drags (positive deltaY)
       if (deltaY <= 0) return;
 
+      // Accumulate drag distance
       scrollAccumulator.current += deltaY;
+      
+      // Convert to 0-1 progress (300px = full unlock)
       const progress = Math.min(1, scrollAccumulator.current / 300);
       updateDragUI(progress);
 
+      // UNLOCK: If progress reaches 100%, trigger unlock animation
       if (progress >= 1) {
-        console.log('🔓 Drag complete, unlocking');
+        console.log('🔓 Unlock threshold reached!');
         setLocalAnimationPhase('unlocking');
         isDragging.current = false;
         document.body.style.cursor = '';
@@ -386,107 +235,129 @@ export const useProjectAnimation = (
       touchStartY.current = y;
     };
 
-    const ts = e => handleStart(e.touches[0].clientY);
-    const tm = e => handleMove(e.touches[0].clientY);
-    const te = resetDrag;
-    const md = e => handleStart(e.clientY);
-    const mm = e => handleMove(e.clientY);
-    const mu = resetDrag;
+    // Touch event handlers
+    const handleTouchStart = (e) => handleStart(e.touches[0].clientY);
+    const handleTouchMove = (e) => handleMove(e.touches[0].clientY);
+    const handleTouchEnd = resetDrag;
 
-    window.addEventListener('touchstart', ts, { passive: true });
-    window.addEventListener('touchmove', tm, { passive: true });
-    window.addEventListener('touchend', te);
-    window.addEventListener('mousedown', md);
-    window.addEventListener('mousemove', mm);
-    window.addEventListener('mouseup', mu);
+    // Mouse event handlers
+    const handleMouseDown = (e) => handleStart(e.clientY);
+    const handleMouseMove = (e) => handleMove(e.clientY);
+    const handleMouseUp = resetDrag;
 
+    // Register event listeners
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    // CLEANUP: Remove all event listeners
     return () => {
-      window.removeEventListener('touchstart', ts);
-      window.removeEventListener('touchmove', tm);
-      window.removeEventListener('touchend', te);
-      window.removeEventListener('mousedown', md);
-      window.removeEventListener('mousemove', mm);
-      window.removeEventListener('mouseup', mu);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
+      console.log('🧹 Drag listeners cleaned up');
     };
   }, [animationPhase, currentSection]);
 
-  // 🔓 Handle unlock animation
+  // ========================================
+  // UNLOCK ANIMATION: Pulsing circle effect
+  // Runs when user completes drag gesture
+  // ========================================
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'unlocking') return;
-    
-    console.log('🔓 Starting unlock animation');
-    executeTimeline('unlock');
-  }, [animationPhase, currentSection, executeTimeline]);
 
-  // 🌅 Handle fadeout animation
+    console.log('🔓 Starting unlock animation');
+
+    let progress = 0;
+    
+    // Immediately fade out title for clean transition
+    setTitleOpacity(0);
+
+    // Pulse animation for unlock progress
+    const interval = setInterval(() => {
+      progress += 0.02; // 2% per frame
+      setUnlockProgress(progress);
+
+      if (progress >= 1) {
+        clearInterval(interval);
+        console.log('✅ Unlock animation complete, starting fadeout');
+        setLocalAnimationPhase('fadeout');
+      }
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [animationPhase, currentSection]);
+
+  // ========================================
+  // FADEOUT: Everything fades to black
+  // Prepares for transition to next section
+  // ========================================
   useEffect(() => {
     if (currentSection !== 0 || animationPhase !== 'fadeout') return;
-    
-    console.log('🌅 Starting fadeout animation');
-    executeTimeline('fadeout');
-  }, [animationPhase, currentSection, executeTimeline]);
 
-  // 🔄 Handle completed animation phase
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'completed') return;
-    
-    console.log('✅ Animation completed, notifying parent');
-    setTimeout(() => {
-      onAnimationComplete?.();
-    }, 100);
+    console.log('🌅 Starting fadeout animation');
+
+    let fade = 1;
+    const interval = setInterval(() => {
+      fade -= 0.05; // 5% per frame
+      setBackgroundFade(Math.max(0, fade));
+
+      if (fade <= 0) {
+        clearInterval(interval);
+        console.log('✅ Fadeout complete, transitioning to next section');
+        setLocalAnimationPhase('completed');
+
+        // Trigger parent callback after brief delay
+        setTimeout(() => {
+          onAnimationComplete?.();
+        }, 100);
+      }
+    }, 20);
+
+    return () => clearInterval(interval);
   }, [animationPhase, currentSection, onAnimationComplete]);
 
-  // 🔄 Reset when returning
+  // ========================================
+  // RESET: When returning to section 0
+  // Ensures clean state for next animation
+  // ========================================
   useEffect(() => {
     if (currentSection === 0 && animationPhase === 'completed') {
-      console.log('🔄 Resetting animation for return');
+      console.log('🔄 Resetting animation state');
       hasInitialized.current = false;
       isReturningToHero.current = false;
       setLocalAnimationPhase('initial');
     }
   }, [currentSection, animationPhase]);
 
-  // Track component mount
-  useEffect(() => {
-    componentMounted.current = true;
-    return () => {
-      componentMounted.current = false;
-    };
+  // ========================================
+  // PUBLIC API: Return to hero section
+  // Called when user navigates back from other sections
+  // ========================================
+  const handleReturnToHero = useCallback(() => {
+    console.log('🔄 Handling return to hero');
+    isReturningToHero.current = true;
+    setLocalAnimationPhase('initial');
   }, []);
 
-  // 📤 Public method for returning to hero
-  const handleReturnToHero = useCallback(() => {
-    console.log('🔄 useProjectAnimation: Handling return to hero');
-    isReturningToHero.current = true;
-    clearAllAnimations();
-    setLocalAnimationPhase('initial');
-  }, [clearAllAnimations]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      console.log('🧹 Cleaning up animation timers');
-      clearAllAnimations();
-    };
-  }, [clearAllAnimations]);
-
-  console.log('📤 useProjectAnimation returning state:', {
-    titleOpacity: titleOpacity.toFixed(2),
-    unlockProgress: unlockProgress.toFixed(2),
-    gradientOpacity: gradientOpacity.toFixed(2),
-    backgroundFade: backgroundFade.toFixed(2),
-    animationPhase,
-  });
-
+  // ========================================
+  // RETURN: All animation values and controls
+  // ========================================
   return {
-    titleOpacity,
-    unlockProgress,
-    gradientOpacity,
-    backgroundFade,
-    dragProgress: dragProgressRef.current,
-    animationPhase,
-    handleReturnToHero,
+    titleOpacity,           // 0-1: Title transparency
+    unlockProgress,         // 0-1: Unlock pulse animation progress
+    gradientOpacity,        // 0-1: Gradient overlay transparency
+    backgroundFade,         // 0-1: Background image transparency
+    dragProgress: dragProgressRef.current, // 0-1: Current drag progress
+    animationPhase,         // Current phase string
+    handleReturnToHero,     // Function to trigger return animation
   };
 };
 

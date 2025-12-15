@@ -11,7 +11,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
   const [positionC, setPositionC] = useState({ x: 0, y: 0 });
   const [zoomC, setZoomC] = useState(1);
   const [animationProgress, setAnimationProgress] = useState(0);
-  const [sidebarVisible, setSidebarVisible] = useState(false); // ⭐ NEW: Control sidebar visibility
+  const [sidebarVisible, setSidebarVisible] = useState(false);
   
   const animationRef = useRef(null);
   const hasStartedRef = useRef(false);
@@ -52,7 +52,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
     setPositionC({ x: 0, y: 0 });
     setZoomC(1);
     setAnimationProgress(0);
-    setSidebarVisible(false); // ⭐ Hide sidebar initially
+    setSidebarVisible(false);
     
     let startTime = null;
 
@@ -65,14 +65,14 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
       if (progress < 1) {
         // Phase 1 (0-25%): Fade in Image A
         if (progress < 0.25) {
-          const fadeProgress = progress * 4; // 0 to 1 over first 25%
+          const fadeProgress = progress * 4;
           setOpacityA(fadeProgress);
           console.log(`📸 Phase 1: Image A opacity = ${fadeProgress.toFixed(2)}`);
         } 
         // Phase 2 (25-50%): Fade in Images B and C
         else if (progress < 0.5) {
           setOpacityA(1);
-          const bcProgress = (progress - 0.25) * 4; // 0 to 1 over next 25%
+          const bcProgress = (progress - 0.25) * 4;
           setOpacityB(bcProgress);
           setOpacityC(bcProgress);
           console.log(`📸 Phase 2: Images B&C opacity = ${bcProgress.toFixed(2)}`);
@@ -83,8 +83,8 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
           setOpacityB(1);
           setOpacityC(1);
           
-          const movementProgress = (progress - 0.5) * 2; // 0 to 1 over last 50%
-          const easeProgress = 1 - Math.pow(1 - movementProgress, 3); // Ease out cubic
+          const movementProgress = (progress - 0.5) * 2;
+          const easeProgress = 1 - Math.pow(1 - movementProgress, 3);
           
           // Move images
           setPositionA(-easeProgress * moveDistanceA);
@@ -109,7 +109,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
             console.log(`📸 Phase 3b: Image E opacity = ${eProgress.toFixed(2)}`);
           }
           
-          // ⭐ Show sidebar only after Image E reaches 80% opacity (at ~96% total progress)
+          // Show sidebar only after Image E reaches 80% opacity
           if (movementProgress > 0.92 && !sidebarVisible) {
             console.log('📊 Showing sidebar');
             setSidebarVisible(true);
@@ -130,7 +130,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         setPositionC(targetPositionC);
         setZoomC(zoomFactor);
         setAnimationProgress(1);
-        setSidebarVisible(true); // Ensure sidebar is visible
+        setSidebarVisible(true);
       }
     };
 
@@ -177,7 +177,7 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
     };
   }, []);
 
-  // ⭐ Emit sidebar visibility event for parent components
+  // Emit sidebar visibility event for parent components
   useEffect(() => {
     if (sidebarVisible) {
       window.dispatchEvent(new CustomEvent('map-sidebar-visible'));
@@ -185,47 +185,23 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
   }, [sidebarVisible]);
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'transparent',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div className="my-map-container">
       
       {/* Main container */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        zIndex: 1
-      }}>
+      <div className="my-map-main">
         
         {/* Image A - Fades in first */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) translateY(${positionA}px) scale(1)`,
-          width: '300px',
-          height: '200px',
-          opacity: opacityA,
-          zIndex: 1,
-          transformOrigin: 'center center',
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'transform, opacity'
-        }}>
+        <div 
+          className="my-map-image image-a"
+          style={{
+            transform: `translate(-50%, -50%) translateY(${positionA}px) scale(1)`,
+            opacity: opacityA,
+          }}
+        >
           <img 
             src={imagePaths.A}
             alt="Image A"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
+            className="my-map-img"
             onError={(e) => {
               console.log('Image A failed to load');
               e.target.style.display = 'none';
@@ -234,27 +210,17 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         </div>
 
         {/* Image B */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) translateY(${positionB}px) scale(1)`,
-          width: '300px',
-          height: '200px',
-          opacity: opacityB,
-          zIndex: 2,
-          transformOrigin: 'center center',
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'transform, opacity'
-        }}>
+        <div 
+          className="my-map-image image-b"
+          style={{
+            transform: `translate(-50%, -50%) translateY(${positionB}px) scale(1)`,
+            opacity: opacityB,
+          }}
+        >
           <img 
             src={imagePaths.B}
             alt="Image B"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
+            className="my-map-img"
             onError={(e) => {
               console.log('Image B failed to load');
               e.target.style.display = 'none';
@@ -263,27 +229,17 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         </div>
 
         {/* Image C */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
-          width: '300px',
-          height: '200px',
-          opacity: opacityC,
-          zIndex: 3,
-          transformOrigin: 'center center',
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'transform, opacity'
-        }}>
+        <div 
+          className="my-map-image image-c"
+          style={{
+            transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
+            opacity: opacityC,
+          }}
+        >
           <img 
             src={imagePaths.C}
             alt="Image C"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
+            className="my-map-img"
             onError={(e) => {
               console.log('Image C failed to load');
               e.target.style.display = 'none';
@@ -292,27 +248,17 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         </div>
 
         {/* Image D */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
-          width: '300px',
-          height: '200px',
-          opacity: opacityD,
-          zIndex: 4,
-          transformOrigin: 'center center',
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'transform, opacity'
-        }}>
+        <div 
+          className="my-map-image image-d"
+          style={{
+            transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
+            opacity: opacityD,
+          }}
+        >
           <img 
             src={imagePaths.D}
             alt="Image D"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
+            className="my-map-img"
             onError={(e) => {
               console.log('Image D failed to load');
               e.target.style.display = 'none';
@@ -321,27 +267,17 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
         </div>
 
         {/* Image E */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
-          width: '300px',
-          height: '200px',
-          opacity: opacityE,
-          zIndex: 5,
-          transformOrigin: 'center center',
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'transform, opacity'
-        }}>
+        <div 
+          className="my-map-image image-e"
+          style={{
+            transform: `translate(-50%, -50%) translate(${positionC.x}px, ${positionC.y}px) scale(${zoomC})`,
+            opacity: opacityE,
+          }}
+        >
           <img 
             src={imagePaths.E}
             alt="Image E"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
+            className="my-map-img"
             onError={(e) => {
               console.log('Image E failed to load');
               e.target.style.display = 'none';
