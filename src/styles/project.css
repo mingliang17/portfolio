@@ -1,5 +1,5 @@
 /* ========================================
-   MH1 PROJECT - OPTIMIZED STYLES
+   MH1 PROJECT - OPTIMIZED STYLES (CLEANED)
    ======================================== */
 
 /* === BASE LAYOUT === */
@@ -29,8 +29,6 @@
   inset: 0;
   background: linear-gradient(to bottom, 
     rgba(15, 23, 42, 1) 30%, 
-    /* rgba(15, 23, 42, 0.8) 10%,
-    rgba(15, 23, 42, 0.6) 80%,  */
     rgba(15, 23, 42, 0.5) 100%);
   pointer-events: none;
   transition: opacity 0.3s ease-out;
@@ -54,8 +52,7 @@
 }
 
 /* === CONTENT CONTAINERS === */
-.project-content-center
-{
+.project-content-center {
   max-width: 72rem;
   margin: 0 auto;
   width: 100%;
@@ -85,7 +82,7 @@
   text-align: center;
   margin-left: auto;
   margin-right: auto;
-  max-width: min(90vw, 40ch); /* wraps after ~40 characters */
+  max-width: min(90vw, 40ch);
   white-space: normal;
 } 
 
@@ -175,61 +172,6 @@
   border-right-color: transparent;
 }
 
-/* === MAP LAYOUT === */
-.map-layout {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  gap: 20px;
-  padding: 20px;
-  box-sizing: border-box;
-  justify-content: space-around;
-  border: red 2px solid;
-}
-
-.project-sidebar {
-  flex: 0 0 30%;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  backdrop-filter: blur(10px);
-  justify-content: center;
-}
-
-.project-logo-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  gap: 16px;
-}
-
-.project-logo {
-  width: 50px;
-  height: auto;
-  margin-bottom: 4px;
-}
-
-.project-map-container {
-  flex: 0 0 40%;
-  position: relative;
-  overflow: hidden;
-  border: palegoldenrod 2px solid;  
-}
-
-.project-map-loading {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  color: white;
-  font-size: 18px;
-}
-
 /* === DRAG PROGRESS === */
 .project-drag-progress {
   position: fixed;
@@ -261,25 +203,6 @@
 
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
-  .map-layout {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-  }
-
-  .project-sidebar {
-    flex: 0 0 auto;
-    max-height: 40vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .project-map-container {
-    flex: 0 0 50vh;
-    order: -1;
-  }
-
   .project-hero-title {
     font-size: clamp(2rem, 10vw, 5rem);
     margin-top: -10rem;
@@ -293,15 +216,6 @@
 @media (max-width: 768px) {
   .project-scroll-prompt {
     bottom: 2rem;
-  }
-
-  .map-layout {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .project-sidebar {
-    padding: 16px;
   }
 }
 
@@ -320,43 +234,7 @@
   }
 }
 
-.project-sidebar {
-  flex: 0 0 30%;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  backdrop-filter: blur(10px);
-  justify-content: center;
-}
-
-.project-sidebar h2 {
-  font-size: 1.5rem;
-  color: #f59e0b;
-  margin-bottom: 1rem;
-}
-
-.project-description-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 1.5rem;
-}
-
-.project-description-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f59e0b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.project-description-label {
-  font-size: 0.95rem;
-  color: #cbd5e1;
-  line-height: 1.6;
-}
-
+/* === LEGACY SUPPORT (Keep for backwards compatibility) === */
 .project-scroll-indicator {
   position: absolute;
   bottom: 3rem;
@@ -381,4 +259,3 @@
   position: relative;
   z-index: 1;
 }
-
