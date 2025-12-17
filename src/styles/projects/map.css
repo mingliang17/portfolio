@@ -27,11 +27,10 @@
    LEFT COLUMN - Map Animation
    ======================================== */
 .map-animation-container {
-  flex: 0 0 50%;
+  flex:0 0 40%;
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
 }
 
@@ -78,10 +77,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  scale: 1.5;
 }
 
 /* ========================================
-   MIDDLE COLUMN - Logos
+   MIDDLE COLUMN - Logos with Timeline Animation
    ======================================== */
 .map-logos-column {
   flex: 0 0 15%;
@@ -92,8 +92,18 @@
   gap: 2rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(8px);
+  
+  /* Initial state - hidden and off-screen */
+  opacity: 0;
+  transform: translateX(-100px);
+  visibility: hidden;
+}
+
+/* When timeline starts - column animation */
+.map-logos-column.timeline-started {
+  visibility: visible;
+  animation: logosColumnEntrance 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .map-logo-item {
@@ -101,34 +111,48 @@
   height: auto;
   max-height: 60px;
   object-fit: contain;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0.8;
+  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+  opacity: 0.5;
+  filter: grayscale(0.8);
+  
+  /* Individual logo initial state */
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+}
+
+/* Logo animation when triggered by JS */
+.map-logo-item.logo-animated {
+  animation: logoReveal 0.6s ease-out forwards;
+  animation-play-state: running;
 }
 
 .map-logo-item:hover {
   transform: scale(1.1);
   opacity: 1;
-}
-
-.map-no-logos {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.875rem;
-  text-align: center;
+  filter: grayscale(0);
 }
 
 /* ========================================
    RIGHT COLUMN - Description Sidebar
    ======================================== */
 .map-description-sidebar {
-  flex: 0 0 30%;
+  flex: 0 0 40%;
   padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   border-radius: var(--radius-lg);
-  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   overflow-y: auto;
+  
+  /* Initial state */
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+/* Timeline phases for sidebar */
+.map-description-sidebar.timeline-phase-2 {
+  animation: sidebarReveal 1s ease-out forwards;
 }
 
 .map-sidebar-title {
@@ -136,6 +160,15 @@
   color: #f59e0b;
   margin-bottom: 1rem;
   font-weight: 700;
+  
+  /* Initial state */
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Title animation triggered by JS */
+.map-sidebar-title.title-animated {
+  animation: titleReveal 0.6s ease-out forwards;
 }
 
 /* Metrics List */
@@ -151,6 +184,15 @@
   gap: 0.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Initial state */
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Metric animation triggered by JS */
+.map-metric-item.metric-animated {
+  animation: metricReveal 0.5s ease-out forwards;
 }
 
 .map-metric-item:last-child {
@@ -178,6 +220,155 @@
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Initial state */
+  opacity: 0;
+}
+
+/* Disclaimer animation triggered by JS */
+.map-disclaimer.disclaimer-animated {
+  animation: disclaimerReveal 0.8s ease-out forwards;
+}
+
+/* ========================================
+   TIMELINE ANIMATIONS
+   ======================================== */
+
+/* Logo column entrance */
+@keyframes logosColumnEntrance {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(30px); /* First overshoot */
+  }
+  25% {
+    transform: translateX(-15px); /* First bounce back */
+  }
+  35% {
+    transform: translateX(8px); /* Second overshoot */
+  }
+  45% {
+    transform: translateX(-4px); /* Second bounce back */
+  }
+  55% {
+    transform: translateX(2px); /* Third overshoot */
+  }
+  65% {
+    transform: translateX(0); /* Settle */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Individual logo reveal */
+@keyframes logoReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  70% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Sidebar entrance */
+@keyframes sidebarReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Title reveal */
+@keyframes titleReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Metric items reveal */
+@keyframes metricReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Disclaimer reveal */
+@keyframes disclaimerReveal {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   DEVELOPMENT & DEBUG STYLES
+   ======================================== */
+.timeline-debug-info {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  font-size: 9px;
+  color: #f59e0b;
+  background: rgba(0,0,0,0.5);
+  padding: 2px 5px;
+  border-radius: 3px;
+  z-index: 10;
+}
+
+.timeline-debug-info div {
+  line-height: 1.3;
+}
+
+.dev-animation-trigger {
+  margin-top: 1rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #f59e0b;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.dev-animation-trigger:hover {
+  background: rgba(245, 158, 11, 0.4);
+  transform: scale(1.05);
+}
+
+.map-no-logos {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  text-align: center;
+  font-size: 0.875rem;
 }
 
 /* ========================================
@@ -209,32 +400,6 @@
 }
 
 /* ========================================
-   ANIMATIONS
-   ======================================== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translate(-50%, -50%) translateY(0) scale(1);
-  }
-  to {
-    transform: translate(-50%, -50%) translateY(-100px) scale(1);
-  }
-}
-
-@keyframes zoomIn {
-  from {
-    transform: translate(-50%, -50%) translate(0, 0) scale(1);
-  }
-  to {
-    transform: translate(-50%, -50%) translate(-300px, 150px) scale(10);
-  }
-}
-
-/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 
@@ -258,6 +423,58 @@
     padding: 1rem;
   }
 
+  /* Mobile logo column animation */
+  .map-logos-column.timeline-started {
+    animation: logosColumnEntranceMobile 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform: translateY(-50px);
+  }
+
+  @keyframes logosColumnEntranceMobile {
+    0% {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(15px);
+    }
+    25% {
+      transform: translateY(-8px);
+    }
+    35% {
+      transform: translateY(4px);
+    }
+    45% {
+      transform: translateY(-2px);
+    }
+    55% {
+      transform: translateY(1px);
+    }
+    65% {
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Mobile logo reveal */
+  @keyframes logoReveal {
+    0% {
+      opacity: 0;
+      transform: translateX(-20px) scale(0.8);
+    }
+    70% {
+      transform: translateX(0) scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
   .map-description-sidebar {
     flex: 0 0 auto;
     max-height: none;
@@ -268,10 +485,9 @@
     height: 175px;
   }
 
-  @keyframes zoomIn {
-    to {
-      transform: translate(-50%, -50%) translate(-200px, 100px) scale(7);
-    }
+  .map-logo-item {
+    width: 50px;
+    max-height: 50px;
   }
 }
 
@@ -311,10 +527,12 @@
     height: 150px;
   }
 
-  @keyframes zoomIn {
-    to {
-      transform: translate(-50%, -50%) translate(-150px, 75px) scale(5);
-    }
+  .map-metric-label {
+    font-size: 0.8125rem;
+  }
+
+  .map-metric-value {
+    font-size: 0.9375rem;
   }
 }
 
@@ -354,15 +572,14 @@
     height: 100px;
   }
 
-  @keyframes zoomIn {
-    to {
-      transform: translate(-50%, -50%) translate(-100px, 50px) scale(3);
-    }
+  .timeline-debug-info {
+    font-size: 8px;
+    padding: 1px 3px;
   }
 }
 
 /* ========================================
-   SCROLLBAR STYLING (for sidebar)
+   SCROLLBAR STYLING
    ======================================== */
 .map-description-sidebar::-webkit-scrollbar {
   width: 6px;
@@ -380,4 +597,69 @@
 
 .map-description-sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(245, 158, 11, 0.7);
+}
+
+/* ========================================
+   ACCESSIBILITY & PERFORMANCE
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .map-logos-column,
+  .map-logo-item,
+  .map-description-sidebar,
+  .map-sidebar-title,
+  .map-metric-item,
+  .map-disclaimer {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .map-logos-column.timeline-started,
+  .map-logo-item.logo-animated,
+  .map-sidebar-title.title-animated,
+  .map-metric-item.metric-animated,
+  .map-disclaimer.disclaimer-animated,
+  .map-description-sidebar.timeline-phase-2 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+  .map-section-wrapper {
+    height: auto;
+    padding: 0;
+  }
+  
+  .map-flex-container {
+    flex-direction: column;
+    height: auto;
+    gap: 1rem;
+  }
+  
+  .map-animation-container,
+  .map-logos-column,
+  .map-description-sidebar {
+    flex: 0 0 auto;
+    min-height: auto;
+    backdrop-filter: none;
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ccc;
+  }
+  
+  .map-logo-item {
+    filter: grayscale(1) !important;
+    opacity: 1 !important;
+  }
+  
+  .timeline-debug-info,
+  .dev-animation-trigger {
+    display: none !important;
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { CAROUSEL_DATA, CAROUSEL_TITLE } from '../constants/carouselData.js'; 
+import { ICONS } from '../../assets/index.js';
+import { CAROUSEL_DATA, CAROUSEL_TITLE } from '../../constants/carouselData.js'; 
 
 // Sample data
 
@@ -227,6 +228,7 @@ const LiquidCarousel = ({projectID}) => {
               onClick={goToPrev}
               disabled={isAnimating || !!zoomedImage}
             >
+              <img src={ICONS.leftArrow} alt="Previous" />
             </button>
             
             <button 
@@ -234,6 +236,7 @@ const LiquidCarousel = ({projectID}) => {
               onClick={goToNext}
               disabled={isAnimating || !!zoomedImage}
             >
+             <img src={ICONS.rightArrow} alt="Next" />
             </button>
           </div>
         </div>

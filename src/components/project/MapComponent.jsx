@@ -18,9 +18,9 @@ const MyMap = ({ startAnimation = false, mapImages = {}, defaultImagePath = null
   const isMountedRef = useRef(false);
   
   // Animation variables
-  const zoomFactor = 10;
+  const zoomFactor = 12;
   const animationDuration = 3000;
-  const targetPositionC = { x: -300, y: 150 };
+  const targetPositionC = { x: -350, y: 150 };
   const moveDistanceA = 100;
   const moveDistanceB = moveDistanceA;
 

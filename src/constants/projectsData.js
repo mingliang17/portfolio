@@ -34,7 +34,6 @@ export const PROJECT_MH1 = {
     map: {
       enabled: true,
       title: 'Project Location',
-      component: 'MyMap', // Component name to load
       animateOnEntry: true,
     },
     

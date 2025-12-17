@@ -1,23 +1,33 @@
-// src/components/project/ProjectTemplate.jsx
-// ============================================
-// UNIVERSAL PROJECT TEMPLATE - FIXED MAP SECTION
-// ============================================
-
 import React, { Suspense, useState, useCallback } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from './ProjectComponents.jsx';
 import { ScrollPrompt, ComponentLoading } from '../common/LayoutComponents.jsx';
 import { useProjectAnimation, useProjectNavigation, useNavbarControl } from '../../hooks/index.js';
 
+// ====================================================
+// PROJECT TEMPLATE - REUSABLE COMPONENT (DO NOT EDIT)
+// ====================================================
+// This is a generic template that handles:
+// 1. Animation states and transitions
+// 2. Navigation between sections
+// 3. Section rendering logic
+// 4. Error handling
+//
+// Project-specific content should be passed via props
+// from individual project files (e.g., Mh1.jsx)
+// ====================================================
+
 const ProjectTemplate = ({
   projectData,
   totalSections = 5,
   sections = [],
-  mapDescription = null,
   enableNavbar = true,
   onSectionChange = null,
 }) => {
   
+  // ====================================================
+  // ERROR HANDLING - Validate required props
+  // ====================================================
   if (!projectData) {
     console.error('❌ ProjectTemplate: projectData is required');
     return <div style={{ color: 'white', padding: '2rem' }}>Error: Project data not found</div>;
@@ -28,10 +38,16 @@ const ProjectTemplate = ({
     return <div style={{ color: 'white', padding: '2rem' }}>Error: No sections configured</div>;
   }
 
+  // ====================================================
+  // STATE MANAGEMENT - Animation and navigation states
+  // ====================================================
   const [animationPhase, setAnimationPhase] = useState('initial');
   const [currentSection, setCurrentSection] = useState(0);
   const [startMapAnimation, setStartMapAnimation] = useState(false);
 
+  // ====================================================
+  // EVENT HANDLERS - Navigation callbacks
+  // ====================================================
   const handleAnimationComplete = useCallback(() => {
     console.log('🎉 Hero animation complete → Moving to section 1');
     setCurrentSection(1);
@@ -53,6 +69,9 @@ const ProjectTemplate = ({
     }
   }, [onSectionChange]);
 
+  // ====================================================
+  // CUSTOM HOOKS - Animation, navigation, and UI controls
+  // ====================================================
   const {
     titleOpacity,
     unlockProgress,
@@ -80,9 +99,9 @@ const ProjectTemplate = ({
     useNavbarControl(currentSection, animationPhase, dragProgress);
   }
 
-  // ========================================
-  // SECTION RENDERER
-  // ========================================
+  // ====================================================
+  // SECTION RENDERER - Renders sections based on type
+  // ====================================================
   const renderSection = (sectionConfig, index) => {
     if (currentSection !== index) return null;
 
@@ -151,6 +170,9 @@ const ProjectTemplate = ({
     return null;
   };
 
+  // ====================================================
+  // DEVELOPMENT LOGS - Only in development mode
+  // ====================================================
   if (process.env.NODE_ENV === 'development') {
     console.log('🔍 ProjectTemplate State:', { 
       projectId: projectData.id,
@@ -160,6 +182,9 @@ const ProjectTemplate = ({
     });
   }
 
+  // ====================================================
+  // MAIN RENDER - ProjectLayout with all sections
+  // ====================================================
   return (
     <ProjectLayout
       currentSection={currentSection}

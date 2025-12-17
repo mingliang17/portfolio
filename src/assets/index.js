@@ -21,19 +21,17 @@ const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
 // ===================================
 
 export const ICONS = {
-  icons: {
-    github: assetPath('assets/icons/github.svg'),
-    twitter: assetPath('assets/icons/twitter.svg'),
-    instagram: assetPath('assets/icons/instagram.svg'),
-    menu: assetPath('assets/icons/menu.svg'),
-    close: assetPath('assets/icons/close.svg'),
-    arrowUp: assetPath('assets/icons/arrow-up.png'),
-    leftArrow: assetPath('assets/icons/left-arrow.png'),
-    rightArrow: assetPath('assets/icons/right-arrow.png'),
-    star: assetPath('assets/icons/star.png'),
-    copy: assetPath('assets/icons/copy.svg'),
-    tick: assetPath('assets/icons/tick.svg'),
-  },
+  github: assetPath('assets/icons/github.svg'),
+  twitter: assetPath('assets/icons/twitter.svg'),
+  instagram: assetPath('assets/icons/instagram.svg'),
+  menu: assetPath('assets/icons/menu.svg'),
+  close: assetPath('assets/icons/close.svg'),
+  arrowUp: assetPath('assets/icons/arrow-up.png'),
+  leftArrow: assetPath('assets/icons/left-arrow.png'),
+  rightArrow: assetPath('assets/icons/right-arrow.png'),
+  star: assetPath('assets/icons/star.png'),
+  copy: assetPath('assets/icons/copy.svg'),
+  tick: assetPath('assets/icons/tick.svg'),
 };
 
 // ===================================
@@ -41,7 +39,6 @@ export const ICONS = {
 // ===================================
 
 export const MODELS = {
-  
   human: {
     developer: assetPath('models/human/developer.glb'),
     waving: assetPath('models/human/waving.fbx'),
@@ -49,14 +46,13 @@ export const MODELS = {
     dancing: assetPath('models/human/dancing.fbx'),
     thankful: assetPath('models/human/thankful.fbx'),
   },
-
-  earth:{
+  earth: {
     model: assetPath('models/earth/custom.geo.json'),
   }
 };
 
 export const TEXTURES = {
-  earth:{
+  earth: {
     day: assetPath('textures/earth-day.jpg'),
     night: assetPath('textures/earth-night.jpg'),
     normal: assetPath('textures/earth-normal.jpg'),
@@ -85,7 +81,46 @@ export const PROJECT_ASSETS = {
       layer3: assetPath('assets/projects/mh1/maps/3.svg'),
       layer4: assetPath('assets/projects/mh1/maps/4.svg'),
     },
+
+    logos: {
+      github: {
+        src: ICONS.github,
+        alt: "GitHub Repository",
+        title: "View source code on GitHub",
+        className: "logo-github"
+      },
+      twitter: {
+        src: ICONS.twitter,
+        alt: "Twitter Profile",
+        title: "Follow on Twitter",
+        className: "logo-twitter"
+      },
+      instagram: {
+        src: ICONS.instagram,
+        alt: "Instagram Profile",
+        title: "Follow on Instagram",
+        className: "logo-instagram"
+      }
+    },
   },
+  
+  // Example: Another project with dictionary logos
+  project2: {
+    logos: {
+      companyA: {
+        src: assetPath('assets/logos/company-a.svg'),
+        alt: "Company A",
+        title: "Client: Company A",
+        className: "logo-company-a"
+      },
+      companyB: {
+        src: assetPath('assets/logos/company-b.png'),
+        alt: "Company B",
+        title: "Partner: Company B",
+        className: "logo-company-b"
+      }
+    }
+  }
 };
 
 // ===================================
@@ -99,6 +134,16 @@ export const PROJECT_ASSETS = {
  */
 export const getProjectAssets = (projectId) => {
   return PROJECT_ASSETS[projectId] || null;
+};
+
+/**
+ * Get project logos as dictionary (recommended)
+ * @param {string} projectId - The project identifier
+ * @returns {object} Dictionary of logos
+ */
+export const getProjectLogos = (projectId) => {
+  const project = PROJECT_ASSETS[projectId];
+  return project?.logos || {};
 };
 
 /**
@@ -139,6 +184,7 @@ export default {
   textures: TEXTURES,
   projects: PROJECT_ASSETS,
   getProjectAssets,
+  getProjectLogos,        // New: dictionary version
   getProjectCarousel,
   assetPath,
 };
