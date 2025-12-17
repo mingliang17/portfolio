@@ -26,9 +26,10 @@ export const MapSection = ({
   timelineStartDelay = 1000,
   animationIncrement = 300 // 0.3s between animations
 }) => {
-  const [timelinePhase, setTimelinePhase] = useState('idle'); // idle, column-entrance, logos-animating, sidebar, disclaimer, complete
-  const [animatedLogos, setAnimatedLogos] = useState([]); // Track which logos have been animated
-  const [animatedMetrics, setAnimatedMetrics] = useState([]); // Track which metrics have been animated
+  const [timelinePhase, setTimelinePhase] = useState('idle');
+  const [animatedLogos, setAnimatedLogos] = useState([]);
+  const [animatedMetrics, setAnimatedMetrics] = useState([]);
+  const [hoveredLogo, setHoveredLogo] = useState(null);
   const animationTimers = useRef([]);
   const isAnimating = useRef(false);
   const logoAnimationIndex = useRef(0);
@@ -53,6 +54,15 @@ export const MapSection = ({
 
   const logosToRender = getLogosToRender();
   const metricsToRender = description.metrics || [];
+
+  // Logo hover handlers
+  const handleLogoMouseEnter = (logoId) => {
+    setHoveredLogo(logoId);
+  };
+
+  const handleLogoMouseLeave = () => {
+    setHoveredLogo(null);
+  };
 
   // Animate logos one by one
   const animateNextLogo = () => {
@@ -94,7 +104,6 @@ export const MapSection = ({
     // Start with title animation
     const titleTimer = setTimeout(() => {
       console.log('📊 Sidebar: Title animating');
-      // Title animation handled by CSS class
       
       // Start metrics animations after title
       const metricsStartTimer = setTimeout(() => {
@@ -152,6 +161,7 @@ export const MapSection = ({
     metricAnimationIndex.current = 0;
     setAnimatedLogos([]);
     setAnimatedMetrics([]);
+    setHoveredLogo(null);
     console.log(`🎬 MapSection: Starting timeline animation with ${logosToRender.length} logos, ${metricsToRender.length} metrics`);
     
     // Clear any existing timers
@@ -168,7 +178,7 @@ export const MapSection = ({
         setTimelinePhase('logos-animating');
         console.log('📊 Timeline: Phase 2 - Starting individual logo animations');
         animateNextLogo();
-      }, 1000); // Wait for column animation to complete
+      }, 1000);
       
       animationTimers.current.push(logoStartTimer);
     }, 500);
@@ -203,6 +213,7 @@ export const MapSection = ({
       metricAnimationIndex.current = 0;
       setAnimatedLogos([]);
       setAnimatedMetrics([]);
+      setHoveredLogo(null);
     };
   }, [autoPlay, timelineStartDelay]);
 
@@ -258,19 +269,27 @@ export const MapSection = ({
         {/* MIDDLE: Logos Column */}
         <div className={getLogosColumnClass()}>
           {logosToRender.length > 0 ? (
-            logosToRender.map((logo, index) => (
-              <img 
-                key={logo.id}
-                src={logo.src} 
-                alt={logo.alt || `Logo ${index + 1}`} 
-                title={logo.title || ''}
-                className={`map-logo-item ${getLogoAnimationClass(logo.id)}`}
-                loading="lazy"
-                style={{
-                  animationDelay: `${index * (animationIncrement / 1000)}s`
-                }}
-              />
-            ))
+            logosToRender.map((logo, index) => {
+              const isHovered = hoveredLogo === logo.id;
+              const isAnimated = animatedLogos.includes(logo.id);
+              
+              return (
+                <div 
+                  key={logo.id}
+                  className={`map-logo-container ${getLogoAnimationClass(logo.id)} ${isHovered ? 'logo-hovered' : ''}`}
+                  onMouseEnter={() => handleLogoMouseEnter(logo.id)}
+                  onMouseLeave={handleLogoMouseLeave}
+                >
+                  <img 
+                    src={logo.src} 
+                    alt={logo.alt || `Logo ${index + 1}`} 
+                    title={logo.title || ''}
+                    className="map-logo-img"
+                    loading="lazy"
+                  />
+                </div>
+              );
+            })
           ) : (
             <p className="map-no-logos">No software available</p>
           )}
@@ -281,6 +300,7 @@ export const MapSection = ({
               <div>Phase: {timelinePhase}</div>
               <div>Logos: {animatedLogos.length}/{logosToRender.length}</div>
               <div>Metrics: {animatedMetrics.length}/{metricsToRender.length}</div>
+              <div>Hovered: {hoveredLogo || 'none'}</div>
             </div>
           )}
         </div>

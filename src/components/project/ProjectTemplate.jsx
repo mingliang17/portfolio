@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useCallback } from 'react';
+import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from './ProjectComponents.jsx';
 import { ScrollPrompt, ComponentLoading } from '../common/LayoutComponents.jsx';
@@ -6,15 +6,6 @@ import { useProjectAnimation, useProjectNavigation, useNavbarControl } from '../
 
 // ====================================================
 // PROJECT TEMPLATE - REUSABLE COMPONENT (DO NOT EDIT)
-// ====================================================
-// This is a generic template that handles:
-// 1. Animation states and transitions
-// 2. Navigation between sections
-// 3. Section rendering logic
-// 4. Error handling
-//
-// Project-specific content should be passed via props
-// from individual project files (e.g., Mh1.jsx)
 // ====================================================
 
 const ProjectTemplate = ({
@@ -44,6 +35,31 @@ const ProjectTemplate = ({
   const [animationPhase, setAnimationPhase] = useState('initial');
   const [currentSection, setCurrentSection] = useState(0);
   const [startMapAnimation, setStartMapAnimation] = useState(false);
+
+  // ====================================================
+  // NAVBAR CONTROL FOR PROJECT MH1
+  // ====================================================
+  useEffect(() => {
+    if (!enableNavbar) return;
+    
+    // Hide navbar when past section 1 (Map section)
+    const shouldHideNavbar = currentSection > 1;
+    
+    if (shouldHideNavbar) {
+      // Dispatch event to hide navbar
+      window.dispatchEvent(new CustomEvent('projectMH1-navbar-hide'));
+    } else {
+      // Show navbar for sections 0 and 1
+      window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
+    }
+
+    // Cleanup when component unmounts or section changes
+    return () => {
+      if (shouldHideNavbar) {
+        window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
+      }
+    };
+  }, [currentSection, enableNavbar]);
 
   // ====================================================
   // EVENT HANDLERS - Navigation callbacks
@@ -85,6 +101,14 @@ const ProjectTemplate = ({
     setAnimationPhase
   );
 
+  // ALWAYS call this hook - condition is handled inside
+  const navbarControlResult = useNavbarControl(
+    currentSection, 
+    animationPhase, 
+    dragProgress,
+    enableNavbar // Pass enableNavbar as a parameter instead of conditionally calling
+  );
+
   useProjectNavigation(
     totalSections, 
     animationPhase,
@@ -95,79 +119,50 @@ const ProjectTemplate = ({
     setStartMapAnimation
   );
 
-  if (enableNavbar) {
-    useNavbarControl(currentSection, animationPhase, dragProgress);
-  }
-
   // ====================================================
   // SECTION RENDERER - Renders sections based on type
   // ====================================================
   const renderSection = (sectionConfig, index) => {
     if (currentSection !== index) return null;
 
-    // ----------------------------------------
-    // HERO SECTION
-    // ----------------------------------------
-    if (sectionConfig.type === 'hero') {
-      return (
-        <section key={index} className="project-section">
-          <HeroBackground
-            imagePath={sectionConfig.backgroundImage}
-            backgroundFade={backgroundFade}
-            gradientOpacity={gradientOpacity}
-            visible={true}
-          />
+    switch(sectionConfig.type) {
+      case 'hero':
+        return (
+          <section key={index} className="project-section">
+            <HeroBackground
+              imagePath={sectionConfig.backgroundImage}
+              backgroundFade={backgroundFade}
+              gradientOpacity={gradientOpacity}
+              visible={true}
+            />
+            <HeroContent
+              title={sectionConfig.title}
+              subtitle={sectionConfig.subtitle}
+              titleOpacity={titleOpacity}
+            />
+            <ScrollPrompt
+              dragProgress={dragProgress}
+              visible={animationPhase === 'waiting'}
+            />
+          </section>
+        );
 
-          <HeroContent
-            title={sectionConfig.title}
-            subtitle={sectionConfig.subtitle}
-            titleOpacity={titleOpacity}
-          />
+      case 'map':
+      case 'carousel':
+      case 'custom':
+        return (
+          <section 
+            key={index} 
+            className={`project-section ${sectionConfig.className || ''}`}
+          >
+            {sectionConfig.component}
+          </section>
+        );
 
-          <ScrollPrompt
-            dragProgress={dragProgress}
-            visible={animationPhase === 'waiting'}
-          />
-        </section>
-      );
+      default:
+        console.warn(`⚠️ Unknown section type: ${sectionConfig.type}`);
+        return null;
     }
-
-    // ----------------------------------------
-    // MAP SECTION - FIXED
-    // ----------------------------------------
-    if (sectionConfig.type === 'map') {
-      return (
-        <section key={index} className="project-section">
-          {/* Render the pre-configured MapSection component */}
-          {sectionConfig.component}
-        </section>
-      );
-    }
-
-    // ----------------------------------------
-    // CAROUSEL SECTION
-    // ----------------------------------------
-    if (sectionConfig.type === 'carousel') {
-      return (
-        <section key={index} className="project-section">
-          {sectionConfig.component}
-        </section>
-      );
-    }
-
-    // ----------------------------------------
-    // CUSTOM SECTION
-    // ----------------------------------------
-    if (sectionConfig.type === 'custom') {
-      return (
-        <section key={index} className={`project-section ${sectionConfig.className || ''}`}>
-          {sectionConfig.component}
-        </section>
-      );
-    }
-
-    console.warn(`⚠️ Unknown section type: ${sectionConfig.type}`);
-    return null;
   };
 
   // ====================================================

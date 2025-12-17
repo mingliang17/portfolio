@@ -41,6 +41,7 @@ export const useProjectAnimation = (
   const hasInitialized = useRef(false);     // Has initial animation run?
   const isReturningToHero = useRef(false);  // Is this a return from another section?
   const timelineTimeouts = useRef([]);      // Array to store all timeline timeouts for cleanup
+  const unlockTriggered = useRef(false);    // Prevent multiple unlock triggers
 
   // ========================================
   // SYNC: Keep parent informed of phase changes
@@ -62,6 +63,9 @@ export const useProjectAnimation = (
     timelineTimeouts.current = [];
 
     console.log('🎬 Starting hero animation timeline');
+    
+    // Reset unlock trigger flag
+    unlockTriggered.current = false;
 
     // RESET: Clear all animation values
     setTitleOpacity(0);
@@ -69,6 +73,7 @@ export const useProjectAnimation = (
     setBackgroundFade(0);
     setUnlockProgress(0);
     dragProgressRef.current = 0;
+    scrollAccumulator.current = 0;
 
     // CHECK: Fast return animation if coming back from another section
     if (isReturningToHero.current) {
@@ -177,21 +182,24 @@ export const useProjectAnimation = (
     const resetDrag = () => {
       if (!isDragging.current) return;
       
-      console.log('🔙 Resetting drag');
+      console.log('🔙 Resetting drag, progress was:', dragProgressRef.current.toFixed(2));
       isDragging.current = false;
       document.body.style.cursor = '';
 
-      // Animate back to 0
-      const resetInterval = setInterval(() => {
-        dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
-        updateDragUI(dragProgressRef.current);
+      // Only reset if we didn't reach unlock threshold
+      if (dragProgressRef.current < 0.95) {
+        // Animate back to 0
+        const resetInterval = setInterval(() => {
+          dragProgressRef.current = Math.max(0, dragProgressRef.current - 0.1);
+          updateDragUI(dragProgressRef.current);
 
-        if (dragProgressRef.current <= 0) {
-          clearInterval(resetInterval);
-          scrollAccumulator.current = 0;
-          console.log('✅ Drag reset complete');
-        }
-      }, 16); // ~60fps
+          if (dragProgressRef.current <= 0) {
+            clearInterval(resetInterval);
+            scrollAccumulator.current = 0;
+            console.log('✅ Drag reset complete');
+          }
+        }, 16); // ~60fps
+      }
     };
 
     /**
@@ -201,6 +209,7 @@ export const useProjectAnimation = (
       console.log('👇 Drag start');
       isDragging.current = true;
       touchStartY.current = y;
+      scrollAccumulator.current = 0;
       document.body.style.cursor = 'grabbing';
     };
 
@@ -209,27 +218,46 @@ export const useProjectAnimation = (
      * Accumulates vertical distance and converts to progress (0-1)
      */
     const handleMove = (y) => {
-      if (!isDragging.current) return;
+      if (!isDragging.current || unlockTriggered.current) return;
 
       const deltaY = touchStartY.current - y;
       
       // Only track downward drags (positive deltaY)
-      if (deltaY <= 0) return;
+      if (deltaY <= 0) {
+        // Reset start position if moving up
+        touchStartY.current = y;
+        return;
+      }
 
-      // Accumulate drag distance
-      scrollAccumulator.current += deltaY;
+      // Accumulate drag distance with a small max per frame to prevent jumps
+      const maxDeltaPerFrame = 30; // Prevent huge jumps from fast swipes
+      const clampedDelta = Math.min(deltaY, maxDeltaPerFrame);
+      scrollAccumulator.current += clampedDelta;
       
       // Convert to 0-1 progress (300px = full unlock)
       const progress = Math.min(1, scrollAccumulator.current / 300);
       updateDragUI(progress);
 
+      console.log('📏 Drag progress:', {
+        progress: progress.toFixed(3),
+        accumulator: scrollAccumulator.current.toFixed(0),
+        delta: deltaY.toFixed(0),
+        clampedDelta: clampedDelta.toFixed(0)
+      });
+
       // UNLOCK: If progress reaches 100%, trigger unlock animation
-      if (progress >= 1) {
-        console.log('🔓 Unlock threshold reached!');
+      // Use strict threshold to ensure full completion
+      if (progress >= 0.95 && !unlockTriggered.current) {
+        console.log('🔓 Unlock threshold reached at', progress.toFixed(2), '%');
+        unlockTriggered.current = true;
         setLocalAnimationPhase('unlocking');
         isDragging.current = false;
         document.body.style.cursor = '';
-        scrollAccumulator.current = 0;
+        scrollAccumulator.current = 300; // Force to max
+        updateDragUI(1); // Ensure UI shows 100%
+        
+        // Prevent further processing
+        return;
       }
 
       touchStartY.current = y;
@@ -333,6 +361,9 @@ export const useProjectAnimation = (
       console.log('🔄 Resetting animation state');
       hasInitialized.current = false;
       isReturningToHero.current = false;
+      unlockTriggered.current = false;
+      scrollAccumulator.current = 0;
+      dragProgressRef.current = 0;
       setLocalAnimationPhase('initial');
     }
   }, [currentSection, animationPhase]);
@@ -344,6 +375,9 @@ export const useProjectAnimation = (
   const handleReturnToHero = useCallback(() => {
     console.log('🔄 Handling return to hero');
     isReturningToHero.current = true;
+    unlockTriggered.current = false;
+    scrollAccumulator.current = 0;
+    dragProgressRef.current = 0;
     setLocalAnimationPhase('initial');
   }, []);
 

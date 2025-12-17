@@ -25,10 +25,6 @@
 
 /* === NEED TO MIGRATE FROM MH1.CSS === */
 @import './project.css';
-
-/* ========================================
-   LEGACY SUPPORT (Remove after migration)
-   ======================================== */
    
 /* Work Experience Section */
 .work-container {
@@ -278,3 +274,4 @@
     height: 3px;
   }
 }
+

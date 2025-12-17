@@ -12,7 +12,6 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  transition: opacity 0.5s ease-out;
   overflow: hidden;
 }
 
@@ -22,6 +21,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transition: opacity 0.8s ease-out;
 }
 
 .project-background-gradient-mask {
@@ -31,7 +31,7 @@
     rgba(15, 23, 42, 1) 30%, 
     rgba(15, 23, 42, 0.5) 100%);
   pointer-events: none;
-  transition: opacity 0.3s ease-out;
+  z-index: 2; /* Ensure mask is on top */
 }
 
 /* === SECTIONS === */
@@ -59,6 +59,7 @@
   position: relative;
   z-index: 3;
   text-align: center; 
+  will-change: transform, opacity; /* Optimize animations */
 }
 
 /* === HERO SECTION === */
@@ -70,20 +71,22 @@
   background-clip: text;
   color: transparent;
   margin: -18rem 0 -3rem;
-  transition: opacity 0.8s ease-out;
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
   line-height: 2;
+  transform: translateY(0); /* Initial state */
 }
 
 .project-hero-subtitle {
   font-size: clamp(1rem, 10vw, 2rem);
   color: #cbd5e1;
   margin-top: 5rem;
-  transition: opacity 0.8s ease-out;
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
   text-align: center;
   margin-left: auto;
   margin-right: auto;
   max-width: min(90vw, 40ch);
   white-space: normal;
+  transform: translateY(0); /* Initial state */
 } 
 
 /* === SCROLL PROMPT === */
@@ -258,4 +261,20 @@
   padding: 0 var(--spacing-md);
   position: relative;
   z-index: 1;
+}
+
+/* === ANIMATIONS === */
+@keyframes project-scroll-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes project-scroll-dot {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+}
+
+@keyframes project-unlock-pulse {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(1.2); opacity: 0; }
 }

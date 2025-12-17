@@ -18,7 +18,7 @@
   display: flex;
   width: 100%;
   max-width: 1400px;
-  height: 80vh;
+  height: 90vh;
   gap: 2rem;
   align-items: stretch;
 }
@@ -106,30 +106,96 @@
   animation: logosColumnEntrance 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-.map-logo-item {
+/* ========================================
+   LOGO CONTAINER & IMAGE STYLES
+   ======================================== */
+.map-logo-container {
   width: 60px;
-  height: auto;
-  max-height: 60px;
-  object-fit: contain;
-  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
-  opacity: 0.5;
-  filter: grayscale(0.8);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Individual logo initial state */
+  /* Initial state before animation */
   opacity: 0;
   transform: translateY(20px) scale(0.8);
 }
 
-/* Logo animation when triggered by JS */
-.map-logo-item.logo-animated {
-  animation: logoReveal 0.6s ease-out forwards;
-  animation-play-state: running;
+.map-logo-img {
+  width: 100%;
+  height: auto;
+  max-height: 60px;
+  object-fit: contain;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Default state - 50% opacity, grayscale */
+  opacity: 0.5;
+  filter: grayscale(0.8) blur(0px);
 }
 
-.map-logo-item:hover {
-  transform: scale(1.1);
-  opacity: 1;
-  filter: grayscale(0);
+/* ========================================
+   LOGO ANIMATION STATES
+   ======================================== */
+
+/* After animation completes - container is visible, image at 50% opacity */
+.map-logo-container.logo-animated {
+  animation: logoContainerEntrance 0.6s ease-out forwards;
+}
+
+@keyframes logoContainerEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Keyframes for the actual image - ends at 50% opacity */
+@keyframes logoImgAfterAnimation {
+  0%, 100% {
+    opacity: 0.5;
+    filter: grayscale(0.8) blur(0px);
+  }
+}
+
+/* Apply the end state to the image after container animation */
+.map-logo-container.logo-animated .map-logo-img {
+  animation: logoImgAfterAnimation 0.6s ease-out forwards;
+  opacity: 0.5;
+  filter: grayscale(0.8) blur(0px);
+}
+
+/* ========================================
+   LOGO HOVER EFFECTS
+   ======================================== */
+
+/* Hover effect on container - scale up the container */
+.map-logo-container.logo-animated:hover {
+  transform: scale(1.15);
+}
+
+/* Hover effect on image - 100% opacity, no grayscale */
+.map-logo-container.logo-animated:hover .map-logo-img {
+  opacity: 1 !important;
+  filter: grayscale(0) blur(0px) !important;
+}
+
+/* Active hover state class */
+.map-logo-container.logo-hovered {
+  transform: scale(1.15);
+}
+
+.map-logo-container.logo-hovered .map-logo-img {
+  opacity: 1 !important;
+  filter: grayscale(0) blur(0px) !important;
 }
 
 /* ========================================
@@ -140,6 +206,7 @@
   padding: 2rem;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 1.5rem;
   border-radius: var(--radius-lg);
   backdrop-filter: blur(10px);
@@ -217,7 +284,6 @@
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.6);
   font-style: italic;
-  margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   
@@ -242,42 +308,26 @@
   }
   15% {
     opacity: 1;
-    transform: translateX(30px); /* First overshoot */
+    transform: translateX(30px);
   }
   25% {
-    transform: translateX(-15px); /* First bounce back */
+    transform: translateX(-15px);
   }
   35% {
-    transform: translateX(8px); /* Second overshoot */
+    transform: translateX(8px);
   }
   45% {
-    transform: translateX(-4px); /* Second bounce back */
+    transform: translateX(-4px);
   }
   55% {
-    transform: translateX(2px); /* Third overshoot */
+    transform: translateX(2px);
   }
   65% {
-    transform: translateX(0); /* Settle */
+    transform: translateX(0);
   }
   100% {
     opacity: 1;
     transform: translateX(0);
-  }
-}
-
-/* Individual logo reveal */
-@keyframes logoReveal {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(0.8);
-  }
-  70% {
-    transform: translateY(0) scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
@@ -421,6 +471,7 @@
     flex-direction: row;
     justify-content: center;
     padding: 1rem;
+    gap: 1.5rem;
   }
 
   /* Mobile logo column animation */
@@ -459,20 +510,23 @@
     }
   }
 
-  /* Mobile logo reveal */
-  @keyframes logoReveal {
-    0% {
-      opacity: 0;
-      transform: translateX(-20px) scale(0.8);
-    }
-    70% {
-      transform: translateX(0) scale(1.1);
-      opacity: 1;
-    }
-    100% {
-      opacity: 1;
-      transform: translateX(0) scale(1);
-    }
+  /* Mobile logo container */
+  .map-logo-container {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .map-logo-img {
+    max-height: 50px;
+  }
+
+  /* Mobile hover effects */
+  .map-logo-container.logo-animated:hover {
+    transform: scale(1.2);
+  }
+  
+  .map-logo-container.logo-hovered {
+    transform: scale(1.2);
   }
 
   .map-description-sidebar {
@@ -483,11 +537,6 @@
   .my-map-image {
     width: 250px;
     height: 175px;
-  }
-
-  .map-logo-item {
-    width: 50px;
-    max-height: 50px;
   }
 }
 
@@ -509,8 +558,12 @@
     gap: 1rem;
   }
 
-  .map-logo-item {
+  .map-logo-container {
     width: 40px;
+    height: 40px;
+  }
+  
+  .map-logo-img {
     max-height: 40px;
   }
 
@@ -533,48 +586,6 @@
 
   .map-metric-value {
     font-size: 0.9375rem;
-  }
-}
-
-/* Small Mobile (480px and below) */
-@media (max-width: 480px) {
-  .map-section-wrapper {
-    padding: 0.5rem;
-  }
-
-  .map-animation-container {
-    min-height: 250px;
-  }
-
-  .map-logo-item {
-    width: 35px;
-    max-height: 35px;
-  }
-
-  .map-description-sidebar {
-    padding: 1rem;
-  }
-
-  .map-sidebar-title {
-    font-size: 1.25rem;
-  }
-
-  .map-metric-label {
-    font-size: 0.75rem;
-  }
-
-  .map-metric-value {
-    font-size: 0.875rem;
-  }
-
-  .my-map-image {
-    width: 150px;
-    height: 100px;
-  }
-
-  .timeline-debug-info {
-    font-size: 8px;
-    padding: 1px 3px;
   }
 }
 
@@ -604,7 +615,8 @@
    ======================================== */
 @media (prefers-reduced-motion: reduce) {
   .map-logos-column,
-  .map-logo-item,
+  .map-logo-container,
+  .map-logo-img,
   .map-description-sidebar,
   .map-sidebar-title,
   .map-metric-item,
@@ -615,7 +627,7 @@
   }
   
   .map-logos-column.timeline-started,
-  .map-logo-item.logo-animated,
+  .map-logo-container.logo-animated,
   .map-sidebar-title.title-animated,
   .map-metric-item.metric-animated,
   .map-disclaimer.disclaimer-animated,
@@ -625,41 +637,14 @@
     transform: none !important;
     visibility: visible !important;
   }
-}
-
-/* ========================================
-   PRINT STYLES
-   ======================================== */
-@media print {
-  .map-section-wrapper {
-    height: auto;
-    padding: 0;
+  
+  .map-logo-img {
+    opacity: 0.5 !important;
+    filter: grayscale(0.8) !important;
   }
   
-  .map-flex-container {
-    flex-direction: column;
-    height: auto;
-    gap: 1rem;
-  }
-  
-  .map-animation-container,
-  .map-logos-column,
-  .map-description-sidebar {
-    flex: 0 0 auto;
-    min-height: auto;
-    backdrop-filter: none;
-    background: white !important;
-    color: black !important;
-    border: 1px solid #ccc;
-  }
-  
-  .map-logo-item {
-    filter: grayscale(1) !important;
+  .map-logo-container:hover .map-logo-img {
     opacity: 1 !important;
-  }
-  
-  .timeline-debug-info,
-  .dev-animation-trigger {
-    display: none !important;
+    filter: grayscale(0) !important;
   }
 }

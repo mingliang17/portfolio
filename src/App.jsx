@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 
 import React, { useEffect, useRef } from 'react';
 import {useNavbarHeight} from './hooks/index.js';
-import Navbar from './sections/Navbar.jsx';
+import Navbar from './components/common/Navbar.jsx';
 import Contact from './sections/Contact.jsx'
 
 const Home = lazy(() => import('./pages/Home.jsx'));

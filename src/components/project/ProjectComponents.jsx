@@ -22,26 +22,26 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
   };
 
   return (
-    <>
-      {/* Loading Spinner */}
-      {isLoading && (
-        <div className="mh1-loading-overlay">
-          <div className="mh1-loading-spinner" />
-          <p className="mh1-loading-text">Loading Experience...</p>
-        </div>
-      )}
-
+    <>  
       {/* Background Image */}
-      <div 
-        className="project-background-wrapper"
-        style={{ 
-          opacity: isLoading ? 0 : backgroundFade,
-          transition: 'opacity 0.8s ease-out'
-        }}
-      >
+      <div className="project-background-wrapper">
+        {/* Background Gradient Mask - Loads immediately, no fade-in */}
+        <div 
+          className="project-background-gradient-mask"
+          style={{ 
+            opacity: gradientOpacity,
+            transition: 'opacity 0.5s ease-out'
+          }}
+        />
+        
+        {/* Background Image with fade-in */}
         <div 
           className="project-background-image"
-          style={{ backgroundImage: `url('${imagePath}')` }}
+          style={{ 
+            backgroundImage: `url('${imagePath}')`,
+            opacity: isLoading ? 0 : backgroundFade,
+            transition: 'opacity 0.8s ease-out'
+          }}
         >
           {/* Hidden image for preloading */}
           <img
@@ -52,14 +52,6 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
             style={{ display: 'none' }}
           />
         </div>
-        
-        <div 
-          className="project-background-gradient-mask"
-          style={{ 
-            opacity: gradientOpacity,
-            transition: 'opacity 0.5s ease-out'
-          }}
-        />
       </div>
 
       {/* Error State */}
@@ -73,24 +65,37 @@ export const HeroBackground = ({ backgroundFade, gradientOpacity, imagePath }) =
 };
 
 // Hero Content (Animated Title & Subtitle)
-export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => (
-  <div 
-    className="project-content-center"
-    style={{ 
-      opacity: titleOpacity,
-      transition: 'opacity 0.8s ease-out',
-      transform: `translateY(${(1 - titleOpacity) * 20}px)`, // Subtle move up
-      willChange: 'opacity, transform'
-    }}
-  >
-    <h1 className="project-hero-title unselectable">
-      {title}
-    </h1>
-    <p className="project-hero-subtitle unselectable">
-      {subtitle}
-    </p>
-  </div>
-);
+export const HeroContent = ({ titleOpacity = 1, title, subtitle }) => {
+  // Calculate transform based on opacity for smooth animation
+  const transformValue = `translateY(${(1 - titleOpacity) * 20}px)`;
+  
+  return (
+    <div className="project-content-center">
+      <h1 
+        className="project-hero-title unselectable"
+        style={{ 
+          opacity: titleOpacity,
+          transform: transformValue,
+          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+          willChange: 'opacity, transform'
+        }}
+      >
+        {title}
+      </h1>
+      <p 
+        className="project-hero-subtitle unselectable"
+        style={{ 
+          opacity: titleOpacity,
+          transform: transformValue,
+          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+          willChange: 'opacity, transform'
+        }}
+      >
+        {subtitle}
+      </p>
+    </div>
+  );
+};
 
 
 // ===================================

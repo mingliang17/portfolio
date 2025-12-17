@@ -2,7 +2,7 @@
 // Reusable layout component for all project pages
 
 import React from 'react';
-import { NavigationDots, UnlockOverlay, DragProgressIndicator } from '../common/LayoutComponents.jsx';
+import { NavigationDots } from '../common/LayoutComponents.jsx';
 
 /**
  * ProjectLayout - Base layout for all project detail pages
@@ -27,32 +27,50 @@ const ProjectLayout = ({
   children,
   className = '',
 }) => {
+  
+  // Determine if NavigationDots should be visible
+  const shouldShowNavDots = totalSections > 1 && (
+    animationPhase === 'completed' || 
+    animationPhase === 'waiting' || 
+    currentSection > 0
+  );
+
   return (
-    <div className="project-base-container">
-      {/* Navigation Dots - Always visible */}
-      <NavigationDots
-        totalSections={totalSections}
-        currentSection={currentSection}
-        onSectionChange={onSectionChange}
-        disabled={animationPhase !== 'completed'}
-      />
-
-      {/* Unlock Animation Overlay - Shows during unlock phase */}
-      <UnlockOverlay
-        unlockProgress={unlockProgress}
-        visible={animationPhase === 'unlocking' && currentSection === 0}
-      />
-
-      {/* Drag Progress Indicator - Shows during waiting phase */}
-      <DragProgressIndicator
-        progress={dragProgress}
-        visible={currentSection === 0 && animationPhase === 'waiting' && dragProgress > 0}
-      />
+    <div className={`project-base-container ${className}`}>
+      {/* Navigation Dots - Conditional visibility */}
+      {shouldShowNavDots && (
+        <NavigationDots
+          totalSections={totalSections}
+          currentSection={currentSection}
+          onSectionChange={onSectionChange}
+          disabled={animationPhase === 'unlocking' || animationPhase === 'fadeout'}
+        />
+      )}
 
       {/* Main Content Container */}
       <div className="project-section-container">
         {children}
       </div>
+
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          position: 'fixed',
+          bottom: '10px',
+          left: '10px',
+          background: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '8px 12px',
+          borderRadius: '4px',
+          fontSize: '11px',
+          zIndex: 9999,
+          fontFamily: 'monospace'
+        }}>
+          <div>Section: {currentSection + 1}/{totalSections}</div>
+          <div>Phase: {animationPhase}</div>
+          <div>Show Dots: {shouldShowNavDots ? 'Yes' : 'No'}</div>
+        </div>
+      )}
     </div>
   );
 };
