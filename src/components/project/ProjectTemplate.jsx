@@ -1,23 +1,21 @@
-import React, { Suspense, useState, useCallback, useEffect } from 'react';
+// src/components/project/ProjectTemplate.jsx
+// UPDATED: GSAP integration + simplified navbar
+
+import React, { useCallback, useState } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from './ProjectComponents.jsx';
-import { ScrollPrompt, ComponentLoading } from '../common/LayoutComponents.jsx';
-import { useProjectAnimation, useProjectNavigation, useNavbarControl } from '../../hooks/index.js';
-
-// ====================================================
-// PROJECT TEMPLATE - REUSABLE COMPONENT (DO NOT EDIT)
-// ====================================================
+import { ScrollPrompt } from '../common/LayoutComponents.jsx';
+import { useProjectAnimation, useProjectNavigation } from '../../hooks/index.js';
 
 const ProjectTemplate = ({
   projectData,
   totalSections = 5,
   sections = [],
-  enableNavbar = true,
   onSectionChange = null,
 }) => {
   
   // ====================================================
-  // ERROR HANDLING - Validate required props
+  // VALIDATION
   // ====================================================
   if (!projectData) {
     console.error('❌ ProjectTemplate: projectData is required');
@@ -30,42 +28,17 @@ const ProjectTemplate = ({
   }
 
   // ====================================================
-  // STATE MANAGEMENT - Animation and navigation states
+  // STATE
   // ====================================================
   const [animationPhase, setAnimationPhase] = useState('initial');
   const [currentSection, setCurrentSection] = useState(0);
   const [startMapAnimation, setStartMapAnimation] = useState(false);
 
   // ====================================================
-  // NAVBAR CONTROL FOR PROJECT MH1
-  // ====================================================
-  useEffect(() => {
-    if (!enableNavbar) return;
-    
-    // Hide navbar when past section 1 (Map section)
-    const shouldHideNavbar = currentSection > 1;
-    
-    if (shouldHideNavbar) {
-      // Dispatch event to hide navbar
-      window.dispatchEvent(new CustomEvent('projectMH1-navbar-hide'));
-    } else {
-      // Show navbar for sections 0 and 1
-      window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
-    }
-
-    // Cleanup when component unmounts or section changes
-    return () => {
-      if (shouldHideNavbar) {
-        window.dispatchEvent(new CustomEvent('projectMH1-navbar-show'));
-      }
-    };
-  }, [currentSection, enableNavbar]);
-
-  // ====================================================
-  // EVENT HANDLERS - Navigation callbacks
+  // EVENT HANDLERS
   // ====================================================
   const handleAnimationComplete = useCallback(() => {
-    console.log('🎉 Hero animation complete → Moving to section 1');
+    console.log('🎉 Hero animation complete → Section 1');
     setCurrentSection(1);
     onSectionChange?.(1);
   }, [onSectionChange]);
@@ -86,12 +59,11 @@ const ProjectTemplate = ({
   }, [onSectionChange]);
 
   // ====================================================
-  // CUSTOM HOOKS - Animation, navigation, and UI controls
+  // CUSTOM HOOKS
   // ====================================================
   const {
-    titleOpacity,
+    titleShouldAnimate,  // CHANGED: Now controls GSAP trigger
     unlockProgress,
-    gradientOpacity,
     backgroundFade,
     dragProgress,
     handleReturnToHero,
@@ -101,13 +73,7 @@ const ProjectTemplate = ({
     setAnimationPhase
   );
 
-  // ALWAYS call this hook - condition is handled inside
-  const navbarControlResult = useNavbarControl(
-    currentSection, 
-    animationPhase, 
-    dragProgress,
-    enableNavbar // Pass enableNavbar as a parameter instead of conditionally calling
-  );
+  // REMOVED: useNavbarControl (navbar is now always visible)
 
   useProjectNavigation(
     totalSections, 
@@ -120,7 +86,7 @@ const ProjectTemplate = ({
   );
 
   // ====================================================
-  // SECTION RENDERER - Renders sections based on type
+  // SECTION RENDERER
   // ====================================================
   const renderSection = (sectionConfig, index) => {
     if (currentSection !== index) return null;
@@ -132,13 +98,11 @@ const ProjectTemplate = ({
             <HeroBackground
               imagePath={sectionConfig.backgroundImage}
               backgroundFade={backgroundFade}
-              gradientOpacity={gradientOpacity}
-              visible={true}
             />
             <HeroContent
               title={sectionConfig.title}
               subtitle={sectionConfig.subtitle}
-              titleOpacity={titleOpacity}
+              shouldAnimate={titleShouldAnimate}  // CHANGED: Trigger GSAP
             />
             <ScrollPrompt
               dragProgress={dragProgress}
@@ -166,19 +130,7 @@ const ProjectTemplate = ({
   };
 
   // ====================================================
-  // DEVELOPMENT LOGS - Only in development mode
-  // ====================================================
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 ProjectTemplate State:', { 
-      projectId: projectData.id,
-      currentSection, 
-      animationPhase,
-      dragProgress: dragProgress?.toFixed(2),
-    });
-  }
-
-  // ====================================================
-  // MAIN RENDER - ProjectLayout with all sections
+  // RENDER
   // ====================================================
   return (
     <ProjectLayout

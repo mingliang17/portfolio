@@ -25,7 +25,10 @@
 
 /* === NEED TO MIGRATE FROM MH1.CSS === */
 @import './project.css';
-   
+
+
+@import './navbar.css';
+
 /* Work Experience Section */
 .work-container {
   display: grid;

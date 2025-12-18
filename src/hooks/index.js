@@ -18,7 +18,6 @@
 // ===================================
 export { useProjectAnimation } from './useProjectAnimation.js';
 export { useProjectNavigation } from './useProjectNavigation.js';
-export { useNavbarControl } from './useNavbarControl.js';
 export { useNavbarHeight } from './useNavbarHeight.js';
 
 // Default export for convenience
