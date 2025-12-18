@@ -72,6 +72,8 @@ export const PROJECT_ASSETS = {
       assetPath('assets/projects/mh1/images/2.jpg'),
       assetPath('assets/projects/mh1/images/3.jpg'),
       assetPath('assets/projects/mh1/images/4.jpg'),
+      assetPath('assets/projects/mh1/images/5.jpg'),
+
     ],
     
     map: {

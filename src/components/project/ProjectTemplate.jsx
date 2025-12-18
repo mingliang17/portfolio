@@ -1,5 +1,5 @@
 // src/components/project/ProjectTemplate.jsx
-// UPDATED: GSAP integration + simplified navbar
+// UPDATED: Pass both background and title animation props
 
 import React, { useCallback, useState } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
@@ -62,9 +62,9 @@ const ProjectTemplate = ({
   // CUSTOM HOOKS
   // ====================================================
   const {
-    titleShouldAnimate,  // CHANGED: Now controls GSAP trigger
+    backgroundShouldAnimate,  // NEW: For background + gradient
+    titleShouldAnimate,       // For title + subtitle
     unlockProgress,
-    backgroundFade,
     dragProgress,
     handleReturnToHero,
   } = useProjectAnimation(
@@ -72,8 +72,6 @@ const ProjectTemplate = ({
     handleAnimationComplete, 
     setAnimationPhase
   );
-
-  // REMOVED: useNavbarControl (navbar is now always visible)
 
   useProjectNavigation(
     totalSections, 
@@ -97,12 +95,12 @@ const ProjectTemplate = ({
           <section key={index} className="project-section">
             <HeroBackground
               imagePath={sectionConfig.backgroundImage}
-              backgroundFade={backgroundFade}
+              shouldAnimate={backgroundShouldAnimate}  // GSAP trigger
             />
             <HeroContent
               title={sectionConfig.title}
               subtitle={sectionConfig.subtitle}
-              shouldAnimate={titleShouldAnimate}  // CHANGED: Trigger GSAP
+              shouldAnimate={titleShouldAnimate}  // GSAP trigger
             />
             <ScrollPrompt
               dragProgress={dragProgress}

@@ -1,5 +1,5 @@
 // src/components/project/ProjectComponents.jsx
-// FIXED: Using GSAP for smooth timeline animations
+// FIXED: Background and gradient fade together using GSAP
 
 import React, { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
@@ -8,9 +8,17 @@ import gsap from 'gsap';
 // HERO SECTION
 // ===================================
 
-export const HeroBackground = ({ backgroundFade, imagePath }) => {
+/**
+ * HeroBackground - GSAP-powered synchronized fade
+ * Background image and gradient mask fade in together
+ */
+export const HeroBackground = ({ shouldAnimate = false, imagePath }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  
+  const backgroundRef = useRef(null);
+  const gradientRef = useRef(null);
+  const hasAnimated = useRef(false);
 
   const handleImageLoad = () => {
     console.log('✅ Hero image loaded');
@@ -23,18 +31,62 @@ export const HeroBackground = ({ backgroundFade, imagePath }) => {
     setHasError(true);
   };
 
+  // GSAP animation when image is loaded and shouldAnimate is true
+  useEffect(() => {
+    if (!shouldAnimate || hasAnimated.current || isLoading) return;
+    if (!backgroundRef.current || !gradientRef.current) return;
+
+    console.log('🎬 GSAP: Animating background + gradient together');
+    hasAnimated.current = true;
+
+    // Set initial state (hidden)
+    gsap.set([backgroundRef.current, gradientRef.current], {
+      opacity: 0
+    });
+
+    // Animate both together
+    gsap.to([backgroundRef.current, gradientRef.current], {
+      opacity: 1,
+      duration: 0.8,
+      ease: 'power2.out',
+      onComplete: () => {
+        console.log('✅ GSAP: Background + gradient animation complete');
+      }
+    });
+
+  }, [shouldAnimate, isLoading]);
+
+  // Reset when returning to hero
+  useEffect(() => {
+    if (!shouldAnimate && hasAnimated.current) {
+      console.log('🔄 GSAP: Resetting background animation');
+      hasAnimated.current = false;
+      if (backgroundRef.current && gradientRef.current) {
+        gsap.set([backgroundRef.current, gradientRef.current], {
+          opacity: 0
+        });
+      }
+    }
+  }, [shouldAnimate]);
+
   return (
     <>  
       <div className="project-background-wrapper">
-        <div className="project-background-gradient-mask" />
-        
+        {/* Gradient Mask - Animated with GSAP */}
         <div 
+          ref={gradientRef}
+          className="project-background-gradient-mask"
+        />
+        
+        {/* Background Image - Animated with GSAP */}
+        <div 
+          ref={backgroundRef}
           className="project-background-image"
           style={{ 
             backgroundImage: `url('${imagePath}')`,
-            opacity: isLoading ? 0 : backgroundFade
           }}
         >
+          {/* Hidden image for preloading */}
           <img
             src={imagePath}
             alt="Hero background"
@@ -55,8 +107,7 @@ export const HeroBackground = ({ backgroundFade, imagePath }) => {
 };
 
 /**
- * HeroContent - GSAP-powered animation
- * Automatically animates when shouldAnimate prop changes
+ * HeroContent - GSAP-powered title animation
  */
 export const HeroContent = ({ shouldAnimate = false, title, subtitle }) => {
   const titleRef = useRef(null);
@@ -64,11 +115,10 @@ export const HeroContent = ({ shouldAnimate = false, title, subtitle }) => {
   const hasAnimated = useRef(false);
 
   useEffect(() => {
-    // Only animate once when shouldAnimate becomes true
     if (!shouldAnimate || hasAnimated.current) return;
     if (!titleRef.current || !subtitleRef.current) return;
 
-    console.log('🎬 GSAP: Starting hero animation');
+    console.log('🎬 GSAP: Starting title animation');
     hasAnimated.current = true;
 
     // Create GSAP timeline
@@ -89,13 +139,12 @@ export const HeroContent = ({ shouldAnimate = false, title, subtitle }) => {
     tl.to([titleRef.current, subtitleRef.current], {
       opacity: 1,
       y: 0,
-      stagger: 0.1, // Subtitle starts 0.1s after title
+      stagger: 0.1,
       onComplete: () => {
-        console.log('✅ GSAP: Hero animation complete');
+        console.log('✅ GSAP: Title animation complete');
       }
     });
 
-    // Cleanup
     return () => {
       tl.kill();
     };
@@ -104,7 +153,7 @@ export const HeroContent = ({ shouldAnimate = false, title, subtitle }) => {
   // Reset animation when component unmounts or returns to hero
   useEffect(() => {
     if (!shouldAnimate && hasAnimated.current) {
-      console.log('🔄 GSAP: Resetting animation');
+      console.log('🔄 GSAP: Resetting title animation');
       hasAnimated.current = false;
       if (titleRef.current && subtitleRef.current) {
         gsap.set([titleRef.current, subtitleRef.current], {
@@ -162,7 +211,7 @@ export const ImageSlider = () => {
   };
 
   const handleTouchMove = (e) => {
-    if (isDragging) handleMove(e.touches[0].clientY);
+    if (isDragging) handleMove(e.touches[0].clientX);
   };
 
   React.useEffect(() => {
