@@ -1,4 +1,6 @@
 // src/sections/projects/Carousel.jsx
+// FIXED MAGNIFIER - Now works at any zoom level (0.5x to 100x+)
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ICONS } from '../../assets/index.js';
@@ -11,8 +13,13 @@ const POSITIONS = {
   2: { x: 100, z: -500, rotateY: 35, scale: 0.65, opacity: 0.5, blur: 8 }
 };
 
-const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators }) => {
-  // Use the carouselData prop directly - don't fetch anything!
+const Carousel = ({ 
+  carouselData = [], 
+  title = 'Gallery', 
+  autoPlay = false, 
+  showControls = true, 
+  showIndicators = true 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -20,17 +27,45 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
 
   const [magnifyActive, setMagnifyActive] = useState(false);
   const [magnifyPosition, setMagnifyPosition] = useState({ x: 0, y: 0 });
-  const [magnifyOffset, setMagnifyOffset] = useState({ x: 0, y: 0 });
+  // FIXED: Store pixel offsets AND rendered dimensions
+  const [magnifyOffset, setMagnifyOffset] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const hoverTimeoutRef = useRef(null);
   const closeTimeoutRef = useRef(null);
   const itemRefs = useRef({});
   const zoomImageRef = useRef(null);
 
-  const totalItems = carouselData ? carouselData.length : 0;
+  // Configurable magnifier settings
+  const MAGNIFY_SIZE = 400;      // Size of the magnifying glass circle
+  const MAGNIFY_ZOOM = 2.5;       // Zoom factor (try 2.5, 5, 10, 20, etc.)
 
-  const MAGNIFY_SIZE = 200;
-  const MAGNIFY_ZOOM = 2.5;
+  // Normalize carousel data
+  const normalizedData = React.useMemo(() => {
+    if (!carouselData || !Array.isArray(carouselData)) {
+      console.warn('Carousel: Invalid carouselData, expected array');
+      return [];
+    }
+    
+    return carouselData.map((item, index) => {
+      if (typeof item === 'string') {
+        return {
+          id: index,
+          image: item,
+          title: `Image ${index + 1}`,
+          description: ''
+        };
+      }
+      
+      return {
+        id: item.id ?? index,
+        image: item.image || '',
+        title: item.title || `Image ${index + 1}`,
+        description: item.description || ''
+      };
+    });
+  }, [carouselData]);
+
+  const totalItems = normalizedData.length;
 
   const goToNext = useCallback(() => {
     if (isAnimating || zoomedImage || totalItems === 0) return;
@@ -95,7 +130,7 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
     }
 
     setZoomedImage(image);
-    setMagnifyActive(false); // Reset on open
+    setMagnifyActive(false);
   }, []);
 
   const closeZoom = useCallback(() => {
@@ -109,11 +144,10 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
     if (zoomedImage || index !== currentIndex) return;
 
     hoverTimeoutRef.current = setTimeout(() => {
-      const item = carouselData[index];
-      const imageSrc = item.image; // item is an object with image property
-      openZoom(imageSrc, index);
+      const item = normalizedData[index];
+      openZoom(item.image, index);
     }, 800);
-  }, [zoomedImage, currentIndex, openZoom, carouselData]);
+  }, [zoomedImage, currentIndex, openZoom, normalizedData]);
 
   const handleItemMouseLeave = useCallback(() => {
     if (hoverTimeoutRef.current) {
@@ -147,23 +181,41 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
     });
   }, []);
 
+  // FIXED: Pixel-based magnifier positioning with proper background size calculation
   const handleImageMouseMove = useCallback((e) => {
     if (!magnifyActive || !zoomImageRef.current) return;
 
     const rect = zoomImageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Get mouse position relative to the image
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    const clampedX = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.width - MAGNIFY_SIZE / 2, x));
-    const clampedY = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.height - MAGNIFY_SIZE / 2, y));
+    // Clamp the magnifier position to stay within image bounds
+    const clampedX = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.width - MAGNIFY_SIZE / 2, mouseX));
+    const clampedY = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.height - MAGNIFY_SIZE / 2, mouseY));
 
+    // Set the magnifier circle position
     setMagnifyPosition({ x: clampedX, y: clampedY });
 
-    const bgX = (clampedX / rect.width) * 100;
-    const bgY = (clampedY / rect.height) * 100;
+    // CRITICAL FIX: Calculate pixel offset for background position
+    // The background image needs to be positioned so that the point under the cursor
+    // appears at the center of the magnifier lens
+    
+    // Calculate the offset: where the magnified image should start
+    // Formula: (mouse position * zoom factor) - (lens radius)
+    // This centers the magnified portion under the cursor
+    const bgOffsetX = mouseX * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2;
+    const bgOffsetY = mouseY * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2;
 
-    setMagnifyOffset({ x: bgX, y: bgY });
-  }, [magnifyActive]);
+    setMagnifyOffset({ 
+      x: bgOffsetX, 
+      y: bgOffsetY,
+      // Store the rendered dimensions for background-size calculation
+      width: rect.width,
+      height: rect.height
+    });
+  }, [magnifyActive, MAGNIFY_SIZE, MAGNIFY_ZOOM]);
 
   useEffect(() => {
     return () => {
@@ -172,30 +224,36 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
     };
   }, []);
 
-  // Early return if no data
-  if (!carouselData || carouselData.length === 0) {
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (zoomedImage) return;
+      if (e.key === 'ArrowLeft') goToPrev();
+      if (e.key === 'ArrowRight') goToNext();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToPrev, goToNext, zoomedImage]);
+
+  if (totalItems === 0) {
     return (
-      <div className="carousel">
+      <div className="carousel-container">
         <div className="carousel-header">
-          <h2 className="carousel-title">{title || 'Gallery'}</h2>
+          <h2 className="carousel-title">{title}</h2>
+        </div>
+        <div className="carousel-empty-state">
           <p className="carousel-empty">No images available</p>
         </div>
       </div>
     );
   }
 
-  // Get current item
-  const currentItem = carouselData[currentIndex] || {};
+  const currentItem = normalizedData[currentIndex] || {};
 
   return (
     <>
-      {/* Carousel Title */}
-      {title && (
-        <div className="carousel-header">
-          <h2 className="carousel-title">{title}</h2>
-        </div>
-      )}
-
+      {/* Zoom Overlay Portal */}
       {zoomedImage && createPortal(
         <div 
           className="zoom-overlay"
@@ -220,7 +278,7 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
               onClick={closeZoom}
               title="Close Zoom"
             >
-              <img src={ICONS.close} alt="Close Zoom" />
+              <img src={ICONS.close} alt="Close" />
             </button>
 
             <div className="zoom-image" onClick={handleImageClick}>
@@ -232,57 +290,135 @@ const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators 
               />
             </div>
 
-            {magnifyActive && (
+            {/* FIXED: Magnifier with pixel-based positioning and explicit dimensions */}
+            {magnifyActive && magnifyOffset.width && (
               <div 
                 className="magnify-lens"
                 style={{
-                  left: `${magnifyPosition.x - MAGNIFY_SIZE / 2}px`,
-                  top: `${magnifyPosition.y - MAGNIFY_SIZE / 2}px`,
-                  backgroundPosition: `${-magnifyOffset.x}% ${-magnifyOffset.y}%`,
-                  backgroundSize: `${MAGNIFY_ZOOM * 100}%`,
+                  left: `${magnifyPosition.x}px`,
+                  top: `${magnifyPosition.y}px`,
+                  width: `${MAGNIFY_SIZE}px`,
+                  height: `${MAGNIFY_SIZE}px`,
+                  // CRITICAL: Use explicit pixel dimensions for background-size
+                  // This ensures the background image scales correctly at any zoom level
+                  backgroundSize: `${magnifyOffset.width * MAGNIFY_ZOOM}px ${magnifyOffset.height * MAGNIFY_ZOOM}px`,
+                  // Position using negative pixels to align with cursor
+                  backgroundPosition: `-${magnifyOffset.x}px -${magnifyOffset.y}px`,
                   backgroundImage: `url(${zoomedImage})`,
+                  transform: 'translate(-50%, -50%)',
                 }}
               />
+            )}
+
+            {/* Hints */}
+            {!magnifyActive ? (
+              <div className="zoom-hint">
+                Click image to enable magnifier (Zoom: {MAGNIFY_ZOOM}x)
+              </div>
+            ) : (
+              <div className="zoom-hint zoom-hint-active">
+                Click again to disable magnifier
+              </div>
             )}
           </div>
         </div>,
         document.body
       )}
 
-      <div className="carousel">
-        <div className="carousel-wrapper">
-          {carouselData.map((item, index) => (
-            <div 
-              className="carousel-item"
-              key={item.id || index}
-              style={getItemStyle(index)}
-              ref={(el) => (itemRefs.current[index] = el)}
-              onMouseEnter={() => handleItemMouseEnter(index)}
-              onMouseLeave={handleItemMouseLeave}
-              onClick={() => openZoom(item.image, index)}
-            >
-              <img
-                className="carousel-image"
-                src={item.image}
-                alt={item.title || 'Carousel Image'}
-              />
-              {(item.title || item.description) && (
-                <div className="carousel-item-info">
-                  {item.title && <h3>{item.title}</h3>}
-                  {item.description && <p>{item.description}</p>}
+      {/* Carousel Container */}
+      <div className="carousel-container">
+        {/* Title Header */}
+        {title && (
+          <div className="carousel-header">
+            <h2 className="carousel-title">{title}</h2>
+          </div>
+        )}
+
+        {/* Main Carousel */}
+        <div className="carousel">
+          <div className="carousel-wrapper">
+            {normalizedData.map((item, index) => (
+              <div 
+                className="carousel-item"
+                key={item.id}
+                data-position={index - currentIndex}
+                style={getItemStyle(index)}
+                ref={(el) => (itemRefs.current[index] = el)}
+                onMouseEnter={() => handleItemMouseEnter(index)}
+                onMouseLeave={handleItemMouseLeave}
+                onClick={() => index === currentIndex && openZoom(item.image, index)}
+              >
+                <div className="item-frame" />
+                <div className="item-image-wrapper">
+                  <img
+                    className="item-image"
+                    src={item.image}
+                    alt={item.title}
+                    loading="lazy"
+                  />
                 </div>
-              )}
-            </div>
-          ))}
+                {index === currentIndex && (item.title || item.description) && (
+                  <div className="item-label">
+                    {item.title}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Controls */}
+          {showControls && (
+            <>
+              <button 
+                className="carousel-prev" 
+                onClick={goToPrev}
+                disabled={isAnimating || totalItems <= 1}
+                aria-label="Previous slide"
+              >
+                <img src={ICONS.leftArrow} alt="Previous" />
+              </button>
+              <button 
+                className="carousel-next" 
+                onClick={goToNext}
+                disabled={isAnimating || totalItems <= 1}
+                aria-label="Next slide"
+              >
+                <img src={ICONS.rightArrow} alt="Next" />
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Carousel Navigation */}
-        <button className="carousel-prev" onClick={goToPrev}>
-          <img src={ICONS.leftArrow} alt="Previous" />
-        </button>
-        <button className="carousel-next" onClick={goToNext}>
-          <img src={ICONS.rightArrow} alt="Next" />
-        </button>
+        {/* Bottom Panel */}
+        <div className="bottom-panel">
+          {/* Description */}
+          {currentItem.description && (
+            <div className="description-panel">
+              <p>{currentItem.description}</p>
+            </div>
+          )}
+
+          {/* Indicators */}
+          {showIndicators && totalItems > 1 && (
+            <div className="indicators">
+              {normalizedData.map((item, index) => (
+                <button
+                  key={item.id}
+                  className={`indicator ${index === currentIndex ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Information */}
+          {currentItem.information && (
+            <div className="information-panel">
+              <pre>{currentItem.information}</pre>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

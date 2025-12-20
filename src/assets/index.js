@@ -101,19 +101,19 @@ const MH1_CAROUSEL_ITEMS = [
 const MH2_CAROUSEL_PRIMARY_ITEMS = [
   {
     id: 1,
-    image: assetPath('assets/projects/mh2/images/1.jpg'),
+    image: assetPath('assets/projects/mh1/images/1.jpg'),
     title: 'Concept Phase - Initial Design',
     description: 'Initial architectural concepts and spatial planning.',
   },
   {
     id: 2,
-    image: assetPath('assets/projects/mh2/images/2.jpg'),
+    image: assetPath('assets/projects/mh1/images/2.jpg'),
     title: 'Concept Phase - 3D Visualization',
     description: 'Three-dimensional renderings of proposed infrastructure.',
   },
   {
     id: 3,
-    image: assetPath('assets/projects/mh2/images/3.jpg'),
+    image: assetPath('assets/projects/mh1/images/3.jpg'),
     title: 'Concept Phase - Site Analysis',
     description: 'Geographic and environmental analysis of project location.',
   },
@@ -122,19 +122,19 @@ const MH2_CAROUSEL_PRIMARY_ITEMS = [
 const MH2_CAROUSEL_SECONDARY_ITEMS = [
   {
     id: 4,
-    image: assetPath('assets/projects/mh2/images/4.jpg'),
+    image: assetPath('assets/projects/mh1/images/4.jpg'),
     title: 'Detail Phase - Structural Engineering',
     description: 'Detailed structural analysis and engineering drawings.',
   },
   {
     id: 5,
-    image: assetPath('assets/projects/mh2/images/5.jpg'),
+    image: assetPath('assets/projects/mh1/images/5.jpg'),
     title: 'Detail Phase - Material Specifications',
     description: 'Material selections and technical specifications.',
   },
   {
     id: 6,
-    image: assetPath('assets/projects/mh2/images/6.jpg'),
+    image: assetPath('assets/projects/mh1/images/6.jpg'),
     title: 'Detail Phase - Final Integration',
     description: 'Complete project integration and system optimization.',
   },
