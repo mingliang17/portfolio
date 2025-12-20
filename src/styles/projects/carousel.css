@@ -1,429 +1,408 @@
+/* ========================================
+   CAROUSEL - CLEANED & OPTIMIZED
+   Added: Magnifying glass zoom
+   Removed: Duplicate animations, redundant styles
+   ======================================== */
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { overflow-x: hidden; }
-  
-  @keyframes liquid-flow {
-    0%, 100% { 
-      transform: translate(-50%, -50%) scale(1) rotate(0deg);
-      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    }
-    50% { 
-      transform: translate(-50%, -50%) scale(1.05) rotate(180deg);
-      border-radius: 70% 30% 50% 50% / 30% 70% 50% 70%;
-    }
+/* === ANIMATIONS === */
+@keyframes liquid-flow {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.05) rotate(180deg);
+    border-radius: 70% 30% 50% 50% / 30% 70% 50% 70%;
+  }
+}
 
-  @keyframes liquid-float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-  }
+@keyframes liquid-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
 
-  @keyframes liquid-shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
+@keyframes liquid-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
 
-  @keyframes liquid-glow {
-    0%, 100% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
-  }
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
 
-  .carousel-container {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2rem;
-    border: violet 2px solid;
-  }
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 
-  .carousel-title {
-    font-size: 2rem;
-    font-weight: 300;
-    background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(200,220,255,0.9) 50%, rgba(255,255,255,0.9) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: liquid-shimmer 3s ease-in-out infinite;
-    border: orange 2px solid;
-  }
-/*
-  .carousel-stage {
-    position: relative;
-    height: 90vh;
-    min-height: 400px;
-    width: 100%;
-    perspective: 1400px; 
-    transform-style: preserve-3d;
-    margin-bottom: 2rem;
-    border: pink 2px solid;
-  }
-  */
-  .carousel-track {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border: green 2px solid;
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .carousel-item {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 400px;
-    height: 300px;
-    transform-style: preserve-3d;
-    cursor: pointer;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .item-frame {
-    position: absolute;
-    inset: -20px;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    background: linear-gradient(135deg, rgba(100, 149, 237, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 0 60px rgba(100, 149, 237, 0.2);
-    z-index: -1;
-  }
-
-  .carousel-item[data-position="0"] .item-frame {
-    box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.1), 0 0 100px rgba(100, 149, 237, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .item-image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .item-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s ease;
-  }
-
-  .carousel-item[data-position="0"]:hover .item-image {
-    transform: scale(1.05);
-  }
-
-  .item-label {
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: liquid-float 3s ease-in-out infinite;
-    color: white;
-    font-size: 1.1rem;
-    white-space: nowrap;
-  }
-
-  .carousel-controls {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    transform: translateY(-50%);
-    display: flex;
-    justify-content: space-between;
-    padding: 0 2rem;
-    z-index: 15;
-    pointer-events: none;
-  }
-
-  .control-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    pointer-events: auto;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .control-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
-    color: white;
-  }
-
-  .control-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .bottom-panel {
-    padding: 2.5rem;
-    width: 90%;
-    height:20vh;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 20px 60px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    border: blue 2px solid;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 auto;
-  }
-
-  .bottom-panel > * {
-  flex: 1; /* Each child takes equal space */
-  text-align: center; /* Center text in each section */
-  }
-
-  .description-panel {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    border: teal 2px solid;
-    border-radius: 40px;
-    padding-right: 1rem;
-    padding-left: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    text-align: center;
-  }
-
-  .information-panel {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    border: teal 2px solid;
-    border-radius: 40px;
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.05);
-    padding-right: 1rem;
-    padding-left: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    text-align: center;
-  }
-
-  .indicators {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    border: red 2px solid;
-  }
-
-  .indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .indicator:hover {
-    transform: scale(1.2);
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .indicator.active {
-    background: rgba(100, 149, 237, 0.8);
-    border-color: rgba(100, 149, 237, 1);
-    box-shadow: 0 0 10px rgba(100, 149, 237, 0.5);
-  }
-
-  /* Zoom Overlay */
-  .zoom-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .zoom-bubble {
-    position: absolute;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(100, 149, 237, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%);
-    animation: liquid-flow 20s ease-in-out infinite;
-    border: red 2px solid;
-  }
-
-  .zoom-bubble:nth-child(1) {
-    width: 400px;
-    height: 400px;
-    top: 10%;
-    left: 10%;
-  }
-
-  .zoom-bubble:nth-child(2) {
-    width: 300px;
-    height: 300px;
-    top: 60%;
-    right: 10%;
-    animation-delay: 0.5s;
-  }
-
-  .zoom-bubble:nth-child(3) {
-    width: 500px;
-    height: 500px;
-    bottom: 10%;
-    left: 50%;
-    animation-delay: 1s;
-  }
-
-  .zoom-glass {
-    position: absolute;
-    inset: 0;
-    backdrop-filter: blur(30px);
-    background: linear-gradient(135deg, rgba(100, 149, 237, 0.15) 0%, rgba(138, 43, 226, 0.15) 100%);
+@keyframes expandIn {
+  from {
     opacity: 0;
-    animation: fadeIn 0.3s ease forwards;
+    transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
+    border-radius: 16px;
   }
-
-  @keyframes fadeIn {
-    to { opacity: 1; }
-  }
-
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  .zoom-glass.closing {
-    animation: fadeOut 0.3s ease forwards;
-  }
-
-  .zoom-image-container {
-    position: relative;
-    max-width: 90vw;
-    max-height: 90vh;
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
     border-radius: 32px;
-    overflow: hidden;
-    z-index: 2;
-    cursor: default;
-    box-shadow: 0 0 100px rgba(100, 149, 237, 0.3);
-    border: 2px solid rgba(255, 255, 255, 1);
-    object-fit: contain;
   }
+}
 
-  .zoom-image-container.expanding {
-    animation: expandIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+@keyframes shrinkOut {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    border-radius: 32px;
   }
-
-  .zoom-image-container.shrinking {
-    animation: shrinkOut 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  to {
+    opacity: 0;
+    transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
+    border-radius: 16px;
   }
+}
 
-  @keyframes expandIn {
-    from {
-      opacity: 0;
-      transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-      border-radius: 16px;
-    }
-    to {
-      opacity: 1;
-      transform: translate(0, 0) scale(1);
-      border-radius: 32px;
-    }
+/* === CAROUSEL CONTAINER === */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.carousel-title {
+  font-size: 2rem;
+  font-weight: 300;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(200,220,255,0.9) 50%, rgba(255,255,255,0.9) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: liquid-shimmer 3s ease-in-out infinite;
+}
+
+.carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === CAROUSEL ITEMS === */
+.carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 300px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.item-frame {
+  position: absolute;
+  inset: -20px;
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(100, 149, 237, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 0 60px rgba(100, 149, 237, 0.2);
+  z-index: -1;
+}
+
+.carousel-item[data-position="0"] .item-frame {
+  box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.1), 0 0 100px rgba(100, 149, 237, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.item-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.carousel-item[data-position="0"]:hover .item-image {
+  transform: scale(1.05);
+}
+
+.item-label {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: liquid-float 3s ease-in-out infinite;
+  color: white;
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+/* === CONTROLS === */
+.carousel-controls {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2rem;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.control-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+  color: white;
+}
+
+.control-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === BOTTOM PANEL === */
+.bottom-panel {
+  padding: 2.5rem;
+  width: 90%;
+  height: 20vh;
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.bottom-panel > * {
+  flex: 1;
+  text-align: center;
+}
+
+.description-panel,
+.information-panel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border-radius: 40px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.indicators {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator:hover {
+  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.indicator.active {
+  background: rgba(100, 149, 237, 0.8);
+  border-color: rgba(100, 149, 237, 1);
+  box-shadow: 0 0 10px rgba(100, 149, 237, 0.5);
+}
+
+/* === ZOOM OVERLAY === */
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.zoom-glass {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(30px);
+  background: linear-gradient(135deg, rgba(100, 149, 237, 0.15) 0%, rgba(138, 43, 226, 0.15) 100%);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.zoom-glass.closing {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.zoom-image-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 32px;
+  overflow: hidden;
+  z-index: 2;
+  cursor: default;
+  box-shadow: 0 0 100px rgba(100, 149, 237, 0.3);
+  border: 2px solid rgba(255, 255, 255, 1);
+}
+
+.zoom-image-container.expanding {
+  animation: expandIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.zoom-image-container.shrinking {
+  animation: shrinkOut 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+.zoom-image-container.magnify-active {
+  cursor: none;
+}
+
+.zoom-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 24px;
+}
+
+.zoom-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.zoom-image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.zoom-image {
+  width: auto;
+  height: 90vh;
+  object-fit: contain;
+  display: block;
+}
+
+/* === MAGNIFYING GLASS === */
+.magnifier {
+  position: absolute;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: 
+    0 0 20px rgba(100, 149, 237, 0.6),
+    inset 0 0 30px rgba(0, 0, 0, 0.3);
+  background-repeat: no-repeat;
+  z-index: 100;
+  cursor: none;
+}
+
+.zoom-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  animation: liquid-float 3s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .carousel-title { 
+    font-size: 2.5rem; 
   }
-
-  @keyframes shrinkOut {
-    from {
-      opacity: 1;
-      transform: translate(0, 0) scale(1);
-      border-radius: 32px;
-    }
-    to {
-      opacity: 0;
-      transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-      border-radius: 16px;
-    }
+  
+  .carousel-item { 
+    width: 300px; 
+    height: 400px; 
   }
-
-  .zoom-close-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.3s ease;
-    color: white;
-    font-size: 24px;
+  
+  .control-btn { 
+    width: 50px; 
+    height: 50px; 
   }
-
-  .zoom-close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+  
+  .bottom-panel { 
+    padding: 1.5rem; 
+    margin: 0 1rem; 
   }
-
+  
+  .description-panel,
+  .information-panel { 
+    font-size: 1rem; 
+  }
+  
   .zoom-image {
-    width: auto;
-    height: 90vh;
-    object-fit: contain;
-    display: block;
-    border: red 2px solid;
-    position: relative;
+    height: 70vh;
   }
-
-  .zoom-hint {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 8px 16px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    animation: liquid-float 3s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  @media (max-width: 768px) {
-    .carousel-title { font-size: 2.5rem; }
-    .carousel-item { width: 300px; height: 400px; }
-    .control-btn { width: 50px; height: 50px; }
-    .description-panel { padding: 1.5rem; margin: 0 1rem; }
-    .panel-description { font-size: 1rem; }
-  }
+}

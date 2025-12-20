@@ -1,6 +1,3 @@
-// src/components/common/LayoutComponents.jsx
-// FIXED: Reinstated drag progress indicator
-
 import React, { useState, useEffect } from 'react';
 import { Html, useProgress } from '@react-three/drei';
 
@@ -96,26 +93,40 @@ export const DragProgressIndicator = ({ progress, visible }) => {
 // ===================================
 
 export const ScrollPrompt = ({ dragProgress, visible }) => {
+  const [fadeIn, setFadeIn] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      // allow mount first, then fade
+      requestAnimationFrame(() => setFadeIn(true));
+    } else {
+      setFadeIn(false);
+    }
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
-    <div className="project-scroll-prompt">
-      <div 
+    <div className={`project-scroll-prompt ${fadeIn ? 'fade-in' : ''}`}>
+      <div
         className="project-scroll-arrow project-drag-arrow"
-        style={{ 
+        style={{
           borderRightColor: dragProgress > 0 ? '#fbbf24' : '#f59e0b',
           borderBottomColor: dragProgress > 0 ? '#fbbf24' : '#f59e0b',
-        }} 
+        }}
       />
       <p className="project-drag-text">
         {dragProgress > 0 ? 'Keep dragging...' : 'Drag up to unlock'}
       </p>
-      
-      {/* REINSTATED: Show drag progress indicator */}
-      <DragProgressIndicator progress={dragProgress} visible={dragProgress > 0} />
+
+      <DragProgressIndicator
+        progress={dragProgress}
+        visible={dragProgress > 0}
+      />
     </div>
   );
 };
+
 
 // ===================================
 // CANVAS LOADER

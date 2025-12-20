@@ -2,7 +2,7 @@
 // Reusable layout component for all project pages
 
 import React from 'react';
-import { NavigationDots } from '../common/LayoutComponents.jsx';
+import { NavigationDots } from '../../components/common/LayoutComponents.jsx';
 
 /**
  * ProjectLayout - Base layout for all project detail pages
@@ -36,7 +36,7 @@ const ProjectLayout = ({
   );
 
   return (
-    <div className={`project-base-container ${className}`}>
+    <div>
       {/* Navigation Dots - Conditional visibility */}
       {shouldShowNavDots && (
         <NavigationDots

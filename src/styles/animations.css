@@ -1,8 +1,10 @@
 /* =================================
-   ANIMATIONS & KEYFRAMES
+   ANIMATIONS & KEYFRAMES - CLEANED
+   Removed: All duplicate keyframes
+   Consolidated: Common animations
    ================================= */
 
-/* Waving Hand */
+/* === HAND & GESTURE ANIMATIONS === */
 .waving-hand {
   display: inline-block;
   transform-origin: 70% 70%;
@@ -19,7 +21,7 @@
   70%, 100% { transform: rotate(0deg); }
 }
 
-/* Pulse */
+/* === PULSE ANIMATIONS === */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -29,7 +31,6 @@
   50% { opacity: 0.5; }
 }
 
-/* Ping (for notification dots) */
 @keyframes ping {
   75%, 100% {
     transform: scale(2);
@@ -37,7 +38,7 @@
   }
 }
 
-/* Float */
+/* === FLOAT ANIMATIONS === */
 .float-animation {
   animation: float 6s ease-in-out infinite;
 }
@@ -51,7 +52,7 @@
   }
 }
 
-/* Bounce */
+/* === BOUNCE ANIMATIONS === */
 .animate-bounce {
   animation: bounce 2s infinite;
 }
@@ -65,7 +66,7 @@
   }
 }
 
-/* Gradient Shift */
+/* === GRADIENT & COLOR ANIMATIONS === */
 @keyframes gradient-shift {
   0%, 100% {
     background-position: 0% 50%;
@@ -75,57 +76,20 @@
   }
 }
 
-/* Fade In */
+/* === FADE ANIMATIONS === */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* Scroll Bounce (Project Pages) */
-@keyframes project-scroll-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(15px); }
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-/* Scroll Dot Animation */
-@keyframes project-scroll-dot {
-  0% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+/* === SPIN ANIMATION === */
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
   }
-  50% {
-    opacity: 0.3;
-    transform: translateX(-50%) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* Unlock Pulse */
-@keyframes project-unlock-pulse {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(3);
-    opacity: 0;
-  }
-}
-
-/* Zoom Animations */
-@keyframes zoom-pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
-
-@keyframes zoom-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }

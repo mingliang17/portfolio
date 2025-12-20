@@ -1,9 +1,7 @@
+// src/sections/projects/Carousel.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ICONS } from '../../assets/index.js';
-import { CAROUSEL_DATA, CAROUSEL_TITLE } from '../../constants/carouselData.js'; 
-
-// Sample data
 
 const POSITIONS = {
   '-2': { x: -100, z: -500, rotateY: -35, scale: 0.65, opacity: 0.5, blur: 8 },
@@ -13,43 +11,51 @@ const POSITIONS = {
   2: { x: 100, z: -500, rotateY: 35, scale: 0.65, opacity: 0.5, blur: 8 }
 };
 
-const LiquidCarousel = ({projectID}) => {
-  const DATA = CAROUSEL_DATA[projectID] || [];
+const Carousel = ({ carouselData, title, autoPlay, showControls, showIndicators }) => {
+  // Use the carouselData prop directly - don't fetch anything!
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [itemRect, setItemRect] = useState(null);
-  
+
+  const [magnifyActive, setMagnifyActive] = useState(false);
+  const [magnifyPosition, setMagnifyPosition] = useState({ x: 0, y: 0 });
+  const [magnifyOffset, setMagnifyOffset] = useState({ x: 0, y: 0 });
+
   const hoverTimeoutRef = useRef(null);
   const closeTimeoutRef = useRef(null);
   const itemRefs = useRef({});
+  const zoomImageRef = useRef(null);
 
-  const totalItems = DATA.length;
+  const totalItems = carouselData ? carouselData.length : 0;
+
+  const MAGNIFY_SIZE = 200;
+  const MAGNIFY_ZOOM = 2.5;
 
   const goToNext = useCallback(() => {
-    if (isAnimating || zoomedImage) return;
+    if (isAnimating || zoomedImage || totalItems === 0) return;
     setIsAnimating(true);
-    setCurrentIndex(prev => (prev + 1) % totalItems);
+    setCurrentIndex((prev) => (prev + 1) % totalItems);
     setTimeout(() => setIsAnimating(false), 600);
   }, [isAnimating, zoomedImage, totalItems]);
 
   const goToPrev = useCallback(() => {
-    if (isAnimating || zoomedImage) return;
+    if (isAnimating || zoomedImage || totalItems === 0) return;
     setIsAnimating(true);
-    setCurrentIndex(prev => (prev - 1 + totalItems) % totalItems);
+    setCurrentIndex((prev) => (prev - 1 + totalItems) % totalItems);
     setTimeout(() => setIsAnimating(false), 600);
   }, [isAnimating, zoomedImage, totalItems]);
 
   const goToSlide = useCallback((index) => {
-    if (isAnimating || zoomedImage || index === currentIndex) return;
+    if (isAnimating || zoomedImage || index === currentIndex || totalItems === 0) return;
     setIsAnimating(true);
     setCurrentIndex(index);
     setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, zoomedImage, currentIndex]);
+  }, [isAnimating, zoomedImage, currentIndex, totalItems]);
 
   const getItemStyle = (index) => {
     let position = index - currentIndex;
-    
+
     if (position < -2) {
       const altPos = position + totalItems;
       if (altPos <= 2) position = altPos;
@@ -58,7 +64,7 @@ const LiquidCarousel = ({projectID}) => {
       const altPos = position - totalItems;
       if (altPos >= -2) position = altPos;
     }
-    
+
     if (position < -2 || position > 2) {
       return {
         transform: 'translate(-50%, -50%) translateZ(-800px) scale(0.4)',
@@ -81,29 +87,33 @@ const LiquidCarousel = ({projectID}) => {
 
   const openZoom = useCallback((image, index) => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    
+
     const itemEl = itemRefs.current[index];
     if (itemEl) {
       const rect = itemEl.getBoundingClientRect();
       setItemRect(rect);
     }
-    
+
     setZoomedImage(image);
+    setMagnifyActive(false); // Reset on open
   }, []);
 
   const closeZoom = useCallback(() => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     setZoomedImage(null);
     setItemRect(null);
+    setMagnifyActive(false);
   }, []);
 
   const handleItemMouseEnter = useCallback((index) => {
     if (zoomedImage || index !== currentIndex) return;
-    
+
     hoverTimeoutRef.current = setTimeout(() => {
-      openZoom(DATA[index], index);
+      const item = carouselData[index];
+      const imageSrc = item.image; // item is an object with image property
+      openZoom(imageSrc, index);
     }, 800);
-  }, [zoomedImage, currentIndex, openZoom]);
+  }, [zoomedImage, currentIndex, openZoom, carouselData]);
 
   const handleItemMouseLeave = useCallback(() => {
     if (hoverTimeoutRef.current) {
@@ -130,6 +140,31 @@ const LiquidCarousel = ({projectID}) => {
     }
   }, []);
 
+  const handleImageClick = useCallback(() => {
+    setMagnifyActive((prev) => {
+      console.log(prev ? '🔍 Magnifier OFF' : '🔍 Magnifier ON');
+      return !prev;
+    });
+  }, []);
+
+  const handleImageMouseMove = useCallback((e) => {
+    if (!magnifyActive || !zoomImageRef.current) return;
+
+    const rect = zoomImageRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const clampedX = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.width - MAGNIFY_SIZE / 2, x));
+    const clampedY = Math.max(MAGNIFY_SIZE / 2, Math.min(rect.height - MAGNIFY_SIZE / 2, y));
+
+    setMagnifyPosition({ x: clampedX, y: clampedY });
+
+    const bgX = (clampedX / rect.width) * 100;
+    const bgY = (clampedY / rect.height) * 100;
+
+    setMagnifyOffset({ x: bgX, y: bgY });
+  }, [magnifyActive]);
+
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -137,10 +172,30 @@ const LiquidCarousel = ({projectID}) => {
     };
   }, []);
 
-  const currentItem = DATA[currentIndex];
+  // Early return if no data
+  if (!carouselData || carouselData.length === 0) {
+    return (
+      <div className="carousel">
+        <div className="carousel-header">
+          <h2 className="carousel-title">{title || 'Gallery'}</h2>
+          <p className="carousel-empty">No images available</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get current item
+  const currentItem = carouselData[currentIndex] || {};
 
   return (
-    <> {/* ADDED: Opening Fragment */}
+    <>
+      {/* Carousel Title */}
+      {title && (
+        <div className="carousel-header">
+          <h2 className="carousel-title">{title}</h2>
+        </div>
+      )}
+
       {zoomedImage && createPortal(
         <div 
           className="zoom-overlay"
@@ -149,9 +204,9 @@ const LiquidCarousel = ({projectID}) => {
           onClick={closeZoom}
         >          
           <div className={`zoom-glass ${!zoomedImage ? 'closing' : ''}`} />
-          
+
           <div 
-            className={`zoom-image-container ${itemRect ? 'expanding' : ''} ${!zoomedImage ? 'shrinking' : ''}`}
+            className={`zoom-image-container ${itemRect ? 'expanding' : ''} ${!zoomedImage ? 'shrinking' : ''} ${magnifyActive ? 'magnify-active' : ''}`}
             style={itemRect ? {
               '--start-x': `${itemRect.left + itemRect.width / 2 - window.innerWidth / 2}px`,
               '--start-y': `${itemRect.top + itemRect.height / 2 - window.innerHeight / 2}px`,
@@ -162,103 +217,75 @@ const LiquidCarousel = ({projectID}) => {
           >
             <button 
               className="zoom-close-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                closeZoom();
-              }}
+              onClick={closeZoom}
+              title="Close Zoom"
             >
-              ×
+              <img src={ICONS.close} alt="Close Zoom" />
             </button>
-            
-            <img 
-              src={zoomedImage.image}
-              alt={zoomedImage.title}
-              className="zoom-image"
-            />
-          </div>
-          
-          <div className="zoom-hint">
-            Hover outside image to close
+
+            <div className="zoom-image" onClick={handleImageClick}>
+              <img
+                src={zoomedImage}
+                alt={currentItem.title || 'Zoomed Image'}
+                ref={zoomImageRef}
+                onMouseMove={handleImageMouseMove}
+              />
+            </div>
+
+            {magnifyActive && (
+              <div 
+                className="magnify-lens"
+                style={{
+                  left: `${magnifyPosition.x - MAGNIFY_SIZE / 2}px`,
+                  top: `${magnifyPosition.y - MAGNIFY_SIZE / 2}px`,
+                  backgroundPosition: `${-magnifyOffset.x}% ${-magnifyOffset.y}%`,
+                  backgroundSize: `${MAGNIFY_ZOOM * 100}%`,
+                  backgroundImage: `url(${zoomedImage})`,
+                }}
+              />
+            )}
           </div>
         </div>,
         document.body
       )}
 
-      {/* Main Carousel */}
-      <div className="carousel-container">
-        <div className="carousel-title">{CAROUSEL_TITLE[projectID]}</div>
-        <div className="carousel-track">
-          {DATA.map((item, index) => {
-            const style = getItemStyle(index);
-            const position = index - currentIndex;
-            const isCenter = position === 0 || (position === -totalItems && currentIndex === 0) || (position === totalItems && currentIndex === totalItems - 1);
-            
-            return (
-              <div
-                key={item.id}
-                ref={el => itemRefs.current[index] = el}
-                className="carousel-item"
-                style={style}
-                data-position={position}
-                onMouseEnter={() => handleItemMouseEnter(index)}
-                onMouseLeave={handleItemMouseLeave}
-              >
-                <div className="item-frame" />
-                
-                <div className="item-image-wrapper">
-                  <img 
-                    src={item.image}
-                    alt={item.title}
-                    className="item-image"
-                    draggable="false"
-                  />
+      <div className="carousel">
+        <div className="carousel-wrapper">
+          {carouselData.map((item, index) => (
+            <div 
+              className="carousel-item"
+              key={item.id || index}
+              style={getItemStyle(index)}
+              ref={(el) => (itemRefs.current[index] = el)}
+              onMouseEnter={() => handleItemMouseEnter(index)}
+              onMouseLeave={handleItemMouseLeave}
+              onClick={() => openZoom(item.image, index)}
+            >
+              <img
+                className="carousel-image"
+                src={item.image}
+                alt={item.title || 'Carousel Image'}
+              />
+              {(item.title || item.description) && (
+                <div className="carousel-item-info">
+                  {item.title && <h3>{item.title}</h3>}
+                  {item.description && <p>{item.description}</p>}
                 </div>
-                
-                {isCenter && (
-                  <div className="item-label">
-                    {item.title}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className="carousel-controls">
-            <button 
-              className="control-btn"
-              onClick={goToPrev}
-              disabled={isAnimating || !!zoomedImage}
-            >
-              <img src={ICONS.leftArrow} alt="Previous" />
-            </button>
-            
-            <button 
-              className="control-btn"
-              onClick={goToNext}
-              disabled={isAnimating || !!zoomedImage}
-            >
-             <img src={ICONS.rightArrow} alt="Next" />
-            </button>
-          </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        <div className="bottom-panel">
-          <p className="description-panel">{currentItem.description}</p>
-          
-          <div className="indicators">
-            {DATA.map((_, index) => (
-              <button
-                key={index}
-                className={`indicator ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => goToSlide(index)}
-                disabled={isAnimating || !!zoomedImage}
-              />
-            ))}
-          </div>
-          <p className="information-panel">{currentItem.information}</p>
-        </div>
+        {/* Carousel Navigation */}
+        <button className="carousel-prev" onClick={goToPrev}>
+          <img src={ICONS.leftArrow} alt="Previous" />
+        </button>
+        <button className="carousel-next" onClick={goToNext}>
+          <img src={ICONS.rightArrow} alt="Next" />
+        </button>
       </div>
-    </> 
+    </>
   );
 };
 
-export default LiquidCarousel;
+export default Carousel;

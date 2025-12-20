@@ -1,25 +1,10 @@
 // src/assets/index.js
-// Centralized asset path management for easy scaling
-// 
-// IMPORTANT: This file only contains PATHS to assets.
-// The actual asset files (images, videos, models) are in public/ folder.
-// 
-// Structure:
-//   public/assets/projects/mh1/hero.jpg  ← Actual file (in public/)
-//   src/assets/index.js                   ← This file (path mapping)
-//   Component: <img src={assets.hero} />  ← Usage in code
-
 const BASE_URL = import.meta.env.BASE_URL;
 
-// Helper function to construct asset paths
-// Converts: 'assets/image.jpg' → '/portfolio/assets/image.jpg' (production)
-//        or 'assets/image.jpg' → '/assets/image.jpg' (development)
 const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
 
 // ===================================
 // ICONS
-// ===================================
-
 export const ICONS = {
   github: assetPath('assets/icons/github.svg'),
   twitter: assetPath('assets/icons/twitter.svg'),
@@ -36,8 +21,6 @@ export const ICONS = {
 
 // ===================================
 // 3D MODELS & TEXTURES
-// ===================================
-
 export const MODELS = {
   human: {
     developer: assetPath('models/human/developer.glb'),
@@ -46,9 +29,7 @@ export const MODELS = {
     dancing: assetPath('models/human/dancing.fbx'),
     thankful: assetPath('models/human/thankful.fbx'),
   },
-  earth: {
-    model: assetPath('models/earth/custom.geo.json'),
-  }
+  earth: { model: assetPath('models/earth/custom.geo.json') },
 };
 
 export const TEXTURES = {
@@ -60,133 +41,154 @@ export const TEXTURES = {
 };
 
 // ===================================
-// PROJECT-SPECIFIC ASSETS
-// ===================================
+// PROJECT ASSETS
+
+// Helper to create carousel items
+const createCarouselItem = (project, imageNum, title, description) => ({
+  id: imageNum,
+  image: assetPath(`assets/projects/${project}/images/${imageNum}.jpg`),
+  title,
+  description,
+});
+
+// MH1 carousels data (single carousel)
+const MH1_CAROUSEL_ITEMS = [
+  {
+    id: 1,
+    image: assetPath('assets/projects/mh1/images/1.jpg'),
+    title: 'Innovation in Agriculture',
+    description: 'Pioneering genetic research for sustainable farming solutions.',
+    information: 'Date: January 2024\nLocation: Research Lab A\nClient: AgriTech Corp\n',
+  },
+  {
+    id: 2,
+    image: assetPath('assets/projects/mh1/images/2.jpg'),
+    title: 'Sustainable Farming',
+    description: 'Environmentally conscious methods preserving resources.',
+    information: 'Additional details about Sustainable Farming.',
+  },
+  {
+    id: 3,
+    image: assetPath('assets/projects/mh1/images/3.jpg'),
+    title: 'Genetic Excellence',
+    description: 'Advanced crop genetics for climate challenges.',
+    information: 'Additional details about Genetic Excellence.',
+  },
+  {
+    id: 4,
+    image: assetPath('assets/projects/mh1/images/4.jpg'),
+    title: 'Future Harvest',
+    description: 'Breakthrough developments in crop science.',
+    information: 'Additional details about Future Harvest.',
+  },
+  {
+    id: 5,
+    image: assetPath('assets/projects/mh1/images/5.jpg'),
+    title: 'Climate Resilience',
+    description: 'Engineering crops for diverse conditions.',
+    information: 'Additional details about Climate Resilience.',
+  },
+  {
+    id: 6,
+    image: assetPath('assets/projects/mh1/images/6.jpg'),
+    title: 'Advanced Research',
+    description: 'Cutting-edge laboratory research and development.',
+    information: 'Additional details about Advanced Research.',
+  },
+];
+
+// MH2 carousels data (multiple carousels)
+const MH2_CAROUSEL_PRIMARY_ITEMS = [
+  {
+    id: 1,
+    image: assetPath('assets/projects/mh2/images/1.jpg'),
+    title: 'Concept Phase - Initial Design',
+    description: 'Initial architectural concepts and spatial planning.',
+  },
+  {
+    id: 2,
+    image: assetPath('assets/projects/mh2/images/2.jpg'),
+    title: 'Concept Phase - 3D Visualization',
+    description: 'Three-dimensional renderings of proposed infrastructure.',
+  },
+  {
+    id: 3,
+    image: assetPath('assets/projects/mh2/images/3.jpg'),
+    title: 'Concept Phase - Site Analysis',
+    description: 'Geographic and environmental analysis of project location.',
+  },
+];
+
+const MH2_CAROUSEL_SECONDARY_ITEMS = [
+  {
+    id: 4,
+    image: assetPath('assets/projects/mh2/images/4.jpg'),
+    title: 'Detail Phase - Structural Engineering',
+    description: 'Detailed structural analysis and engineering drawings.',
+  },
+  {
+    id: 5,
+    image: assetPath('assets/projects/mh2/images/5.jpg'),
+    title: 'Detail Phase - Material Specifications',
+    description: 'Material selections and technical specifications.',
+  },
+  {
+    id: 6,
+    image: assetPath('assets/projects/mh2/images/6.jpg'),
+    title: 'Detail Phase - Final Integration',
+    description: 'Complete project integration and system optimization.',
+  },
+];
 
 export const PROJECT_ASSETS = {
   mh1: {
     hero: assetPath('assets/projects/mh1/images/1.jpg'),
-    
-    carousel: [
-      assetPath('assets/projects/mh1/images/1.jpg'),
-      assetPath('assets/projects/mh1/images/2.jpg'),
-      assetPath('assets/projects/mh1/images/3.jpg'),
-      assetPath('assets/projects/mh1/images/4.jpg'),
-      assetPath('assets/projects/mh1/images/5.jpg'),
-
-    ],
-    
+    carousels: MH1_CAROUSEL_ITEMS, // Single carousel array for MH1
     map: {
-      layer0: assetPath('assets/projects/mh1/maps/0.svg'),
-      layer1: assetPath('assets/projects/mh1/maps/1.svg'),
-      layer2: assetPath('assets/projects/mh1/maps/2.svg'),
-      layer3: assetPath('assets/projects/mh1/maps/3.svg'),
-      layer4: assetPath('assets/projects/mh1/maps/4.svg'),
+      A: assetPath('assets/projects/mh1/maps/0.svg'),
+      B: assetPath('assets/projects/mh1/maps/1.svg'),
+      C: assetPath('assets/projects/mh1/maps/2.svg'),
+      D: assetPath('assets/projects/mh1/maps/3.svg'),
+      E: assetPath('assets/projects/mh1/maps/4.svg'),
     },
-
     logos: {
-      github: {
-        src: ICONS.github,
-        alt: "GitHub Repository",
-        title: "View source code on GitHub",
-        className: "logo-github"
-      },
-      twitter: {
-        src: ICONS.twitter,
-        alt: "Twitter Profile",
-        title: "Follow on Twitter",
-        className: "logo-twitter"
-      },
-      instagram: {
-        src: ICONS.instagram,
-        alt: "Instagram Profile",
-        title: "Follow on Instagram",
-        className: "logo-instagram"
-      }
+      github: { src: ICONS.github, alt: 'GitHub Repository', title: 'View source code on GitHub', className: 'logo-github' },
+      twitter: { src: ICONS.twitter, alt: 'Twitter Profile', title: 'Follow on Twitter', className: 'logo-twitter' },
+      instagram: { src: ICONS.instagram, alt: 'Instagram Profile', title: 'Follow on Instagram', className: 'logo-instagram' },
     },
   },
-  
-  // Example: Another project with dictionary logos
-  project2: {
+  mh2: {
+    hero: assetPath('assets/projects/mh2/images/1.jpg'),
+    carousel1: MH2_CAROUSEL_PRIMARY_ITEMS, // First carousel for MH2
+    carousel2: MH2_CAROUSEL_SECONDARY_ITEMS, // Second carousel for MH2
+    map: {
+      A: assetPath('assets/projects/mh2/maps/0.svg'),
+      B: assetPath('assets/projects/mh2/maps/1.svg'),
+      C: assetPath('assets/projects/mh2/maps/2.svg'),
+      D: assetPath('assets/projects/mh2/maps/3.svg'),
+      E: assetPath('assets/projects/mh2/maps/4.svg'),
+    },
     logos: {
-      companyA: {
-        src: assetPath('assets/logos/company-a.svg'),
-        alt: "Company A",
-        title: "Client: Company A",
-        className: "logo-company-a"
-      },
-      companyB: {
-        src: assetPath('assets/logos/company-b.png'),
-        alt: "Company B",
-        title: "Partner: Company B",
-        className: "logo-company-b"
-      }
-    }
-  }
+      github: { src: ICONS.github, alt: 'GitHub Repository', title: 'View source code on GitHub', className: 'logo-github' },
+      twitter: { src: ICONS.twitter, alt: 'Twitter Profile', title: 'Follow on Twitter', className: 'logo-twitter' },
+      instagram: { src: ICONS.instagram, alt: 'Instagram Profile', title: 'Follow on Instagram', className: 'logo-instagram' },
+    },
+  },
 };
 
 // ===================================
 // HELPER FUNCTIONS
+export const getProjectAssets = (projectId) => PROJECT_ASSETS[projectId] || null;
+export const getProjectLogos = (projectId) => PROJECT_ASSETS[projectId]?.logos || {};
+
 // ===================================
-
-/**
- * Get project assets by ID
- * @param {string} projectId - The project identifier
- * @returns {object} Project-specific assets
- */
-export const getProjectAssets = (projectId) => {
-  return PROJECT_ASSETS[projectId] || null;
-};
-
-/**
- * Get project logos as dictionary (recommended)
- * @param {string} projectId - The project identifier
- * @returns {object} Dictionary of logos
- */
-export const getProjectLogos = (projectId) => {
-  const project = PROJECT_ASSETS[projectId];
-  return project?.logos || {};
-};
-
-/**
- * Dynamic asset loader for project carousels
- * @param {string} projectId - The project identifier
- * @param {number} count - Number of carousel images
- * @returns {array} Array of image paths
- */
-export const getProjectCarousel = (projectId, count) => {
-  return Array.from({ length: count }, (_, i) => 
-    assetPath(`assets/projects/${projectId}/image_${i + 1}.jpg`)
-  );
-};
-
-/**
- * Get all assets for a model with its animations
- * @param {string} modelName - Name of the model
- * @returns {object} Model and animation paths
- */
-export const getModelWithAnimations = (modelName) => {
-  return {
-    model: assetPath(`models/${modelName}/${modelName}.glb`),
-    animations: {
-      idle: assetPath(`models/${modelName}/idle.fbx`),
-      walk: assetPath(`models/${modelName}/walk.fbx`),
-      run: assetPath(`models/${modelName}/run.fbx`),
-    },
-  };
-};
-
-// Export the base assetPath function for custom paths
-export { assetPath };
-
-// Default export for convenience
+// DEFAULT EXPORT
 export default {
-  icons: ICONS,
-  models: MODELS,
-  textures: TEXTURES,
-  projects: PROJECT_ASSETS,
+  ICONS,
+  MODELS,
+  TEXTURES,
+  PROJECT_ASSETS,
   getProjectAssets,
-  getProjectLogos,        // New: dictionary version
-  getProjectCarousel,
+  getProjectLogos,
   assetPath,
 };

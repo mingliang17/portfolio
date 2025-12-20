@@ -1,0 +1,64 @@
+/* src/components/project/ProjectTemplate.css */
+
+.project-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000;
+  user-select: none;
+  touch-action: none;
+}
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.drag-debug {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0,0,0,0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  z-index: 1000;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.hero-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.9) 0%,   /* top fully dark */
+    rgba(0,0,0,0.6) 30%,  /* mid slightly transparent */
+    rgba(0,0,0,0.2) 70%,  /* near bottom lighter */
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: opacity 0.05s linear;
+  z-index: 1;
+}
+
+.project-error {
+  color: white;
+  padding: 2rem;
+}
+
+.project-scroll-prompt {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.project-scroll-prompt.fade-in {
+  opacity: 1;
+}

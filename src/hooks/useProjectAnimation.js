@@ -1,357 +1,463 @@
 // src/hooks/useProjectAnimation.js
-// FIXED VERSION: Proper drag tracking with accumulated distance
-
 import { useState, useEffect, useRef, useCallback } from 'react';
+import gsap from 'gsap';
 
 export const useProjectAnimation = (
   currentSection,
-  onAnimationComplete,
-  setAnimationPhase
+  onAnimationComplete
 ) => {
-  // ========================================
-  // STATE
-  // ========================================
-  const [backgroundShouldAnimate, setBackgroundShouldAnimate] = useState(false);
-  const [titleShouldAnimate, setTitleShouldAnimate] = useState(false);
-  const [unlockProgress, setUnlockProgress] = useState(0);
-  const [animationPhase, setLocalAnimationPhase] = useState('initial');
-  const [showDragInstruction, setShowDragInstruction] = useState(false);
+  console.log(`🔄 useProjectAnimation: currentSection=${currentSection}`);
+  
+  // State
+  const [animationStatus, setAnimationStatus] = useState('idle');
+  const [gradientOpacity, setGradientOpacity] = useState(1);
+  const [bgOpacity, setBgOpacity] = useState(0);
+  const [bgScale, setBgScale] = useState(1.1);
+  const [titleOpacity, setTitleOpacity] = useState(0);
+  const [titleY, setTitleY] = useState(30);
+  const [subtitleOpacity, setSubtitleOpacity] = useState(0);
+  const [subtitleY, setSubtitleY] = useState(30);
+  const [dragComponentOpacity, setDragComponentOpacity] = useState(0);
+  const [dragProgress, setDragProgress] = useState(0);
+  const [isHeroUnlocked, setIsHeroUnlocked] = useState(false);
 
-  // ========================================
-  // REFS
-  // ========================================
+  // Refs
+  const timeline = useRef(null);
   const dragStartY = useRef(0);
-  const lastDragY = useRef(0);
-  const currentDragDistance = useRef(0);
+  const accumulatedDistance = useRef(0);
   const isDragging = useRef(false);
-  const dragProgressRef = useRef(0);
-  const hasInitialized = useRef(false);
-  const isReturningToHero = useRef(false);
-  const timelineTimeouts = useRef([]);
-  const unlockTriggered = useRef(false);
-  const dragAnimationFrame = useRef(null);
+  const heroSectionRef = useRef(null);
+  const eventListenersAdded = useRef(false);
+  
+  // Animation targets
+  const animationTargets = useRef({
+    bgOpacity: { current: 0 },
+    bgScale: { current: 1.1 },
+    titleOpacity: { current: 0 },
+    titleY: { current: 30 },
+    subtitleOpacity: { current: 0 },
+    subtitleY: { current: 30 },
+    dragComponentOpacity: { current: 0 }
+  });
 
-  // DRAG SETTINGS
-  const DRAG_DISTANCE_REQUIRED = 800; // Total pixels needed
+  // Constants
+  const DRAG_DISTANCE_REQUIRED = 300;
 
-  // ========================================
-  // SYNC
-  // ========================================
-  useEffect(() => {
-    setAnimationPhase?.(animationPhase);
-  }, [animationPhase, setAnimationPhase]);
-
-  // ========================================
-  // TIMELINE
-  // ========================================
-  useEffect(() => {
-    if (currentSection !== 0) return;
-
-    timelineTimeouts.current.forEach(timeout => clearTimeout(timeout));
-    timelineTimeouts.current = [];
-
-    console.log('🎬 Starting animation timeline');
-    unlockTriggered.current = false;
-
-    // RESET
-    setBackgroundShouldAnimate(false);
-    setTitleShouldAnimate(false);
-    setUnlockProgress(0);
-    dragProgressRef.current = 0;
-    currentDragDistance.current = 0;
-    lastDragY.current = 0;
-
-    // FAST RETURN
-    if (isReturningToHero.current) {
-      console.log('🔄 Quick return');
-      setLocalAnimationPhase('waiting');
-      setBackgroundShouldAnimate(true);
-      setTitleShouldAnimate(true);
-      hasInitialized.current = true;
-      isReturningToHero.current = false;
-      return;
+  // Create animation timeline
+  const createTimeline = useCallback(() => {
+    console.log('📅 Creating timeline');
+    
+    if (timeline.current) {
+      timeline.current.kill();
     }
 
-    // STEP 1: Trigger background + gradient animation (0ms)
-    const step1 = setTimeout(() => {
-      console.log('📍 Step 1: Triggering background + gradient GSAP animation');
-      setBackgroundShouldAnimate(true);
+    // Reset all values
+    setGradientOpacity(1);
+    setBgOpacity(0);
+    setBgScale(1.1);
+    setTitleOpacity(0);
+    setTitleY(30);
+    setSubtitleOpacity(0);
+    setSubtitleY(30);
+    setDragComponentOpacity(0);
+    setDragProgress(0);
+    setIsHeroUnlocked(false);
+    accumulatedDistance.current = 0;
+    isDragging.current = false;
+    
+    // Reset refs for GSAP
+    animationTargets.current.bgOpacity.current = 0;
+    animationTargets.current.bgScale.current = 1.1;
+    animationTargets.current.titleOpacity.current = 0;
+    animationTargets.current.titleY.current = 30;
+    animationTargets.current.subtitleOpacity.current = 0;
+    animationTargets.current.subtitleY.current = 30;
+    animationTargets.current.dragComponentOpacity.current = 0;
+    
+    // Create timeline
+    timeline.current = gsap.timeline({
+      onStart: () => {
+        console.log('▶️ Timeline started');
+        setAnimationStatus('running');
+      },
+      onComplete: () => {
+        console.log('✅ Timeline complete, showing drag instruction');
+        setAnimationStatus('complete');
+      }
+    });
+
+    // 1. Background fade + scale (0ms - 1200ms)
+    timeline.current.to(animationTargets.current.bgOpacity, {
+      current: 1,
+      duration: 1.2,
+      ease: 'power2.out',
+      onUpdate: () => setBgOpacity(animationTargets.current.bgOpacity.current)
     }, 0);
 
-    // STEP 2: Trigger title animation (500ms)
-    const step2 = setTimeout(() => {
-      console.log('📍 Step 2: Triggering title GSAP animation');
-      setTitleShouldAnimate(true);
-    }, 500);
+    timeline.current.to(animationTargets.current.bgScale, {
+      current: 1,
+      duration: 1.2,
+      ease: 'power3.out',
+      onUpdate: () => setBgScale(animationTargets.current.bgScale.current)
+    }, 0);
 
-    // STEP 3: Ready for interaction (1500ms)
-    const step3 = setTimeout(() => {
-      console.log('📍 Step 3: Ready for drag interaction');
-      setLocalAnimationPhase('waiting');
-      hasInitialized.current = true;
-      
-      // Show drag instruction after a short delay
-      setTimeout(() => {
-        setShowDragInstruction(true);
-      }, 1000);
-    }, 1500);
-
-    timelineTimeouts.current = [step1, step2, step3];
-
-    return () => {
-      timelineTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      timelineTimeouts.current = [];
-      if (dragAnimationFrame.current) {
-        cancelAnimationFrame(dragAnimationFrame.current);
+    // 2. Title + subtitle (800ms - 1600ms)
+    timeline.current.to(
+    {
+      titleOpacity: animationTargets.current.titleOpacity.current,
+      titleY: animationTargets.current.titleY.current,
+    },
+    {
+      titleOpacity: 1,
+      titleY: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+      delay: 0.8,
+      onUpdate: function () {
+        setTitleOpacity(this.targets()[0].titleOpacity);
+        setTitleY(this.targets()[0].titleY);
       }
-    };
-  }, [currentSection]);
+    });
 
-  // ========================================
-  // DRAG INTERACTION - FIXED
-  // ========================================
+    timeline.current.to(
+    {
+      subtitleOpacity: animationTargets.current.subtitleOpacity.current,
+      subtitleY: animationTargets.current.subtitleY.current
+    },
+    {
+      subtitleOpacity: 1,
+      subtitleY: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+      delay: 0.8,
+      onUpdate: function () {
+        setSubtitleOpacity(this.targets()[0].subtitleOpacity);
+        setSubtitleY(this.targets()[0].subtitleY);
+      }
+    });
+
+    // 3. Drag component (1600ms - 2000ms)
+    timeline.current.to(animationTargets.current.dragComponentOpacity, {
+      current: 1,
+      duration: 0.6,
+      ease: 'power2.out',
+      delay: 0.8,
+      onUpdate: () => setDragComponentOpacity(animationTargets.current.dragComponentOpacity.current)
+    });
+
+    return timeline.current;
+  }, []);
+
+  // Initialize animations when on section 0
   useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'waiting') {
-      setShowDragInstruction(false);
-      return;
+    console.log(`🎬 Animation init check: currentSection=${currentSection}, isHeroUnlocked=${isHeroUnlocked}`);
+    
+    if (currentSection === 0 && !isHeroUnlocked) {
+      console.log('🎬 Initializing hero animations');
+      setAnimationStatus('idle');
+      setDragProgress(0);
+      accumulatedDistance.current = 0;
+      setGradientOpacity(1);
+      isDragging.current = false;
+      
+      // Start timeline
+      const timer = setTimeout(() => {
+        createTimeline();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+        if (timeline.current) {
+          timeline.current.kill();
+        }
+      };
     }
+  }, [currentSection, isHeroUnlocked, createTimeline]);
 
-    console.log('👆 Drag system enabled - Must drag full 800px');
-
-    // Update UI with current progress
-    const updateProgress = () => {
-      const progress = Math.min(1, currentDragDistance.current / DRAG_DISTANCE_REQUIRED);
-      dragProgressRef.current = progress;
-      setShowDragInstruction(progress < 0.1); // Hide instruction once user starts dragging
+  // Setup event listeners for drag
+  const setupDragListeners = useCallback(() => {
+    if (!heroSectionRef.current || eventListenersAdded.current) return;
+    
+    console.log('🔧 Setting up drag listeners on hero section');
+    
+    const element = heroSectionRef.current;
+    
+    const handleStart = (clientY) => {
+      console.log('👇 Drag STARTED', { clientY });
       
-      // Check for unlock
-      if (progress >= 1 && !unlockTriggered.current) {
-        console.log('🔓 100% REACHED - Unlocking!');
-        unlockTriggered.current = true;
-        isDragging.current = false;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        setLocalAnimationPhase('unlocking');
+      if (isHeroUnlocked) {
+        console.log('🚫 Already unlocked, ignoring drag');
+        return;
       }
-    };
-
-    // Mouse/Touch Start
-    const handleDragStart = (clientY) => {
-      if (unlockTriggered.current) return;
       
-      console.log('👇 Drag started at:', clientY);
       isDragging.current = true;
       dragStartY.current = clientY;
-      lastDragY.current = clientY;
-      currentDragDistance.current = 0; // Reset distance for this drag session
+      accumulatedDistance.current = 0;
+      
       document.body.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
+      document.body.style.touchAction = 'none';
     };
 
-    // Mouse/Touch Move
-    const handleDragMove = (clientY) => {
-      if (!isDragging.current || unlockTriggered.current) return;
-
-      // Calculate movement since last frame
-      const deltaY = lastDragY.current - clientY;
+    const handleMove = (clientY) => {
+      if (!isDragging.current || isHeroUnlocked) {
+        return;
+      }
       
-      // Only accumulate upward movement
+      const deltaY = dragStartY.current - clientY;
+      
+      // Only register upward drag
       if (deltaY > 0) {
-        currentDragDistance.current += deltaY;
-        updateProgress();
+        accumulatedDistance.current = deltaY;
+        const progress = Math.min(1, accumulatedDistance.current / DRAG_DISTANCE_REQUIRED);
         
-        const progress = Math.min(100, (currentDragDistance.current / DRAG_DISTANCE_REQUIRED) * 100);
+        // Update every 20px
+        if (Math.floor(accumulatedDistance.current) % 20 === 0) {
+          console.log(`📏 Drag: ${Math.round(progress * 100)}% (${Math.round(deltaY)}px / ${DRAG_DISTANCE_REQUIRED}px)`);
+        }
         
-        // Log every 10%
-        if (Math.floor(progress / 10) > Math.floor((progress - 1) / 10)) {
-          console.log(`📊 Dragging: ${Math.floor(progress / 10) * 10}% (${currentDragDistance.current.toFixed(0)}px)`);
+        setDragProgress(progress);
+        setGradientOpacity(1 - progress);
+        
+        // Check for unlock
+        if (progress >= 0.95 && !isHeroUnlocked) {
+          console.log('🔓 REACHED 95% - UNLOCKING!');
+          setIsHeroUnlocked(true);
+          isDragging.current = false;
+          
+          // Animate to 100%
+          gsap.to({}, {
+            duration: 0.3,
+            ease: 'power2.out',
+            onUpdate: function() {
+              const finalProgress = progress + (0.05 * this.progress());
+              setDragProgress(finalProgress);
+              setGradientOpacity(1 - finalProgress);
+            },
+            onComplete: () => {
+              console.log('✅ Unlock complete, calling onAnimationComplete');
+              onAnimationComplete?.();
+            }
+          });
         }
       }
-      
-      // Update last position
-      lastDragY.current = clientY;
     };
 
-    // Mouse/Touch End
-    const handleDragEnd = () => {
+    const handleEnd = () => {
       if (!isDragging.current) return;
       
-      const finalProgress = (currentDragDistance.current / DRAG_DISTANCE_REQUIRED) * 100;
-      console.log('🔚 Drag ended at:', finalProgress.toFixed(1) + '%', `(${currentDragDistance.current.toFixed(0)}px)`);
+      console.log(`🔚 Drag ENDED at ${Math.round(dragProgress * 100)}% progress (${Math.round(accumulatedDistance.current)}px)`);
       
       isDragging.current = false;
-      lastDragY.current = 0;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-
-      // If didn't reach 100%, reset with animation
-      if (currentDragDistance.current < DRAG_DISTANCE_REQUIRED) {
-        console.log('⚠️ Did not reach 100% - Resetting...');
+      document.body.style.touchAction = '';
+      
+      // Reset if not completed
+      if (dragProgress < 0.8 && !isHeroUnlocked) {
+        console.log('🔄 Resetting drag - not enough progress');
         
-        const startDistance = currentDragDistance.current;
-        const resetDuration = 300;
-        const startTime = Date.now();
-        
-        const resetAnimation = () => {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(1, elapsed / resetDuration);
-          const easeProgress = 1 - Math.pow(1 - progress, 3);
-          
-          currentDragDistance.current = startDistance * (1 - easeProgress);
-          updateProgress();
-          
-          if (progress < 1) {
-            dragAnimationFrame.current = requestAnimationFrame(resetAnimation);
-          } else {
-            currentDragDistance.current = 0;
-            dragProgressRef.current = 0;
-            console.log('✅ Reset complete');
-            setShowDragInstruction(true);
+        // Animate back to initial state
+        gsap.to({}, {
+          duration: 0.5,
+          ease: 'power2.out',
+          onUpdate: function() {
+            const progress = dragProgress * (1 - this.progress());
+            setDragProgress(progress);
+            setGradientOpacity(1 - progress);
+          },
+          onComplete: () => {
+            setDragProgress(0);
+            setGradientOpacity(1);
+            accumulatedDistance.current = 0;
           }
-        };
+        });
+      } else if (dragProgress >= 0.8 && !isHeroUnlocked) {
+        // Complete if close enough
+        console.log('✅ Close enough to 100%, completing');
+        setIsHeroUnlocked(true);
         
-        dragAnimationFrame.current = requestAnimationFrame(resetAnimation);
+        // Animate to 100%
+        gsap.to({}, {
+          duration: 0.3,
+          ease: 'power2.out',
+          onUpdate: function() {
+            const finalProgress = dragProgress + ((1 - dragProgress) * this.progress());
+            setDragProgress(finalProgress);
+            setGradientOpacity(1 - finalProgress);
+          },
+          onComplete: () => {
+            setTimeout(() => {
+              onAnimationComplete?.();
+            }, 100);
+          }
+        });
       }
     };
 
-    // Event handlers
+    // Mouse event handlers
     const onMouseDown = (e) => {
-      if (e.target.closest('button') || e.target.closest('a')) return;
-      handleDragStart(e.clientY);
+      e.preventDefault();
+      e.stopPropagation();
+      handleStart(e.clientY);
     };
-    
+
     const onMouseMove = (e) => {
       if (!isDragging.current) return;
-      dragAnimationFrame.current = requestAnimationFrame(() => handleDragMove(e.clientY));
-    };
-    
-    const onMouseUp = () => handleDragEnd();
-    
-    const onTouchStart = (e) => {
-      if (e.target.closest('button') || e.target.closest('a')) return;
       e.preventDefault();
-      handleDragStart(e.touches[0].clientY);
+      e.stopPropagation();
+      handleMove(e.clientY);
     };
-    
+
+    const onMouseUp = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleEnd();
+    };
+
+    const onMouseLeave = () => {
+      if (isDragging.current) {
+        handleEnd();
+      }
+    };
+
+    // Touch event handlers
+    const onTouchStart = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleStart(e.touches[0].clientY);
+    };
+
     const onTouchMove = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
-      dragAnimationFrame.current = requestAnimationFrame(() => handleDragMove(e.touches[0].clientY));
+      e.stopPropagation();
+      handleMove(e.touches[0].clientY);
     };
-    
+
     const onTouchEnd = (e) => {
-      if (!isDragging.current) return;
       e.preventDefault();
-      handleDragEnd();
+      e.stopPropagation();
+      handleEnd();
     };
 
-    // Add listeners
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('touchstart', onTouchStart, { passive: false });
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd);
-
-    return () => {
-      window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      if (dragAnimationFrame.current) {
-        cancelAnimationFrame(dragAnimationFrame.current);
+    const onTouchCancel = () => {
+      if (isDragging.current) {
+        handleEnd();
       }
-      console.log('🧹 Drag listeners cleaned up');
     };
-  }, [animationPhase, currentSection]);
 
-  // ========================================
-  // UNLOCK ANIMATION
-  // ========================================
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'unlocking') return;
-
-    console.log('🔓 Unlock animation starting');
-    let progress = 0;
+    // Add event listeners
+    element.addEventListener('mousedown', onMouseDown);
+    element.addEventListener('mousemove', onMouseMove);
+    element.addEventListener('mouseup', onMouseUp);
+    element.addEventListener('mouseleave', onMouseLeave);
+    element.addEventListener('touchstart', onTouchStart);
+    element.addEventListener('touchmove', onTouchMove);
+    element.addEventListener('touchend', onTouchEnd);
+    element.addEventListener('touchcancel', onTouchCancel);
     
-    setTitleShouldAnimate(false);
-    setBackgroundShouldAnimate(false);
-    setShowDragInstruction(false);
+    eventListenersAdded.current = true;
+    console.log('✅ Drag event listeners added to hero section');
 
-    const interval = setInterval(() => {
-      progress += 0.02;
-      setUnlockProgress(progress);
+    // Store cleanup functions
+    const cleanup = () => {
+      console.log('🧹 Removing drag event listeners from hero section');
+      element.removeEventListener('mousedown', onMouseDown);
+      element.removeEventListener('mousemove', onMouseMove);
+      element.removeEventListener('mouseup', onMouseUp);
+      element.removeEventListener('mouseleave', onMouseLeave);
+      element.removeEventListener('touchstart', onTouchStart);
+      element.removeEventListener('touchmove', onTouchMove);
+      element.removeEventListener('touchend', onTouchEnd);
+      element.removeEventListener('touchcancel', onTouchCancel);
+      eventListenersAdded.current = false;
+    };
 
-      if (progress >= 1) {
-        clearInterval(interval);
-        console.log('✅ Unlock animation complete');
-        setLocalAnimationPhase('fadeout');
+    return cleanup;
+  }, [isHeroUnlocked, dragProgress, onAnimationComplete]);
+
+  // Setup drag listeners when conditions are met
+  useEffect(() => {
+    console.log(`🎯 Drag setup check: currentSection=${currentSection}, animationStatus=${animationStatus}, isHeroUnlocked=${isHeroUnlocked}`);
+    
+    // Only setup drag when we're in section 0, animation is complete, and not unlocked
+    if (currentSection === 0 && animationStatus === 'complete' && !isHeroUnlocked && heroSectionRef.current) {
+      console.log('🎯 Setting up drag system');
+      const cleanup = setupDragListeners();
+      return cleanup;
+    } else {
+      // Cleanup if conditions change
+      if (eventListenersAdded.current && heroSectionRef.current) {
+        console.log('🧹 Removing drag listeners (conditions changed)');
+        // We need to actually remove the listeners here
+        eventListenersAdded.current = false;
       }
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [animationPhase, currentSection]);
-
-  // ========================================
-  // FADEOUT
-  // ========================================
-  useEffect(() => {
-    if (currentSection !== 0 || animationPhase !== 'fadeout') return;
-
-    console.log('🌅 Fadeout starting');
-    
-    // Immediate fadeout
-    setTimeout(() => {
-      console.log('✅ Fadeout complete');
-      setLocalAnimationPhase('completed');
-      setTimeout(() => onAnimationComplete?.(), 100);
-    }, 400);
-
-  }, [animationPhase, currentSection, onAnimationComplete]);
-
-  // ========================================
-  // RESET
-  // ========================================
-  useEffect(() => {
-    if (currentSection === 0 && animationPhase === 'completed') {
-      console.log('🔄 Resetting state');
-      hasInitialized.current = false;
-      isReturningToHero.current = false;
-      unlockTriggered.current = false;
-      currentDragDistance.current = 0;
-      dragProgressRef.current = 0;
-      lastDragY.current = 0;
-      setShowDragInstruction(false);
-      setLocalAnimationPhase('initial');
     }
-  }, [currentSection, animationPhase]);
+  }, [currentSection, animationStatus, isHeroUnlocked, setupDragListeners]);
 
-  // ========================================
-  // PUBLIC API
-  // ========================================
+  // Cleanup timeline on unmount
+  useEffect(() => {
+    return () => {
+      console.log('🧹 Cleaning up timeline');
+      if (timeline.current) {
+        timeline.current.kill();
+      }
+    };
+  }, []);
+
+  // Return to hero
   const handleReturnToHero = useCallback(() => {
-    console.log('🔄 Return to hero');
-    isReturningToHero.current = true;
-    unlockTriggered.current = false;
-    currentDragDistance.current = 0;
-    dragProgressRef.current = 0;
-    lastDragY.current = 0;
-    setShowDragInstruction(false);
-    setLocalAnimationPhase('initial');
+    console.log('🔄 Returning to hero');
+    setIsHeroUnlocked(false);
+    setDragProgress(0);
+    setAnimationStatus('idle');
+    setGradientOpacity(1);
+    setBgOpacity(0);
+    setBgScale(1.1);
+    setTitleOpacity(0);
+    setTitleY(30);
+    setSubtitleOpacity(0);
+    setSubtitleY(30);
+    setDragComponentOpacity(0);
+    accumulatedDistance.current = 0;
+    isDragging.current = false;
+    eventListenersAdded.current = false;
+    
+    // Kill timeline
+    if (timeline.current) {
+      timeline.current.kill();
+    }
+  }, []);
+
+  // Function to set hero section ref from component
+  const setHeroSectionRef = useCallback((ref) => {
+    heroSectionRef.current = ref;
   }, []);
 
   return {
-    backgroundShouldAnimate,
-    titleShouldAnimate,
-    unlockProgress,
-    dragProgress: dragProgressRef.current,
-    animationPhase,
-    showDragInstruction,
-    handleReturnToHero,
+    // Animation status
+    animationStatus,
+    
+    // Animation values
+    gradientOpacity,
+    bgOpacity,
+    bgScale,
+    titleOpacity,
+    titleY,
+    subtitleOpacity,
+    subtitleY,
+    dragComponentOpacity,
+    
+    // Drag system
+    dragProgress,
+    isHeroUnlocked,
+    
+    // Refs
+    setHeroSectionRef,
+    
+    // Methods
+    handleReturnToHero
   };
 };
 

@@ -1,35 +1,33 @@
 /* ========================================
-   PORTFOLIO - MAIN CSS ENTRY POINT
+   PORTFOLIO - MAIN CSS ENTRY POINT (CLEANED)
+   All duplicates removed, imports optimized
    ======================================== */
 
-/* === CORE STYLES === */
+/* === CORE === */
+@import './variables.css';
 @import './core.css';
 @import './base.css';
 
-/* === COMPONENT STYLES === */
+/* === COMPONENTS === */
 @import './components.css';
+@import './navbar.css';
 
-/* === LAYOUT STYLES/UTILITIES === */
+/* === UTILITIES === */
 @import './utils.css';
-
-/* === PROJECT-SPECIFIC === */
-@import './projects/carousel.css';
-@import './projects/projects.css';
-@import './projects/map.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';
 
-/* === VARIABLES === */
-@import './variables.css';
-
-/* === NEED TO MIGRATE FROM MH1.CSS === */
+/* === PROJECTS === */
+@import './projects/projects.css';
+@import './projects/carousel.css';
+@import './projects/map.css';
 @import './project.css';
+@import './projecttemplate.css';
 
-
-@import './navbar.css';
-
-/* Work Experience Section */
+/* ========================================
+   WORK EXPERIENCE SECTION (Unique to index.css)
+   ======================================== */
 .work-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -97,7 +95,9 @@
   display: none;
 }
 
-/* Client Reviews */
+/* ========================================
+   CLIENT REVIEWS (Unique to index.css)
+   ======================================== */
 .client-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -133,7 +133,9 @@
   }
 }
 
-/* Contact Section */
+/* ========================================
+   CONTACT SECTION (Unique to index.css)
+   ======================================== */
 .contact-container {
   max-width: 36rem;
   position: relative;
@@ -168,21 +170,9 @@
   outline-offset: 2px;
 }
 
-/* Canvas Loader */
-.canvas-loader {
-  width: 3rem;
-  height: 3rem;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Copy Container */
+/* ========================================
+   COPY CONTAINER (Unique to index.css)
+   ======================================== */
 .copy-container {
   cursor: pointer;
   display: flex;
@@ -199,9 +189,7 @@
 /* ========================================
    RESPONSIVE UTILITIES
    ======================================== */
-
 @media (max-width: 768px) {
-  /* Mobile-specific adjustments */
   .c-space {
     padding: 0 var(--spacing-md);
   }
@@ -212,69 +200,13 @@
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  /* Tablet-specific adjustments */
   .c-space {
     padding: 0 var(--spacing-xl);
   }
 }
 
 @media (min-width: 1025px) {
-  /* Desktop-specific adjustments */
   .c-space {
     padding: 0 var(--spacing-2xl);
   }
 }
-
-/* ========================================
-   PRINT STYLES
-   ======================================== */
-
-@media print {
-  .navbar-header,
-  .nav-dots,
-  button {
-    display: none !important;
-  }
-  
-  body {
-    background: white;
-    color: black;
-  }
-  
-  a {
-    text-decoration: underline;
-  }
-}
-
-/* ========================================
-   ACCESSIBILITY
-   ======================================== */
-
-/* Focus visible styles */
-*:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* Reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .btn {
-    border: 2px solid currentColor;
-  }
-  
-  .navbar-desktop-link::after {
-    height: 3px;
-  }
-}
-
