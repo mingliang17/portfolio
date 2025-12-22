@@ -1,15 +1,18 @@
 // src/components/project/ProjectComponents.jsx
 import React, { useState } from 'react';
+import TextType from '../../bits/TextType.jsx';
 
-// HeroBackground component
-export const HeroBackground = ({ 
-  imagePath, 
+/* ───────────────────────────────────────────── */
+/* HeroBackground                                 */
+/* ───────────────────────────────────────────── */
+export const HeroBackground = ({
+  imagePath,
   opacity = 0,
   scale = 1.1
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  
+
   const handleImageLoad = () => {
     console.log('✅ Hero image loaded');
     setIsLoading(false);
@@ -22,76 +25,35 @@ export const HeroBackground = ({
   };
 
   return (
-    <>  
-      <div className="project-background-wrapper" style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        pointerEvents: 'none'
-      }}>
-        {/* Background Image */}
-        <div 
+    <>
+      <div className="project-background-wrapper">
+        <div
           className="project-background-image"
-          style={{ 
+          style={{
             backgroundImage: `url('${imagePath}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: opacity,
-            transform: `scale(${scale})`,
-            transition: 'opacity 0.3s ease, transform 0.3s ease'
+            opacity,
+            transform: `scale(${scale})`
           }}
         >
-          {/* Hidden image for preloading */}
+          {/* Preload image */}
           <img
             src={imagePath}
             alt="Hero background"
             onLoad={handleImageLoad}
             onError={handleImageError}
-            style={{ display: 'none' }}
+            className="hidden-image"
           />
         </div>
       </div>
 
       {isLoading && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#000',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          zIndex: 5
-        }}>
+        <div className="background-loading">
           Loading background...
         </div>
       )}
 
       {hasError && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#333',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          zIndex: 5
-        }}>
+        <div className="background-error">
           Failed to load background image
         </div>
       )}
@@ -99,51 +61,41 @@ export const HeroBackground = ({
   );
 };
 
-// HeroContent component
-export const HeroContent = ({ 
-  title, 
+/* ───────────────────────────────────────────── */
+/* HeroContent                                   */
+/* ───────────────────────────────────────────── */
+export const HeroContent = ({
+  titleTexts = [],
   subtitle,
-  opacity = 0,
+  titleOpacity = 1,
   subtitleOpacity = 0,
-  translateY = 30,
-  subtitleTranslateY = 30
+  subtitleX = 40,
+  showTitle = true,
 }) => {
   return (
-    <div style={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      textAlign: 'center',
-      color: 'white',
-      zIndex: 10,
-      width: '100%',
-      padding: '0 2rem',
-      pointerEvents: 'none'
-    }}>
-      <h1 
-        style={{
-          opacity: opacity,
-          transform: `translateY(${translateY}px)`,
-          transition: 'opacity 0.3s ease, transform 0.3s ease',
-          fontSize: '3rem',
-          fontWeight: 'bold',
-          marginBottom: '1rem',
-          textShadow: '0 2px 10px rgba(0,0,0,0.5)'
-        }}
-      >
-        {title}
-      </h1>
-      <p 
+    <div className="hero-content-container">
+      {/* TITLE (typing) */}
+      {showTitle && (
+        <h1
+          className="hero-title"
+          style={{ opacity: titleOpacity }}
+        >
+          <TextType
+            text={titleTexts}
+            typingSpeed={150}
+            pauseDuration={1500}
+            showCursor
+            cursorCharacter="|"
+          />
+        </h1>
+      )}
+
+      {/* SUBTITLE */}
+      <p
+        className="hero-subtitle"
         style={{
           opacity: subtitleOpacity,
-          transform: `translateY(${subtitleTranslateY}px)`,
-          transition: 'opacity 0.3s ease, transform 0.3s ease',
-          fontSize: '1.5rem',
-          fontWeight: '300',
-          maxWidth: '600px',
-          margin: '0 auto',
-          textShadow: '0 1px 5px rgba(0,0,0,0.5)'
+          transform: `translateX(${subtitleX}px)`,
         }}
       >
         {subtitle}
@@ -152,3 +104,10 @@ export const HeroContent = ({
   );
 };
 
+/* ───────────────────────────────────────────── */
+/* Default export (optional)                     */
+/* ───────────────────────────────────────────── */
+export default {
+  HeroBackground,
+  HeroContent
+};

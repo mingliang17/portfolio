@@ -1,7 +1,6 @@
 /* ========================================
-   CAROUSEL - CLEANED & OPTIMIZED
-   Added: Magnifying glass zoom
-   Removed: Duplicate animations, redundant styles
+   CAROUSEL - FIXED ZOOM OVERLAY
+   Fixed: Container matches image with proper aspect ratio
    ======================================== */
 
 /* === ANIMATIONS === */
@@ -44,12 +43,14 @@
   from {
     opacity: 0;
     transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-    border-radius: 16px;
+    width: var(--start-width, 400px);
+    height: var(--start-height, 300px);
   }
   to {
     opacity: 1;
     transform: translate(0, 0) scale(1);
-    border-radius: 32px;
+    width: var(--target-width, auto);
+    height: var(--target-height, auto);
   }
 }
 
@@ -57,12 +58,14 @@
   from {
     opacity: 1;
     transform: translate(0, 0) scale(1);
-    border-radius: 32px;
+    width: var(--target-width, auto);
+    height: var(--target-height, auto);
   }
   to {
     opacity: 0;
     transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-    border-radius: 16px;
+    width: var(--start-width, 400px);
+    height: var(--start-height, 300px);
   }
 }
 
@@ -159,8 +162,6 @@
   font-size: 1.1rem;
   white-space: nowrap;
 }
-
-/* Add these updates to src/styles/projects/carousel.css */
 
 /* === CAROUSEL CONTAINER === */
 .carousel-container {
@@ -280,21 +281,6 @@
   transform: translateY(-50%);
 }
 
-/* Magnify lens */
-.magnify-lens {
-  position: absolute;
-  border: 3px solid rgba(255, 255, 255, 0.8);
-  border-radius: 20%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  box-shadow: 
-    0 0 20px rgba(100, 149, 237, 0.6),
-    inset 0 0 30px rgba(0, 0, 0, 0.3);
-  background-repeat: no-repeat;
-  z-index: 100;
-  cursor: none;
-}
-
 /* === CONTROLS === */
 .carousel-controls {
   position: absolute;
@@ -400,7 +386,7 @@
   box-shadow: 0 0 10px rgba(100, 149, 237, 0.5);
 }
 
-/* === ZOOM OVERLAY === */
+/* === ZOOM OVERLAY - FIXED: PROPER CONTAINER MATCHING === */
 .zoom-overlay {
   position: fixed;
   inset: 0;
@@ -409,6 +395,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .zoom-glass {
@@ -424,16 +411,25 @@
   animation: fadeOut 0.3s ease forwards;
 }
 
+/* UPDATED: Container with exact calculated dimensions */
 .zoom-image-container {
   position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
-  border-radius: 32px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  overflow: visible;
   z-index: 2;
   cursor: default;
   box-shadow: 0 0 100px rgba(100, 149, 237, 0.3);
-  border: 2px solid rgba(255, 255, 255, 1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.9);
+  /* Will be set dynamically via JS */
+  width: var(--target-width, auto);
+  height: var(--target-height, auto);
+  /* Remove max constraints since we calculate them */
+  max-width: none;
+  max-height: none;
 }
 
 .zoom-image-container.expanding {
@@ -448,10 +444,36 @@
   cursor: none;
 }
 
+/* NEW: Image container that centers the image */
+.zoom-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* UPDATED: Image takes full container and is contained */
+.zoom-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* This ensures image scales to fit container */
+  border-radius: 16px;
+}
+
+.zoom-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 .zoom-close-btn {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: -20px;
+  right: -20px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -473,23 +495,24 @@
   transform: scale(1.1);
 }
 
-.zoom-image-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.zoom-image {
-  width: auto;
-  height: 90vh;
-  object-fit: contain;
-  display: block;
+/* NEW: Loading state */
+.zoom-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 1.2rem;
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
 }
 
 /* === MAGNIFYING GLASS === */
-.magnifier {
+.magnify-lens {
   position: absolute;
-  border: 3px solid rgba(0, 0, 0, 0.8);
-  border-radius: 20%;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);
   box-shadow: 
@@ -498,29 +521,31 @@
   background-repeat: no-repeat;
   z-index: 100;
   cursor: none;
+  overflow: hidden;
 }
 
 .zoom-hint {
   position: absolute;
-  top: -40px;
+  top: -50px;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(0, 0, 0, 0.9);
+  color: white;
   font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.7);
   padding: 8px 16px;
   border-radius: 20px;
-  /* backdrop-filter: blur(10px); */
+  backdrop-filter: blur(10px);
   animation: liquid-float-long 8s ease-in-out infinite;
   pointer-events: none;
   white-space: nowrap;
-  transition: all 8s ease;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Active state when magnifier is on */
 .zoom-hint-active {
-  background: rgba(255, 255, 255, 0.4);
-  color: rgba(0, 0, 0, 0.9);
+  background: rgba(100, 149, 237, 0.8);
+  color: white;
   animation: liquid-float-long 8s ease-in-out infinite, hint-pulse 2s ease-in-out infinite;
 }
 
@@ -560,7 +585,16 @@
     font-size: 1rem; 
   }
   
-  .zoom-image {
-    height: 70vh;
+  .zoom-close-btn {
+    top: -15px;
+    right: -15px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .zoom-hint {
+    top: -45px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
   }
 }

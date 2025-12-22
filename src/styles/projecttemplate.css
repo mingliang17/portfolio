@@ -38,10 +38,9 @@
   height: 100%;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.9) 0%,   /* top fully dark */
-    rgba(0,0,0,0.6) 30%,  /* mid slightly transparent */
-    rgba(0,0,0,0.2) 70%,  /* near bottom lighter */
-    transparent 100%
+    rgba(0,0,0,1) 0%,   /* top fully dark *//* mid slightly transparent */
+    rgba(0,0,0,0.5) 100%,  /* near bottom lighter */
+    transparent 0%
   );
   pointer-events: none;
   transition: opacity 0.05s linear;

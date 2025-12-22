@@ -3,7 +3,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
 import { ScrollPrompt } from '../../components/common/LayoutComponents.jsx';
-import { useProjectAnimation } from '../../hooks/useProjectAnimation.js';
+import { useProjectAnimation } from '../../hooks/useProjectAnimation.jsx';
 import { useProjectNavigation } from '../../hooks/useProjectNavigation.js';
 
 const ProjectTemplate = ({
@@ -37,23 +37,24 @@ const ProjectTemplate = ({
     }
   }, [onSectionChange]);
 
-  const {
-    animationStatus,
-    gradientOpacity,
-    bgOpacity,
-    bgScale,
-    titleOpacity,
-    titleY,
-    subtitleOpacity,
-    subtitleY,
-    dragComponentOpacity,
-    dragProgress,
-    isHeroUnlocked,
-    setHeroSectionRef,
-    handleReturnToHero,
-  } = useProjectAnimation(currentSection, handleAnimationComplete);
+const {
+  animationStatus,
+  gradientOpacity,
+  bgOpacity,
+  bgScale,
+
+  titleOpacity,
+  subtitleOpacity,
+  subtitleX,
+
+  dragProgress,
+  isHeroUnlocked,
+
+  setHeroSectionRef,
+} = useProjectAnimation(currentSection, handleAnimationComplete);
 
   const showDragUI = animationStatus === 'complete' && !isHeroUnlocked;
+  const showSubtitle = animationStatus !== 'idle';
 
   useEffect(() => {
     if (heroRef.current) setHeroSectionRef(heroRef.current);
@@ -86,32 +87,43 @@ const ProjectTemplate = ({
         >
           {/* Drag debug */}
           <div className="drag-debug">
-            Drag: {Math.round(dragProgress * 100)}% | Status: {animationStatus} | {Math.round(dragProgress * 300)}px/300px
+            Drag: {Math.round(dragProgress * 100)}% | Status: {animationStatus}
           </div>
 
           {/* Gradient overlay */}
-          <div 
-            className="hero-gradient" 
-            style={{ opacity: gradientOpacity }} 
+          <div
+            className="hero-gradient"
+            style={{ opacity: gradientOpacity }}
           />
 
-          <HeroBackground imagePath={sectionConfig.backgroundImage} opacity={bgOpacity} scale={bgScale} />
+          <HeroBackground
+            imagePath={sectionConfig.backgroundImage}
+            opacity={bgOpacity}
+            scale={bgScale}
+          />
+
           <HeroContent
-            title={sectionConfig.title}
+            titleTexts={sectionConfig.title}
             subtitle={sectionConfig.subtitle}
-            opacity={titleOpacity}
+            titleOpacity={titleOpacity}
             subtitleOpacity={subtitleOpacity}
-            translateY={titleY}
-            subtitleTranslateY={subtitleY}
+            subtitleX={subtitleX}
+            showTitle={animationStatus !== 'idle'}
           />
 
-          <ScrollPrompt dragProgress={dragProgress} visible={showDragUI} />
+          <ScrollPrompt
+            dragProgress={dragProgress}
+            visible={showDragUI}
+          />
         </section>
       );
     }
 
     return (
-      <section key={index} className={`project-section ${sectionConfig.className || ''}`}>
+      <section
+        key={index}
+        className={`project-section ${sectionConfig.className || ''}`}
+      >
         {sectionConfig.component}
       </section>
     );

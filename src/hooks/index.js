@@ -16,7 +16,7 @@
  */
 
 // ===================================
-export { useProjectAnimation } from './useProjectAnimation.js';
+export { useProjectAnimation } from './useProjectAnimation.jsx';
 export { useProjectNavigation } from './useProjectNavigation.js';
 export { useNavbarHeight } from './useNavbarHeight.js';
 

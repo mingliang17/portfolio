@@ -178,7 +178,7 @@ export const MapSection = ({
         setTimelinePhase('logos-animating');
         console.log('📊 Timeline: Phase 2 - Starting individual logo animations');
         animateNextLogo();
-      }, 1000);
+      }, 2500);
       
       animationTimers.current.push(logoStartTimer);
     }, 500);
