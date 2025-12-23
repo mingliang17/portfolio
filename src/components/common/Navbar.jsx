@@ -4,7 +4,7 @@
 import { useState, useEffect, forwardRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { navLinks } from '../../constants/index.js';
-import { ICONS } from '../../assets/index.js';
+import { ICONS } from '../../assets/icons.js';
 
 const NavItems = ({ mobile = false, onClick = () => {} }) => (
   <ul className={mobile ? "navbar-mobile-ul" : "navbar-desktop-ul"}>

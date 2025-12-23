@@ -14,7 +14,7 @@ const App = () => {
   useNavbarHeight(navRef);
 
   return (
-    <main className="w-full relative">
+    <main className="w-full relative bg-gray-400">
       <Router basename="portfolio">
         <Navbar ref={navRef} />
         <Suspense fallback={<div>Loading...</div>}>

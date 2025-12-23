@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { TextureLoader, ShaderMaterial, Vector2, Vector3, Euler } from 'three';
+import { TextureLoader, ShaderMaterial, Vector2, Vector3, Quaternion } from 'three';
 import * as solar from 'solar-calculator';
 import { Html } from '@react-three/drei';
 import { TEXTURES } from '../../assets/index.js';
@@ -126,28 +126,35 @@ const sunPosAt = (dt) => {
   return [longitude - solar.equationOfTime(t) / 4, solar.declination(t)];
 };
 
-const Earth = ({ 
+const Earth = forwardRef(({ 
   projects,
   // Animation Controls
-  continentPopHeight = 0.05,
-  hoverPopHeight = 0.3,
+  continentPopHeight = 0,
+  hoverPopHeight = 0.4,
   hoverRadius = 0.3,
   animationSpeed = 0.001,
   timeSpeed = 1,
+  autoRotate = true,
   
   // Visual Controls
-  normalMapStrength = 1.0,
+  normalMapStrength = 0,
   ambientBrightness = 0.3,
   
   // Pin Controls
-  pinColor = '#ff0000',
+  pinColor = '#ffffff',
   pinHoverColor = '#ffcc00',
   pinBaseRadius = 1.8,
-  pinLength = 0.3,
-  pinThickness = 0.02,
-  pinTipSize = 0.05,
-  showPins = true
-}) => {
+  pinLength = 0.5, // Changed from 0.05 to 0.5
+  pinThickness = 0.01,
+  pinTipSize = 0.03,
+  showPins = true,
+  
+  // Controls Panel
+  showControls = false,
+  onToggleControls,
+  onResetDefaults,
+  onAutoRotateChange
+}, ref) => {
   const globeRef = useRef();
   const globeMeshRef = useRef();
   const [hoveredPin, setHoveredPin] = useState(null);
@@ -155,6 +162,21 @@ const Earth = ({
   const [isHovering, setIsHovering] = useState(false);
   const [dt, setDt] = useState(+new Date());
   const [globeRotation] = useState(new Vector2(0, 0));
+  
+  // Local state for controls
+  const [localContinentHeight, setLocalContinentHeight] = useState(continentPopHeight);
+  const [localHoverHeight, setLocalHoverHeight] = useState(hoverPopHeight);
+  const [localHoverRadius, setLocalHoverRadius] = useState(hoverRadius);
+  const [localNormalStrength, setLocalNormalStrength] = useState(normalMapStrength);
+  const [localRotationSpeed, setLocalRotationSpeed] = useState(animationSpeed);
+  const [localPinLength, setLocalPinLength] = useState(pinLength); // This should match the prop default
+  const [localAutoRotate, setLocalAutoRotate] = useState(autoRotate);
+
+  // Expose the globe ref to parent
+  useImperativeHandle(ref, () => ({
+    getGlobe: () => globeRef.current,
+    getGlobeMesh: () => globeMeshRef.current
+  }));
 
   // Load textures
   const dayTexture = useLoader(TextureLoader, TEXTURES.earth.day);
@@ -170,17 +192,17 @@ const Earth = ({
         normalMap: { value: normalMap },
         sunPosition: { value: new Vector2() },
         globeRotation: { value: globeRotation },
-        displaceAmount: { value: continentPopHeight },
-        normalScale: { value: normalMapStrength },
+        displaceAmount: { value: localContinentHeight },
+        normalScale: { value: localNormalStrength },
         ambientLightIntensity: { value: ambientBrightness },
         hoverPoint: { value: new Vector3(0, 0, 0) },
-        hoverRadius: { value: hoverRadius },
-        maxDisplacement: { value: hoverPopHeight }
+        hoverRadius: { value: localHoverRadius },
+        maxDisplacement: { value: localHoverHeight }
       },
       vertexShader: dayNightShader.vertexShader,
       fragmentShader: dayNightShader.fragmentShader
     });
-  }, [dayTexture, nightTexture, normalMap, globeRotation, continentPopHeight, normalMapStrength, ambientBrightness, hoverRadius, hoverPopHeight]);
+  }, [dayTexture, nightTexture, normalMap, globeRotation, localContinentHeight, localNormalStrength, ambientBrightness, localHoverRadius, localHoverHeight]);
 
   // Update time
   useEffect(() => {
@@ -198,16 +220,15 @@ const Earth = ({
     }
   }, [dt, material]);
 
-  // Update material uniforms
+  // Update material uniforms when local state changes
   useEffect(() => {
     if (material) {
-      material.uniforms.displaceAmount.value = continentPopHeight;
-      material.uniforms.normalScale.value = normalMapStrength;
-      material.uniforms.ambientLightIntensity.value = ambientBrightness;
-      material.uniforms.hoverRadius.value = hoverRadius;
-      material.uniforms.maxDisplacement.value = hoverPopHeight;
+      material.uniforms.displaceAmount.value = localContinentHeight;
+      material.uniforms.normalScale.value = localNormalStrength;
+      material.uniforms.hoverRadius.value = localHoverRadius;
+      material.uniforms.maxDisplacement.value = localHoverHeight;
     }
-  }, [material, continentPopHeight, normalMapStrength, ambientBrightness, hoverRadius, hoverPopHeight]);
+  }, [material, localContinentHeight, localNormalStrength, localHoverRadius, localHoverHeight]);
 
   // Handle globe hover
   const handleGlobeHover = (event) => {
@@ -225,10 +246,14 @@ const Earth = ({
     setIsHovering(false);
   };
 
-  // Auto-rotate
+  // Auto-rotate if enabled
   useFrame(() => {
+    if (globeRef.current && localAutoRotate) {
+      globeRef.current.rotation.y += localRotationSpeed;
+    }
+    
+    // Always update globe rotation for shader
     if (globeRef.current) {
-      globeRef.current.rotation.y += animationSpeed;
       const lng = (globeRef.current.rotation.y * 180 / Math.PI) % 360;
       const lat = (globeRef.current.rotation.x * 180 / Math.PI) % 360;
       globeRotation.set(lng, lat);
@@ -247,80 +272,246 @@ const Earth = ({
     return [x, y, z];
   };
 
+  // Function to align cylinder along a direction vector (from origin to point)
+  const alignCylinderToDirection = (direction) => {
+    // Default up vector for cylinder (Y-axis)
+    const up = new Vector3(0, 1, 0);
+    // Normalize the direction
+    const dir = direction.clone().normalize();
+    
+    // Calculate the rotation quaternion
+    const quaternion = new Quaternion();
+    quaternion.setFromUnitVectors(up, dir);
+    
+    return quaternion;
+  };
+
+  // Reset to defaults
+  const handleResetDefaults = () => {
+    setLocalContinentHeight(continentPopHeight);
+    setLocalHoverHeight(hoverPopHeight);
+    setLocalHoverRadius(hoverRadius);
+    setLocalNormalStrength(normalMapStrength);
+    setLocalRotationSpeed(animationSpeed);
+    setLocalPinLength(pinLength); // Reset to the prop value, not a hardcoded value
+    setLocalAutoRotate(autoRotate);
+    if (onResetDefaults) onResetDefaults();
+  };
+
+  // Handle auto-rotate toggle
+  const handleAutoRotateToggle = (e) => {
+    const newValue = e.target.checked;
+    setLocalAutoRotate(newValue);
+    if (onAutoRotateChange) {
+      onAutoRotateChange(newValue);
+    }
+  };
+
   return (
-    <group ref={globeRef}>
-      {/* The Earth Globe */}
-      <mesh
-        ref={globeMeshRef}
-        onPointerMove={handleGlobeHover}
-        onPointerLeave={handleGlobeLeave}
-      >
-        <sphereGeometry args={[2, 128, 128]} />
-        <primitive object={material} attach="material" />
-      </mesh>
+    <>
+      <group ref={globeRef}>
+        {/* The Earth Globe */}
+        <mesh
+          ref={globeMeshRef}
+          onPointerMove={handleGlobeHover}
+          onPointerLeave={handleGlobeLeave}
+        >
+          <sphereGeometry args={[2, 128, 128]} />
+          <primitive object={material} attach="material" />
+        </mesh>
 
-      {/* Project Pins - Radially Extruding from Center */}
-      {showPins && projects && projects.map((project, index) => {
-        const [x, y, z] = latLongToVector3(project.lat, project.lon, 1);
-        const direction = new Vector3(x, y, z).normalize();
-        
-        // Pin positions
-        const startPos = direction.clone().multiplyScalar(pinBaseRadius);
-        const endPos = direction.clone().multiplyScalar(pinBaseRadius + pinLength);
-        const midPos = direction.clone().multiplyScalar(pinBaseRadius + pinLength / 2);
-        
-        // Calculate rotation to align cylinder radially
-        const rotationX = Math.acos(direction.y);
-        const rotationY = Math.atan2(direction.x, direction.z);
+        {/* Project Pins - Radially Extruding from Center */}
+        {showPins && projects && projects.map((project, index) => {
+          const [x, y, z] = latLongToVector3(project.lat, project.lon, 1);
+          const direction = new Vector3(x, y, z);
+          const normalizedDir = direction.clone().normalize();
+          
+          // Pin positions - extending from Earth's surface outward
+          const basePos = normalizedDir.clone().multiplyScalar(pinBaseRadius);
+          const tipPos = normalizedDir.clone().multiplyScalar(pinBaseRadius + localPinLength);
+          const midPos = normalizedDir.clone().multiplyScalar(pinBaseRadius + localPinLength / 2);
+          
+          // Calculate rotation quaternion to align cylinder along radial direction
+          const quaternion = alignCylinderToDirection(direction);
 
-        return (
-          <group key={index}>
-            {/* Pin Cylinder */}
-            <mesh
-              position={[midPos.x, midPos.y, midPos.z]}
-              rotation={[rotationX, rotationY, 0]}
-              onPointerOver={() => setHoveredPin(index)}
-              onPointerOut={() => setHoveredPin(null)}
-              onClick={() => window.location.href = project.link}
-            >
-              <cylinderGeometry args={[pinThickness, pinThickness, pinLength, 8]} />
-              <meshStandardMaterial 
-                color={hoveredPin === index ? pinHoverColor : pinColor}
-                emissive={hoveredPin === index ? pinHoverColor : pinColor}
-                emissiveIntensity={0.3}
+          return (
+            <group key={index}>
+              {/* Pin Cylinder - positioned at midpoint and aligned radially */}
+              <mesh
+                position={[midPos.x, midPos.y, midPos.z]}
+                quaternion={quaternion}
+                onPointerOver={() => setHoveredPin(index)}
+                onPointerOut={() => setHoveredPin(null)}
+                onClick={() => window.location.href = project.link}
+              >
+                <cylinderGeometry args={[pinThickness, pinThickness, localPinLength, 8]} />
+                <meshStandardMaterial 
+                  color={hoveredPin === index ? pinHoverColor : pinColor}
+                  emissive={hoveredPin === index ? pinHoverColor : pinColor}
+                  emissiveIntensity={0.3}
+                />
+              </mesh>
+
+              {/* Pin Tip Sphere */}
+              <mesh
+                position={[tipPos.x, tipPos.y, tipPos.z]}
+                scale={hoveredPin === index ? 1.5 : 1}
+                onPointerOver={() => setHoveredPin(index)}
+                onPointerOut={() => setHoveredPin(null)}
+                onClick={() => window.location.href = project.link}
+              >
+                <sphereGeometry args={[pinTipSize, 16, 16]} />
+                <meshStandardMaterial 
+                  color={hoveredPin === index ? pinHoverColor : pinColor}
+                  emissive={hoveredPin === index ? pinHoverColor : pinColor}
+                  emissiveIntensity={0.5}
+                />
+              </mesh>
+
+              {/* Tooltip */}
+              {hoveredPin === index && (
+                <Html position={[tipPos.x, tipPos.y, tipPos.z]} center distanceFactor={8}>
+                  <div className="bg-black/90 text-white px-4 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg">
+                    <p className="font-bold text-lg">{project.title}</p>
+                    <p className="text-sm text-gray-300">{project.description}</p>
+                  </div>
+                </Html>
+              )}
+            </group>
+          );
+        })}
+      </group>
+
+      {/* HTML Overlays */}
+      <Html fullscreen>
+        <button
+          onClick={onToggleControls}
+          className="absolute top-8 right-8 bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition z-10"
+        >
+          {showControls ? 'Hide' : 'Show'} Controls
+        </button>
+
+        {showControls && (
+          <div className="absolute bottom-8 right-8 bg-black/80 text-white p-6 rounded-lg space-y-4 z-10 min-w-[300px] max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Globe Controls</h3>
+            
+            <div>
+              <label className="block text-sm mb-2">
+                Base Height: {localContinentHeight.toFixed(2)}
+              </label>
+              <input 
+                type="range" 
+                min="0" 
+                max="0.2" 
+                step="0.01" 
+                value={localContinentHeight}
+                onChange={(e) => setLocalContinentHeight(parseFloat(e.target.value))} 
+                className="w-full" 
               />
-            </mesh>
+            </div>
 
-            {/* Pin Tip Sphere */}
-            <mesh
-              position={[endPos.x, endPos.y, endPos.z]}
-              scale={hoveredPin === index ? 1.5 : 1}
-              onPointerOver={() => setHoveredPin(index)}
-              onPointerOut={() => setHoveredPin(null)}
-              onClick={() => window.location.href = project.link}
-            >
-              <sphereGeometry args={[pinTipSize, 16, 16]} />
-              <meshStandardMaterial 
-                color={hoveredPin === index ? pinHoverColor : pinColor}
-                emissive={hoveredPin === index ? pinHoverColor : pinColor}
-                emissiveIntensity={0.5}
+            <div>
+              <label className="block text-sm mb-2">
+                Hover Pop: {localHoverHeight.toFixed(2)}
+              </label>
+              <input 
+                type="range" 
+                min="0" 
+                max="1" 
+                step="0.05" 
+                value={localHoverHeight}
+                onChange={(e) => setLocalHoverHeight(parseFloat(e.target.value))} 
+                className="w-full" 
               />
-            </mesh>
+            </div>
 
-            {/* Tooltip */}
-            {hoveredPin === index && (
-              <Html position={[endPos.x, endPos.y, endPos.z]} center distanceFactor={8}>
-                <div className="bg-black/90 text-white px-4 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg">
-                  <p className="font-bold text-lg">{project.title}</p>
-                  <p className="text-sm text-gray-300">{project.description}</p>
-                </div>
-              </Html>
-            )}
-          </group>
-        );
-      })}
-    </group>
+            <div>
+              <label className="block text-sm mb-2">
+                Hover Radius: {localHoverRadius.toFixed(2)}
+              </label>
+              <input 
+                type="range" 
+                min="0.1" 
+                max="1" 
+                step="0.05" 
+                value={localHoverRadius}
+                onChange={(e) => setLocalHoverRadius(parseFloat(e.target.value))} 
+                className="w-full" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2">
+                Pin Length: {localPinLength.toFixed(2)}
+              </label>
+              <input 
+                type="range" 
+                min="0.05"  // Changed from 0.1 to 0.05 to match the default value
+                max="0.8" 
+                step="0.05" 
+                value={localPinLength}
+                onChange={(e) => setLocalPinLength(parseFloat(e.target.value))} 
+                className="w-full" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2">
+                Normal Strength: {localNormalStrength.toFixed(2)}
+              </label>
+              <input 
+                type="range" 
+                min="0" 
+                max="2" 
+                step="0.1" 
+                value={localNormalStrength}
+                onChange={(e) => setLocalNormalStrength(parseFloat(e.target.value))} 
+                className="w-full" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2">
+                Rotation Speed: {localRotationSpeed.toFixed(4)}
+              </label>
+              <input 
+                type="range" 
+                min="0" 
+                max="0.005" 
+                step="0.0001" 
+                value={localRotationSpeed}
+                onChange={(e) => setLocalRotationSpeed(parseFloat(e.target.value))} 
+                className="w-full" 
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={localAutoRotate}
+                  onChange={handleAutoRotateToggle}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <span className="text-sm">Auto Rotate</span>
+              </label>
+              <p className="text-xs text-gray-400 mt-1">
+                Auto-rotate will continue until you drag the globe
+              </p>
+            </div>
+
+            <button
+              onClick={handleResetDefaults}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
+            >
+              Reset Defaults
+            </button>
+          </div>
+        )}
+      </Html>
+    </>
   );
-};
+});
 
+Earth.displayName = 'Earth';
 export default Earth;

@@ -197,7 +197,7 @@
 /* Main carousel wrapper */
 .carousel {
   position: relative;
-  width: 100%;
+  width: 80%;
   flex: 1;
   display: flex;
   align-items: center;
@@ -423,13 +423,13 @@
   cursor: default;
   box-shadow: 0 0 100px rgba(100, 149, 237, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.9);
   /* Will be set dynamically via JS */
   width: var(--target-width, auto);
   height: var(--target-height, auto);
   /* Remove max constraints since we calculate them */
   max-width: none;
   max-height: none;
+  border-radius: 20px;
 }
 
 .zoom-image-container.expanding {
@@ -452,22 +452,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
 }
 
-/* UPDATED: Image takes full container and is contained */
-.zoom-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* This ensures image scales to fit container */
-  border-radius: 16px;
-}
-
+/* this is the image one, references the <img> */
 .zoom-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
+  border-radius: 20px;
 }
 
 .zoom-close-btn {

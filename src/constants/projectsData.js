@@ -27,7 +27,7 @@ export const PROJECT_MH1 = {
       {
         id: 'gallery',
         enabled: true,
-        title: 'Project Gallery',
+        title: 'Renders',
         images: PROJECT_ASSETS.mh1.carousels,
         items: PROJECT_ASSETS.mh1.carousels.length,
       },

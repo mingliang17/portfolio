@@ -1,3 +1,5 @@
+import projectsData from "./projectsData";
+
 export const navLinks = [
   {
     id: 1,
@@ -289,39 +291,14 @@ export const workExperiences = [
 
 
 export const globeProjects = [{
-      title: 'Project Alpha',
-      description: 'AI-powered app',
-      lat: 40.7128,  // New York
-      lon: -74.0060,
-      link: 'projects/alpha'
+      title: 'meinhardt1',
+      id: 'mh1',
+      description: 'description for mh1',
+      lat: 38.4237,  // Izmir
+      lon: 27.1428,
+      link: 'projects/mh1'
     },
-    {
-      title: 'Project Beta',
-      description: 'E-commerce platform',
-      lat: 51.5074,  // London
-      lon: -0.1278,
-      link: 'projects/beta'
-    },
-    {
-      title: 'Project Gamma',
-      description: 'Social network',
-      lat: 35.6762,  // Tokyo
-      lon: 139.6503,
-      link: 'projects/gamma'
-    },
-    {
-      title: 'Project Delta',
-      description: 'Mobile game',
-      lat: -33.8688, // Sydney
-      lon: 151.2093,
-      link: 'projects/delta'
-    },
-    {
-      title: 'Project Epsilon',
-      description: 'Data visualization',
-      lat: 1.3521,   // Singapore
-      lon: 103.8198,
-      link: 'projects/epsilon'
-    }]
+   
+    ]
 
 

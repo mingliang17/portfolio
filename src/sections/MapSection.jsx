@@ -3,257 +3,231 @@
 // MAP SECTION - 3-Column Flex Layout with Timeline Animation
 // ============================================
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { ComponentLoading } from '../components/common/LayoutComponents.jsx';
+import { ICONS } from '../assets/icons.js';
+import gsap from 'gsap';
+
+/**
+ * Helper function to create logos object with proper className from icon names
+ * @param {Array<string>} iconNames - Array of icon names to include
+ * @param {string} classNamePrefix - Prefix for CSS class (default: 'logo-')
+ * @returns {Object} Logos object with enhanced properties
+ */
+export const createProjectLogos = (iconNames, classNamePrefix = 'logo-') => {
+  return iconNames.reduce((logos, iconName) => {
+    if (ICONS[iconName]) {
+      logos[iconName] = {
+        ...ICONS[iconName],
+        className: `${classNamePrefix}${iconName}`
+      };
+    }
+    return logos;
+  }, {});
+};
 
 /**
  * MapSection - 3-column layout with coordinated timeline animation
- * 
- * @param {React.Component} MapComponent - The MyMap component to render
- * @param {Object} logos - Dictionary of logo objects {key: {src, alt, title, className}}
- * @param {Object} description - Description data {title, metrics, disclaimer}
- * @param {boolean} visible - Control visibility
- * @param {boolean} autoPlay - Whether to auto-play animations (default: true)
- * @param {number} timelineStartDelay - Delay before starting timeline (ms)
- * @param {number} animationIncrement - Delay between animations (ms, default: 300)
  */
-export const MapSection = ({ 
+export const MapSection = ({
   MapComponent,
   logos = {},
   description = {},
   visible = true,
   autoPlay = true,
   timelineStartDelay = 1000,
-  animationIncrement = 300 // 0.3s between animations
+  animationIncrement = 0.2
 }) => {
-  const [timelinePhase, setTimelinePhase] = useState('idle');
-  const [animatedLogos, setAnimatedLogos] = useState([]);
-  const [animatedMetrics, setAnimatedMetrics] = useState([]);
   const [hoveredLogo, setHoveredLogo] = useState(null);
+  const timelineRef = useRef(null);
+  const hasStartedRef = useRef(false);
   const animationTimers = useRef([]);
-  const isAnimating = useRef(false);
-  const logoAnimationIndex = useRef(0);
-  const metricAnimationIndex = useRef(0);
 
-  // Convert logos dictionary to array
-  const getLogosToRender = () => {
+  // Refs for animation targets
+  const logosColumnRef = useRef(null);
+  const logoContainersRef = useRef([]);
+  const sidebarRef = useRef(null);
+  const titleRef = useRef(null);
+  const metricItemsRef = useRef([]);
+  const disclaimerRef = useRef(null);
+
+  // Convert logos object to array
+  const getLogosToRender = useCallback(() => {
     if (!logos || typeof logos !== 'object') return [];
     
-    if (Array.isArray(logos)) {
-      return logos.map((logo, index) => ({
-        ...logo,
-        id: logo.id || `logo-${index}`
-      }));
-    } else {
-      return Object.entries(logos).map(([key, logoData]) => ({
-        ...logoData,
-        id: key
-      }));
-    }
-  };
+    return Object.entries(logos).map(([id, data]) => ({
+      ...data,
+      id
+    }));
+  }, [logos]);
 
   const logosToRender = getLogosToRender();
   const metricsToRender = description.metrics || [];
 
-  // Logo hover handlers
-  const handleLogoMouseEnter = (logoId) => {
-    setHoveredLogo(logoId);
-  };
-
-  const handleLogoMouseLeave = () => {
-    setHoveredLogo(null);
-  };
-
-  // Animate logos one by one
-  const animateNextLogo = () => {
-    if (logoAnimationIndex.current < logosToRender.length) {
-      const currentLogo = logosToRender[logoAnimationIndex.current];
-      console.log(`🎬 Animating logo ${logoAnimationIndex.current + 1}/${logosToRender.length}: ${currentLogo.id}`);
-      
-      setAnimatedLogos(prev => [...prev, currentLogo.id]);
-      
-      // Schedule next logo animation
-      const timer = setTimeout(() => {
-        logoAnimationIndex.current += 1;
-        animateNextLogo();
-      }, animationIncrement);
-      
-      animationTimers.current.push(timer);
-    } else {
-      // All logos animated, move to sidebar phase
-      console.log('✅ All logos animation complete');
-      const sidebarTimer = setTimeout(() => {
-        setTimelinePhase('sidebar');
-        console.log('📊 Timeline: Moving to Sidebar Phase');
-        
-        // Start sidebar animations after a brief pause
-        const sidebarStartTimer = setTimeout(() => {
-          startSidebarAnimations();
-        }, 200);
-        animationTimers.current.push(sidebarStartTimer);
-      }, 500);
-      
-      animationTimers.current.push(sidebarTimer);
-    }
-  };
-
-  // Animate sidebar content sequentially
-  const startSidebarAnimations = () => {
-    console.log('📊 Timeline: Starting sidebar content animations');
-    
-    // Start with title animation
-    const titleTimer = setTimeout(() => {
-      console.log('📊 Sidebar: Title animating');
-      
-      // Start metrics animations after title
-      const metricsStartTimer = setTimeout(() => {
-        animateNextMetric();
-      }, animationIncrement);
-      
-      animationTimers.current.push(metricsStartTimer);
-    }, animationIncrement);
-    
-    animationTimers.current.push(titleTimer);
-  };
-
-  // Animate metrics one by one
-  const animateNextMetric = () => {
-    if (metricAnimationIndex.current < metricsToRender.length) {
-      const currentMetric = metricsToRender[metricAnimationIndex.current];
-      console.log(`📊 Animating metric ${metricAnimationIndex.current + 1}/${metricsToRender.length}`);
-      
-      setAnimatedMetrics(prev => [...prev, metricAnimationIndex.current]);
-      
-      // Schedule next metric animation
-      const timer = setTimeout(() => {
-        metricAnimationIndex.current += 1;
-        animateNextMetric();
-      }, animationIncrement);
-      
-      animationTimers.current.push(timer);
-    } else {
-      // All metrics animated, move to disclaimer
-      console.log('✅ All metrics animation complete');
-      const disclaimerTimer = setTimeout(() => {
-        setTimelinePhase('disclaimer');
-        console.log('📊 Timeline: Moving to Disclaimer Phase');
-        
-        // Final completion
-        const completeTimer = setTimeout(() => {
-          setTimelinePhase('complete');
-          isAnimating.current = false;
-          console.log('✅ Timeline: All animations complete');
-        }, animationIncrement * 2);
-        
-        animationTimers.current.push(completeTimer);
-      }, animationIncrement);
-      
-      animationTimers.current.push(disclaimerTimer);
-    }
-  };
-
-  // Start the timeline animation
-  const startTimeline = () => {
-    if (isAnimating.current) return;
-    
-    isAnimating.current = true;
-    logoAnimationIndex.current = 0;
-    metricAnimationIndex.current = 0;
-    setAnimatedLogos([]);
-    setAnimatedMetrics([]);
-    setHoveredLogo(null);
-    console.log(`🎬 MapSection: Starting timeline animation with ${logosToRender.length} logos, ${metricsToRender.length} metrics`);
-    
-    // Clear any existing timers
-    animationTimers.current.forEach(timer => clearTimeout(timer));
-    animationTimers.current = [];
-    
-    // Phase 1: Logo column entrance
-    const columnTimer = setTimeout(() => {
-      setTimelinePhase('column-entrance');
-      console.log('📊 Timeline: Phase 1 - Logo Column Entrance');
-      
-      // Start logo animations after column entrance completes
-      const logoStartTimer = setTimeout(() => {
-        setTimelinePhase('logos-animating');
-        console.log('📊 Timeline: Phase 2 - Starting individual logo animations');
-        animateNextLogo();
-      }, 2500);
-      
-      animationTimers.current.push(logoStartTimer);
-    }, 500);
-    
-    animationTimers.current.push(columnTimer);
-  };
-
-  // Listen for map animation completion
+  // Initialize ref arrays
   useEffect(() => {
-    const handleSidebarShow = () => {
-      console.log('📊 MapSection: Received map animation complete event');
-      
-      if (autoPlay) {
-        setTimeout(startTimeline, timelineStartDelay);
-      }
-    };
+    logoContainersRef.current = logoContainersRef.current.slice(0, logosToRender.length);
+    metricItemsRef.current = metricItemsRef.current.slice(0, metricsToRender.length);
+  }, [logosToRender.length, metricsToRender.length]);
 
-    window.addEventListener('map-sidebar-visible', handleSidebarShow);
-    
-    // Auto-start if no event is expected
-    if (autoPlay) {
-      const autoStartTimer = setTimeout(startTimeline, timelineStartDelay);
-      animationTimers.current.push(autoStartTimer);
+  // Create and play GSAP timeline
+  const startTimeline = useCallback(() => {
+    if (hasStartedRef.current) {
+      console.log('⚠️ Timeline already started, skipping');
+      return;
     }
     
-    // Cleanup
+    console.log('🎬 Starting GSAP timeline');
+    hasStartedRef.current = true;
+
+    // Kill any existing timeline
+    if (timelineRef.current) {
+      timelineRef.current.kill();
+    }
+
+    // Create new timeline
+    const tl = gsap.timeline({
+      defaults: { ease: "power2.out" }
+    });
+    timelineRef.current = tl;
+
+    console.log('🔧 Setting initial hidden state via GSAP');
+
+    // Set initial hidden state via GSAP (not CSS)
+    // This ensures elements are hidden before animation starts
+    gsap.set(logosColumnRef.current, {
+      opacity: 0,
+      x: -50,
+      scale: 0.9
+    });
+
+    logoContainersRef.current.forEach((logoEl, index) => {
+      if (logoEl) {
+        gsap.set(logoEl, {
+          opacity: 0,
+          y: 30,
+          scale: 0.8
+        });
+      }
+    });
+
+    gsap.set(sidebarRef.current, {
+      opacity: 0,
+      x: 50
+    });
+
+    gsap.set(titleRef.current, {
+      opacity: 0,
+      y: -20
+    });
+
+    metricItemsRef.current.forEach((metricEl, index) => {
+      if (metricEl) {
+        gsap.set(metricEl, {
+          opacity: 0,
+          y: 20
+        });
+      }
+    });
+
+    if (disclaimerRef.current) {
+      gsap.set(disclaimerRef.current, {
+        opacity: 0,
+        y: 20
+      });
+    }
+
+    // 1. Animate logos column
+    tl.to(logosColumnRef.current, {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      duration: 0.8,
+      onStart: () => console.log('📊 Timeline: Logos column fade in')
+    }, "+=0.5");
+
+    // 2. Animate logos one by one
+    logoContainersRef.current.forEach((logoEl, index) => {
+      if (logoEl) {
+        tl.to(logoEl, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          delay: index * animationIncrement,
+          onStart: () => console.log(`🎬 Animating logo ${index + 1}/${logosToRender.length}`)
+        }, ">");
+      }
+    });
+
+    // 3. Animate sidebar (after all logos)
+    const logosDelay = Math.max(0, (logosToRender.length - 1) * animationIncrement);
+    tl.to(sidebarRef.current, {
+      opacity: 1,
+      x: 0,
+      duration: 0.8,
+      onStart: () => console.log('📊 Timeline: Sidebar fade in')
+    }, `+=${logosDelay + 0.3}`);
+
+    // 4. Animate title
+    tl.to(titleRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      onStart: () => console.log('📊 Timeline: Title fade in')
+    }, "+=0.2");
+
+    // 5. Animate metrics one by one
+    metricItemsRef.current.forEach((metricEl, index) => {
+      if (metricEl) {
+        tl.to(metricEl, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          delay: index * animationIncrement * 0.7,
+          onStart: () => console.log(`📊 Timeline: Metric ${index + 1} fade in`)
+        }, ">");
+      }
+    });
+
+    // 6. Animate disclaimer (after all metrics)
+    if (description.disclaimer && disclaimerRef.current) {
+      const metricsDelay = Math.max(0, (metricsToRender.length - 1) * animationIncrement * 0.7);
+      tl.to(disclaimerRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        delay: 0.2,
+        onStart: () => console.log('📊 Timeline: Disclaimer fade in')
+      }, `+=${metricsDelay}`);
+    }
+
+    // Final callback
+    tl.call(() => {
+      console.log('✅ Timeline complete');
+    });
+  }, [logosToRender.length, metricsToRender.length, animationIncrement, description.disclaimer]);
+
+  // Start timeline on mount
+  useEffect(() => {
+    if (!visible || !autoPlay) return;
+
+    const timer = setTimeout(() => {
+      startTimeline();
+    }, timelineStartDelay);
+
+    animationTimers.current.push(timer);
+
     return () => {
-      window.removeEventListener('map-sidebar-visible', handleSidebarShow);
       animationTimers.current.forEach(timer => clearTimeout(timer));
-      isAnimating.current = false;
-      logoAnimationIndex.current = 0;
-      metricAnimationIndex.current = 0;
-      setAnimatedLogos([]);
-      setAnimatedMetrics([]);
-      setHoveredLogo(null);
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+      hasStartedRef.current = false;
     };
-  }, [autoPlay, timelineStartDelay]);
+  }, [visible, autoPlay, timelineStartDelay, startTimeline]);
 
   if (!visible) return null;
-  
-  // Determine CSS classes based on timeline phase
-  const getLogosColumnClass = () => {
-    if (timelinePhase === 'column-entrance' || timelinePhase === 'logos-animating' || 
-        timelinePhase === 'sidebar' || timelinePhase === 'disclaimer' || 
-        timelinePhase === 'complete') {
-      return 'map-logos-column timeline-started ' + 
-             (timelinePhase === 'column-entrance' ? 'timeline-phase-1' : '');
-    }
-    return 'map-logos-column';
-  };
-  
-  const getSidebarClass = () => {
-    if (timelinePhase === 'sidebar' || timelinePhase === 'disclaimer' || timelinePhase === 'complete') {
-      return 'map-description-sidebar timeline-phase-2 ' +
-             (timelinePhase === 'disclaimer' || timelinePhase === 'complete' ? 'timeline-phase-3' : '');
-    }
-    return 'map-description-sidebar';
-  };
-
-  // Determine animation state for each logo
-  const getLogoAnimationClass = (logoId) => {
-    if (timelinePhase === 'logos-animating' || timelinePhase === 'sidebar' || 
-        timelinePhase === 'disclaimer' || timelinePhase === 'complete') {
-      return animatedLogos.includes(logoId) ? 'logo-animated' : '';
-    }
-    return '';
-  };
-
-  // Determine animation state for each metric
-  const getMetricAnimationClass = (index) => {
-    if (timelinePhase === 'sidebar' || timelinePhase === 'disclaimer' || timelinePhase === 'complete') {
-      return animatedMetrics.includes(index) ? 'metric-animated' : '';
-    }
-    return '';
-  };
 
   return (
     <section className="map-section-wrapper">
@@ -266,68 +240,58 @@ export const MapSection = ({
           </Suspense>
         </div>
 
-        {/* MIDDLE: Logos Column */}
-        <div className={getLogosColumnClass()}>
-          {logosToRender.length > 0 ? (
-            logosToRender.map((logo, index) => {
-              const isHovered = hoveredLogo === logo.id;
-              const isAnimated = animatedLogos.includes(logo.id);
-              
-              return (
-                <div 
-                  key={logo.id}
-                  className={`map-logo-container ${getLogoAnimationClass(logo.id)} ${isHovered ? 'logo-hovered' : ''}`}
-                  onMouseEnter={() => handleLogoMouseEnter(logo.id)}
-                  onMouseLeave={handleLogoMouseLeave}
-                >
-                  <img 
-                    src={logo.src} 
-                    alt={logo.alt || `Logo ${index + 1}`} 
-                    title={logo.title || ''}
-                    className="map-logo-img"
-                    loading="lazy"
-                  />
-                </div>
-              );
-            })
-          ) : (
-            <p className="map-no-logos">No software available</p>
-          )}
-          
-          {/* Timeline debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="timeline-debug-info">
-              <div>Phase: {timelinePhase}</div>
-              <div>Logos: {animatedLogos.length}/{logosToRender.length}</div>
-              <div>Metrics: {animatedMetrics.length}/{metricsToRender.length}</div>
-              <div>Hovered: {hoveredLogo || 'none'}</div>
+        {/* MIDDLE: Logos Column - Initially hidden (GSAP will hide it) */}
+        <div className="map-logos-column" ref={logosColumnRef}>
+          {logosToRender.map((logo, index) => (
+            <div
+              key={logo.id}
+              ref={el => { logoContainersRef.current[index] = el }}
+              className={`map-logo-container ${hoveredLogo === logo.id ? 'logo-hovered' : ''}`}
+              onMouseEnter={() => setHoveredLogo(logo.id)}
+              onMouseLeave={() => setHoveredLogo(null)}
+            >
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                title={logo.title}
+                className="map-logo-img"
+                loading="lazy"
+              />
             </div>
-          )}
+          ))}
         </div>
 
-        {/* RIGHT: Description Sidebar */}
-        <div className={getSidebarClass()}>
-          <h2 className={`map-sidebar-title ${timelinePhase === 'sidebar' || timelinePhase === 'disclaimer' || timelinePhase === 'complete' ? 'title-animated' : ''}`}>
-            {description.title || 'Project Details'}
-          </h2>
+        {/* RIGHT: Description Sidebar - Initially hidden (GSAP will hide it) */}
+        <div className="map-description-sidebar" ref={sidebarRef}>
+          <div className="sidebar-section">
+            <h2 className="map-sidebar-title" ref={titleRef}>
+              {description.title || 'Project Details'}
+            </h2>
+          </div>
           
-          {/* Metrics List */}
           {metricsToRender.length > 0 && (
-            <div className="map-metrics-list">
-              {metricsToRender.map((metric, index) => (
-                <div key={index} className={`map-metric-item ${getMetricAnimationClass(index)}`}>
-                  <div className="map-metric-label">{metric.label}</div>
-                  <div className="map-metric-value">{metric.value}</div>
-                </div>
-              ))}
+            <div className="sidebar-section">
+              <div className="map-metrics-list">
+                {metricsToRender.map((metric, index) => (
+                  <div
+                    key={index}
+                    ref={el => { metricItemsRef.current[index] = el }}
+                    className="map-metric-item"
+                  >
+                    <div className="map-metric-label">{metric.label}</div>
+                    <div className="map-metric-value">{metric.value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           
-          {/* Disclaimer */}
           {description.disclaimer && (
-            <p className={`map-disclaimer ${timelinePhase === 'disclaimer' || timelinePhase === 'complete' ? 'disclaimer-animated' : ''}`}>
-              {description.disclaimer}
-            </p>
+            <div className="sidebar-section">
+              <p className="map-disclaimer" ref={disclaimerRef}>
+                {description.disclaimer}
+              </p>
+            </div>
           )}
         </div>
       </div>

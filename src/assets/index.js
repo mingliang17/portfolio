@@ -1,23 +1,7 @@
+import { ICONS } from "./icons.js";
 // src/assets/index.js
 const BASE_URL = import.meta.env.BASE_URL;
-
 const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
-
-// ===================================
-// ICONS
-export const ICONS = {
-  github: assetPath('assets/icons/github.svg'),
-  twitter: assetPath('assets/icons/twitter.svg'),
-  instagram: assetPath('assets/icons/instagram.svg'),
-  menu: assetPath('assets/icons/menu.svg'),
-  close: assetPath('assets/icons/close.svg'),
-  arrowUp: assetPath('assets/icons/arrow-up.png'),
-  leftArrow: assetPath('assets/icons/left-arrow.png'),
-  rightArrow: assetPath('assets/icons/right-arrow.png'),
-  star: assetPath('assets/icons/star.png'),
-  copy: assetPath('assets/icons/copy.svg'),
-  tick: assetPath('assets/icons/tick.svg'),
-};
 
 // ===================================
 // 3D MODELS & TEXTURES
@@ -151,10 +135,15 @@ export const PROJECT_ASSETS = {
       D: assetPath('assets/projects/mh1/maps/3.svg'),
       E: assetPath('assets/projects/mh1/maps/4.svg'),
     },
+    // Simple icon references without enhancement
     logos: {
-      github: { src: ICONS.github, alt: 'GitHub Repository', title: 'View source code on GitHub', className: 'logo-github' },
-      twitter: { src: ICONS.twitter, alt: 'Twitter Profile', title: 'Follow on Twitter', className: 'logo-twitter' },
-      instagram: { src: ICONS.instagram, alt: 'Instagram Profile', title: 'Follow on Instagram', className: 'logo-instagram' },
+      rhino: ICONS.indesign,
+      twinmotion: ICONS.aftereffects,
+      revit: ICONS.lightroom,
+      a: ICONS.lumion,
+      b: ICONS.adobe,
+
+
     },
   },
   mh2: {
@@ -168,10 +157,11 @@ export const PROJECT_ASSETS = {
       D: assetPath('assets/projects/mh2/maps/3.svg'),
       E: assetPath('assets/projects/mh2/maps/4.svg'),
     },
+    // Simple icon references without enhancement
     logos: {
-      github: { src: ICONS.github, alt: 'GitHub Repository', title: 'View source code on GitHub', className: 'logo-github' },
-      twitter: { src: ICONS.twitter, alt: 'Twitter Profile', title: 'Follow on Twitter', className: 'logo-twitter' },
-      instagram: { src: ICONS.instagram, alt: 'Instagram Profile', title: 'Follow on Instagram', className: 'logo-instagram' },
+      github: ICONS.github,
+      twitter: ICONS.twitter,
+      instagram: ICONS.instagram,
     },
   },
 };
@@ -184,7 +174,6 @@ export const getProjectLogos = (projectId) => PROJECT_ASSETS[projectId]?.logos |
 // ===================================
 // DEFAULT EXPORT
 export default {
-  ICONS,
   MODELS,
   TEXTURES,
   PROJECT_ASSETS,

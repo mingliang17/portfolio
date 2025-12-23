@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ICONS } from '../../assets/index.js';
+import { ICONS } from '../../assets/icons.js';
 
 const POSITIONS = {
   '-2': { x: -100, z: -500, rotateY: -35, scale: 0.65, opacity: 0.5, blur: 8 },
@@ -39,7 +39,7 @@ const Carousel = ({
   const zoomContainerRef = useRef(null);
 
   // Configurable magnifier settings
-  const MAGNIFY_SIZE = 300;      // Size of the magnifying glass circle
+  const MAGNIFY_SIZE = 500;      // Size of the magnifying glass circle
   const MAGNIFY_ZOOM = 2.5;     // Zoom factor
 
   // Normalize carousel data
@@ -377,7 +377,7 @@ const Carousel = ({
               onClick={closeZoom}
               title="Close Zoom"
             >
-              <img src={ICONS.close} alt="Close" />
+              <img src={ICONS.close.src} alt="Close" />
             </button>
 
             <div className="zoom-image-wrapper">
@@ -512,7 +512,7 @@ const Carousel = ({
                 disabled={isAnimating || totalItems <= 1}
                 aria-label="Previous slide"
               >
-                <img src={ICONS.leftArrow} alt="Previous" />
+                <img src={ICONS.leftArrow.src} alt="ICONS.leftArrow.title" />
               </button>
               <button 
                 className="carousel-next" 
@@ -520,7 +520,7 @@ const Carousel = ({
                 disabled={isAnimating || totalItems <= 1}
                 aria-label="Next slide"
               >
-                <img src={ICONS.rightArrow} alt="Next" />
+                <img src={ICONS.rightArrow.src} alt={ICONS.rightArrow.title} />
               </button>
             </>
           )}

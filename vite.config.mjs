@@ -5,12 +5,14 @@ import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   base: '/portfolio/',
   
   plugins: [
     react(),
+    tailwindcss(),
     
     // Gzip compression for all assets
     viteCompression({
