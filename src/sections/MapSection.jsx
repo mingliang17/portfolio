@@ -1,19 +1,14 @@
 // src/sections/MapSection.jsx
 // ============================================
-// MAP SECTION - 3-Column Flex Layout with Timeline Animation
+// MAP SECTION - UNIFIED SINGLE TIMELINE
+// Everything in one component, one timeline
+// MyMap + Logos + Sidebar all controlled together
 // ============================================
 
-import React, { useState, useEffect, Suspense, useRef, useCallback } from 'react';
-import { ComponentLoading } from '../components/common/LayoutComponents.jsx';
-import { ICONS } from '../assets/icons.js';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { ICONS } from '../assets/icons.js';
 
-/**
- * Helper function to create logos object with proper className from icon names
- * @param {Array<string>} iconNames - Array of icon names to include
- * @param {string} classNamePrefix - Prefix for CSS class (default: 'logo-')
- * @returns {Object} Logos object with enhanced properties
- */
 export const createProjectLogos = (iconNames, classNamePrefix = 'logo-') => {
   return iconNames.reduce((logos, iconName) => {
     if (ICONS[iconName]) {
@@ -26,206 +21,302 @@ export const createProjectLogos = (iconNames, classNamePrefix = 'logo-') => {
   }, {});
 };
 
-/**
- * MapSection - 3-column layout with coordinated timeline animation
- */
 export const MapSection = ({
-  MapComponent,
+  mapImages = {},
   logos = {},
   description = {},
   visible = true,
-  autoPlay = true,
-  timelineStartDelay = 1000,
-  animationIncrement = 0.2
+  startAnimation = false
 }) => {
   const [hoveredLogo, setHoveredLogo] = useState(null);
-  const timelineRef = useRef(null);
-  const hasStartedRef = useRef(false);
-  const animationTimers = useRef([]);
+  
+  const hasAnimatedRef = useRef(false);
+  const masterTimelineRef = useRef(null);
 
-  // Refs for animation targets
-  const logosColumnRef = useRef(null);
-  const logoContainersRef = useRef([]);
+  // Refs for ALL elements
+  const mapContainerRef = useRef(null);
+  const mapImageRefs = useRef({
+    A: null,
+    B: null,
+    C: null,
+    D: null,
+    E: null
+  });
+  
+  const logoRefs = useRef({});
+  
   const sidebarRef = useRef(null);
   const titleRef = useRef(null);
-  const metricItemsRef = useRef([]);
+  const metricRefs = useRef([]);
   const disclaimerRef = useRef(null);
 
-  // Convert logos object to array
-  const getLogosToRender = useCallback(() => {
+  // Convert logos to array
+  const logosArray = React.useMemo(() => {
     if (!logos || typeof logos !== 'object') return [];
-    
-    return Object.entries(logos).map(([id, data]) => ({
-      ...data,
-      id
-    }));
+    return Object.entries(logos)
+      .map(([id, data]) => ({ ...data, id }));
   }, [logos]);
 
-  const logosToRender = getLogosToRender();
-  const metricsToRender = description.metrics || [];
+  const metricsArray = description.metrics || [];
 
-  // Initialize ref arrays
+  // Image paths
+  const paths = {
+    A: mapImages.A || '',
+    B: mapImages.B || '',
+    C: mapImages.C || '',
+    D: mapImages.D || '',
+    E: mapImages.E || ''
+  };
+
+  // Main animation - ONE timeline for everything
   useEffect(() => {
-    logoContainersRef.current = logoContainersRef.current.slice(0, logosToRender.length);
-    metricItemsRef.current = metricItemsRef.current.slice(0, metricsToRender.length);
-  }, [logosToRender.length, metricsToRender.length]);
+    if (!visible || !startAnimation || hasAnimatedRef.current) return;
 
-  // Create and play GSAP timeline
-  const startTimeline = useCallback(() => {
-    if (hasStartedRef.current) {
-      console.log('⚠️ Timeline already started, skipping');
-      return;
-    }
-    
-    console.log('🎬 Starting GSAP timeline');
-    hasStartedRef.current = true;
+    console.log('🎬 MapSection: Starting unified animation');
+    hasAnimatedRef.current = true;
 
-    // Kill any existing timeline
-    if (timelineRef.current) {
-      timelineRef.current.kill();
-    }
+    // Wait for DOM to be ready
+    requestAnimationFrame(() => {
+      const mapImgs = mapImageRefs.current;
+      
+      // Get all logo refs in the correct order
+      const logoEls = logosArray.map(logo => logoRefs.current[logo.id]).filter(Boolean);
+      
+      const sidebar = sidebarRef.current;
+      const title = titleRef.current;
+      const metricEls = metricRefs.current.filter(Boolean);
+      const disclaimer = disclaimerRef.current;
 
-    // Create new timeline
-    const tl = gsap.timeline({
-      defaults: { ease: "power2.out" }
-    });
-    timelineRef.current = tl;
+      console.log('📊 Elements check:', {
+        mapA: !!mapImgs.A,
+        mapB: !!mapImgs.B,
+        mapC: !!mapImgs.C,
+        mapD: !!mapImgs.D,
+        mapE: !!mapImgs.E,
+        logos: logoEls.length,
+        sidebar: !!sidebar,
+        title: !!title,
+        metrics: metricEls.length,
+        disclaimer: !!disclaimer
+      });
 
-    console.log('🔧 Setting initial hidden state via GSAP');
+      // Verify we have the essential elements
+      if (!mapImgs.A || !sidebar) {
+        console.error('❌ Missing essential elements');
+        return;
+      }
 
-    // Set initial hidden state via GSAP (not CSS)
-    // This ensures elements are hidden before animation starts
-    gsap.set(logosColumnRef.current, {
-      opacity: 0,
-      x: -50,
-      scale: 0.9
-    });
+      // Kill existing timeline
+      if (masterTimelineRef.current) {
+        masterTimelineRef.current.kill();
+      }
 
-    logoContainersRef.current.forEach((logoEl, index) => {
-      if (logoEl) {
-        gsap.set(logoEl, {
-          opacity: 0,
+      // Create ONE master timeline
+      const master = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        onComplete: () => {
+          console.log('✅ MapSection: Complete animation finished');
+        }
+      });
+
+      masterTimelineRef.current = master;
+
+      // ========================================
+      // INITIAL STATE: HIDE EVERYTHING
+      // ========================================
+      console.log('🔧 Setting initial hidden states');
+
+      // Hide all map images
+      gsap.set([mapImgs.A, mapImgs.B, mapImgs.C, mapImgs.D, mapImgs.E], {
+        autoAlpha: 0
+      });
+
+      // Reset map positions
+      gsap.set(mapImgs.A, { y: 0 });
+      gsap.set(mapImgs.B, { y: 0 });
+      gsap.set([mapImgs.C, mapImgs.D, mapImgs.E], { x: 0, y: 0, scale: 1 });
+
+      // Hide all logos
+      if (logoEls.length > 0) {
+        gsap.set(logoEls, {
+          autoAlpha: 0,
           y: 30,
           scale: 0.8
         });
       }
-    });
 
-    gsap.set(sidebarRef.current, {
-      opacity: 0,
-      x: 50
-    });
+      // Hide sidebar
+      gsap.set(sidebar, {
+        autoAlpha: 0,
+        x: 50
+      });
 
-    gsap.set(titleRef.current, {
-      opacity: 0,
-      y: -20
-    });
+      // Hide title
+      if (title) {
+        gsap.set(title, {
+          autoAlpha: 0,
+          y: -20
+        });
+      }
 
-    metricItemsRef.current.forEach((metricEl, index) => {
-      if (metricEl) {
-        gsap.set(metricEl, {
-          opacity: 0,
+      // Hide metrics
+      metricEls.forEach(metric => {
+        gsap.set(metric, {
+          autoAlpha: 0,
+          y: 20
+        });
+      });
+
+      // Hide disclaimer
+      if (disclaimer) {
+        gsap.set(disclaimer, {
+          autoAlpha: 0,
           y: 20
         });
       }
-    });
 
-    if (disclaimerRef.current) {
-      gsap.set(disclaimerRef.current, {
-        opacity: 0,
-        y: 20
-      });
-    }
+      // ========================================
+      // COLUMN 1: MYMAP ANIMATION
+      // ========================================
+      console.log('📊 COLUMN 1: Starting MyMap animation');
 
-    // 1. Animate logos column
-    tl.to(logosColumnRef.current, {
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      duration: 0.8,
-      onStart: () => console.log('📊 Timeline: Logos column fade in')
-    }, "+=0.5");
+      // Phase 1: Fade in Map Image A
+      master.to(mapImgs.A, {
+        autoAlpha: 1,
+        duration: 0.8,
+        ease: 'power2.out',
+        onStart: () => console.log('  🗺️ Map image A fade in')
+      }, '+=0.3');
 
-    // 2. Animate logos one by one
-    logoContainersRef.current.forEach((logoEl, index) => {
-      if (logoEl) {
-        tl.to(logoEl, {
-          opacity: 1,
+      // Phase 2: Fade in Map Images B & C
+      master.to([mapImgs.B, mapImgs.C], {
+        autoAlpha: 1,
+        duration: 0.8,
+        ease: 'power2.out',
+        onStart: () => console.log('  🗺️ Map images B & C fade in')
+      }, '+=0.2');
+
+      // Phase 3: Move and zoom
+      master.to(mapImgs.A, {
+        y: -100,
+        duration: 1.5,
+        ease: 'power2.inOut',
+        onStart: () => console.log('  🗺️ Map movement & zoom')
+      }, '+=0.3');
+
+      master.to(mapImgs.B, {
+        y: -100,
+        duration: 1.5,
+        ease: 'power2.inOut'
+      }, '<');
+
+      master.to([mapImgs.C, mapImgs.D, mapImgs.E], {
+        x: -350,
+        y: 150,
+        scale: 12,
+        duration: 1.5,
+        ease: 'power2.inOut'
+      }, '<');
+
+      // Phase 4: Fade in Map Image D
+      master.to(mapImgs.D, {
+        autoAlpha: 1,
+        duration: 0.5,
+        ease: 'power2.out',
+        onStart: () => console.log('  🗺️ Map image D fade in')
+      }, '-=0.9');
+
+      // Phase 5: Fade in Map Image E
+      master.to(mapImgs.E, {
+        autoAlpha: 1,
+        duration: 0.5,
+        ease: 'power2.out',
+        onStart: () => console.log('  🗺️ Map image E fade in')
+      }, '-=0.5');
+
+      // ========================================
+      // COLUMN 2: LOGOS ANIMATION - SMOOTH & COMPLETE
+      // ========================================
+      console.log('📊 COLUMN 2: Starting Logos animation');
+
+      // Animate logos one by one with smooth timing
+      if (logoEls.length > 0) {
+        // Create a smooth sequential animation for logos
+        const logoStagger = 0.3; // Time between each logo starts
+        const logoDuration = 0.8; // Duration of each logo animation
+        
+        logoEls.forEach((logo, index) => {
+          master.to(logo, {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            duration: logoDuration,
+            ease: 'back.out(1.2)',
+            onStart: () => console.log(`  🎨 Logo ${index + 1}/${logoEls.length} animating`)
+          }, `+=${index === 0 ? 0.3 : logoStagger}`); // First logo after 0.3s, then spaced
+        });
+
+        // Add a pause after all logos complete
+        const totalLogoTime = 0.3 + (logoEls.length * logoDuration) + ((logoEls.length - 1) * logoStagger);
+        console.log(`  ⏱️ Total logo animation time: ${totalLogoTime.toFixed(2)}s`);
+      }
+
+      // ========================================
+      // COLUMN 3: SIDEBAR ANIMATION - AFTER LOGOS
+      // ========================================
+      console.log('📊 COLUMN 3: Starting Sidebar animation');
+
+      // Fade in sidebar container (wait for logos to complete)
+      master.to(sidebar, {
+        autoAlpha: 1,
+        x: 0,
+        duration: 1.0,
+        ease: 'power2.out',
+        onStart: () => console.log('  📄 Sidebar container fade in')
+      }, '+=0.5'); // Wait 0.5s after last logo completes
+
+      // Fade in title (slight delay after sidebar appears)
+      if (title) {
+        master.to(title, {
+          autoAlpha: 1,
           y: 0,
-          scale: 1,
+          duration: 0.8,
+          ease: 'power2.out',
+          onStart: () => console.log('  📄 Title fade in')
+        }, '-=0.7');
+      }
+
+      // Animate each metric with smooth spacing
+      metricEls.forEach((metric, index) => {
+        master.to(metric, {
+          autoAlpha: 1,
+          y: 0,
           duration: 0.6,
-          delay: index * animationIncrement,
-          onStart: () => console.log(`🎬 Animating logo ${index + 1}/${logosToRender.length}`)
-        }, ">");
-      }
-    });
+          ease: 'power2.out',
+          onStart: () => console.log(`  📄 Metric ${index + 1} fade in`)
+        }, `+=${index === 0 ? 0.2 : 0.15}`); // First metric after 0.2s, then spaced
+      });
 
-    // 3. Animate sidebar (after all logos)
-    const logosDelay = Math.max(0, (logosToRender.length - 1) * animationIncrement);
-    tl.to(sidebarRef.current, {
-      opacity: 1,
-      x: 0,
-      duration: 0.8,
-      onStart: () => console.log('📊 Timeline: Sidebar fade in')
-    }, `+=${logosDelay + 0.3}`);
-
-    // 4. Animate title
-    tl.to(titleRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      onStart: () => console.log('📊 Timeline: Title fade in')
-    }, "+=0.2");
-
-    // 5. Animate metrics one by one
-    metricItemsRef.current.forEach((metricEl, index) => {
-      if (metricEl) {
-        tl.to(metricEl, {
-          opacity: 1,
+      // Fade in disclaimer (after metrics)
+      if (disclaimer) {
+        master.to(disclaimer, {
+          autoAlpha: 1,
           y: 0,
-          duration: 0.5,
-          delay: index * animationIncrement * 0.7,
-          onStart: () => console.log(`📊 Timeline: Metric ${index + 1} fade in`)
-        }, ">");
+          duration: 0.8,
+          ease: 'power2.out',
+          onStart: () => console.log('  📄 Disclaimer fade in')
+        }, '+=0.3');
       }
+
+      console.log('🚀 Master timeline started');
     });
-
-    // 6. Animate disclaimer (after all metrics)
-    if (description.disclaimer && disclaimerRef.current) {
-      const metricsDelay = Math.max(0, (metricsToRender.length - 1) * animationIncrement * 0.7);
-      tl.to(disclaimerRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        delay: 0.2,
-        onStart: () => console.log('📊 Timeline: Disclaimer fade in')
-      }, `+=${metricsDelay}`);
-    }
-
-    // Final callback
-    tl.call(() => {
-      console.log('✅ Timeline complete');
-    });
-  }, [logosToRender.length, metricsToRender.length, animationIncrement, description.disclaimer]);
-
-  // Start timeline on mount
-  useEffect(() => {
-    if (!visible || !autoPlay) return;
-
-    const timer = setTimeout(() => {
-      startTimeline();
-    }, timelineStartDelay);
-
-    animationTimers.current.push(timer);
 
     return () => {
-      animationTimers.current.forEach(timer => clearTimeout(timer));
-      if (timelineRef.current) {
-        timelineRef.current.kill();
+      if (masterTimelineRef.current) {
+        masterTimelineRef.current.kill();
       }
-      hasStartedRef.current = false;
     };
-  }, [visible, autoPlay, timelineStartDelay, startTimeline]);
+  }, [visible, startAnimation, logosArray, metricsArray.length, paths]);
 
   if (!visible) return null;
 
@@ -233,19 +324,88 @@ export const MapSection = ({
     <section className="map-section-wrapper">
       <div className="map-flex-container">
         
-        {/* LEFT: Map Animation Container */}
-        <div className="map-animation-container">
-          <Suspense fallback={<ComponentLoading />}>
-            {MapComponent}
-          </Suspense>
+        {/* COLUMN 1: MAP ANIMATION */}
+        <div className="map-animation-container" ref={mapContainerRef}>
+          <div className="my-map-main">
+            
+            {/* Map Image A */}
+            <div 
+              ref={el => mapImageRefs.current.A = el}
+              className="my-map-image"
+            >
+              {paths.A && (
+                <img 
+                  src={paths.A}
+                  alt="Map Layer A"
+                  className="my-map-img"
+                />
+              )}
+            </div>
+
+            {/* Map Image B */}
+            <div 
+              ref={el => mapImageRefs.current.B = el}
+              className="my-map-image"
+            >
+              {paths.B && (
+                <img 
+                  src={paths.B}
+                  alt="Map Layer B"
+                  className="my-map-img"
+                />
+              )}
+            </div>
+
+            {/* Map Image C */}
+            <div 
+              ref={el => mapImageRefs.current.C = el}
+              className="my-map-image"
+            >
+              {paths.C && (
+                <img 
+                  src={paths.C}
+                  alt="Map Layer C"
+                  className="my-map-img"
+                />
+              )}
+            </div>
+
+            {/* Map Image D */}
+            <div 
+              ref={el => mapImageRefs.current.D = el}
+              className="my-map-image"
+            >
+              {paths.D && (
+                <img 
+                  src={paths.D}
+                  alt="Map Layer D"
+                  className="my-map-img"
+                />
+              )}
+            </div>
+
+            {/* Map Image E */}
+            <div 
+              ref={el => mapImageRefs.current.E = el}
+              className="my-map-image"
+            >
+              {paths.E && (
+                <img 
+                  src={paths.E}
+                  alt="Map Layer E"
+                  className="my-map-img"
+                />
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* MIDDLE: Logos Column - Initially hidden (GSAP will hide it) */}
-        <div className="map-logos-column" ref={logosColumnRef}>
-          {logosToRender.map((logo, index) => (
+        {/* COLUMN 2: LOGOS */}
+        <div className="map-logos-column">
+          {logosArray.map((logo) => (
             <div
               key={logo.id}
-              ref={el => { logoContainersRef.current[index] = el }}
+              ref={el => logoRefs.current[logo.id] = el}
               className={`map-logo-container ${hoveredLogo === logo.id ? 'logo-hovered' : ''}`}
               onMouseEnter={() => setHoveredLogo(logo.id)}
               onMouseLeave={() => setHoveredLogo(null)}
@@ -261,7 +421,7 @@ export const MapSection = ({
           ))}
         </div>
 
-        {/* RIGHT: Description Sidebar - Initially hidden (GSAP will hide it) */}
+        {/* COLUMN 3: SIDEBAR */}
         <div className="map-description-sidebar" ref={sidebarRef}>
           <div className="sidebar-section">
             <h2 className="map-sidebar-title" ref={titleRef}>
@@ -269,13 +429,13 @@ export const MapSection = ({
             </h2>
           </div>
           
-          {metricsToRender.length > 0 && (
+          {metricsArray.length > 0 && (
             <div className="sidebar-section">
               <div className="map-metrics-list">
-                {metricsToRender.map((metric, index) => (
+                {metricsArray.map((metric, index) => (
                   <div
                     key={index}
-                    ref={el => { metricItemsRef.current[index] = el }}
+                    ref={el => metricRefs.current[index] = el}
                     className="map-metric-item"
                   >
                     <div className="map-metric-label">{metric.label}</div>

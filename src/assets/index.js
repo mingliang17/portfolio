@@ -35,8 +35,7 @@ const createCarouselItem = (project, imageNum, title, description) => ({
   description,
 });
 
-// MH1 carousels data (single carousel)
-const MH1_CAROUSEL_ITEMS = [
+const MH1_CAROUSEL_1_ITEMS = [
   {
     id: 1,
     image: assetPath('assets/projects/mh1/images/1.jpg'),
@@ -72,12 +71,43 @@ const MH1_CAROUSEL_ITEMS = [
     description: 'Engineering crops for diverse conditions.',
     information: 'Additional details about Climate Resilience.',
   },
+];
+
+const MH1_CAROUSEL_2_ITEMS = [
   {
-    id: 6,
-    image: assetPath('assets/projects/mh1/images/6.jpg'),
-    title: 'Advanced Research',
-    description: 'Cutting-edge laboratory research and development.',
-    information: 'Additional details about Advanced Research.',
+    id: 1,
+    image: assetPath('assets/projects/mh1/images/floor1.jpg'),
+    title: 'Innovation in Agriculture',
+    description: 'Pioneering genetic research for sustainable farming solutions.',
+    information: 'Date: January 2024\nLocation: Research Lab A\nClient: AgriTech Corp\n',
+  },
+  {
+    id: 2,
+    image: assetPath('assets/projects/mh1/images/floor2.jpg'),
+    title: 'Sustainable Farming',
+    description: 'Environmentally conscious methods preserving resources.',
+    information: 'Additional details about Sustainable Farming.',
+  },
+  {
+    id: 3,
+    image: assetPath('assets/projects/mh1/images/floor3.jpg'),
+    title: 'Genetic Excellence',
+    description: 'Advanced crop genetics for climate challenges.',
+    information: 'Additional details about Genetic Excellence.',
+  },
+  {
+    id: 4,
+    image: assetPath('assets/projects/mh1/images/floor4.jpg'),
+    title: 'Future Harvest',
+    description: 'Breakthrough developments in crop science.',
+    information: 'Additional details about Future Harvest.',
+  },
+  {
+    id: 5,
+    image: assetPath('assets/projects/mh1/images/site1.jpg'),
+    title: 'Climate Resilience',
+    description: 'Engineering crops for diverse conditions.',
+    information: 'Additional details about Climate Resilience.',
   },
 ];
 
@@ -126,8 +156,8 @@ const MH2_CAROUSEL_SECONDARY_ITEMS = [
 
 export const PROJECT_ASSETS = {
   mh1: {
-    hero: assetPath('assets/projects/mh1/images/1.jpg'),
-    carousels: MH1_CAROUSEL_ITEMS, // Single carousel array for MH1
+    hero: assetPath('assets/projects/mh1/images/render1.jpg'),
+    carousels: MH1_CAROUSEL_1_ITEMS, MH1_CAROUSEL_2_ITEMS, // Single carousel array for MH1
     map: {
       A: assetPath('assets/projects/mh1/maps/0.svg'),
       B: assetPath('assets/projects/mh1/maps/1.svg'),

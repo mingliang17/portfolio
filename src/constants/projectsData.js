@@ -23,6 +23,9 @@ export const PROJECT_MH1 = {
       title: 'Project Location',
       animateOnEntry: true,
     },
+    model:{
+      enabled:true,
+    },
     carousels: [
       {
         id: 'gallery',
