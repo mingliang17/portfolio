@@ -10,6 +10,8 @@ export const PROJECT_MH1 = {
     map: PROJECT_ASSETS.mh1.map,
     logos: PROJECT_ASSETS.mh1.logos,
     carousels: PROJECT_ASSETS.mh1.carousels,
+    // Model path
+    model: '/assets/projects/mh1/models/computer.glb', // Update this path to your actual FBX file
   },
   sections: {
     hero: {
@@ -23,8 +25,17 @@ export const PROJECT_MH1 = {
       title: 'Project Location',
       animateOnEntry: true,
     },
-    model:{
-      enabled:true,
+    model: {
+      enabled: true,
+      title: '3D Visualization',
+      modelUrl: '/assets/projects/mh1/models/computer.glb', // Path to your FBX file
+      modelScale: 0.01,
+      modelPosition: [0, -1, 0],
+      modelRotation: [0, 0, 0],
+      cameraPosition: [0, 2, 6],
+      cameraFov: 45,
+      environment: 'city',
+      backgroundColor: '#000000',
     },
     carousels: [
       {
@@ -58,6 +69,7 @@ export const PROJECT_MH2 = {
     logos: PROJECT_ASSETS.mh2.logos,
     carousel1: PROJECT_ASSETS.mh2.carousel1,
     carousel2: PROJECT_ASSETS.mh2.carousel2,
+    model: '/assets/projects/mh2/Mh2.fbx', // Add model path if needed
   },
   sections: {
     hero: {
@@ -70,6 +82,18 @@ export const PROJECT_MH2 = {
       enabled: true,
       title: 'Spatial Analysis',
       animateOnEntry: true,
+    },
+    model: {
+      enabled: false, // Set to true when you have a model ready
+      title: '3D Model Visualization',
+      modelUrl: '/assets/projects/mh2/Mh2.fbx',
+      modelScale: 0.01,
+      modelPosition: [0, -1, 0],
+      modelRotation: [0, 0, 0],
+      cameraPosition: [0, 2, 6],
+      cameraFov: 45,
+      environment: 'city',
+      backgroundColor: '#000000',
     },
     carousels: [
       {

@@ -5,6 +5,7 @@ import ProjectTemplate from './ProjectTemplate.jsx';
 import { getProjectById } from '../../constants/projectsData.js';
 import { PROJECT_ASSETS, getProjectLogos } from '../../assets/index.js';
 import { MapSection } from '../../sections/MapSection.jsx';
+import ModelSection from '../../sections/projects/ModelSection.jsx';
 import Carousel from '../../sections/projects/Carousel.jsx';
 
 const ProjectPage = () => {
@@ -82,6 +83,25 @@ const ProjectPage = () => {
       backgroundImage: projectAssets.hero,
     },
 
+        // MODEL SECTION
+    projectData.sections.model?.enabled && {
+      type: 'model',
+      component: (
+        <ModelSection
+          modelUrl={projectData.sections.model.modelUrl}
+          modelScale={projectData.sections.model.modelScale}
+          modelPosition={projectData.sections.model.modelPosition}
+          modelRotation={projectData.sections.model.modelRotation}
+          cameraPosition={projectData.sections.model.cameraPosition}
+          cameraFov={projectData.sections.model.cameraFov}
+          title={projectData.sections.model.title}
+          environment={projectData.sections.model.environment}
+          backgroundColor={projectData.sections.model.backgroundColor}
+          showControls={true}
+        />
+      ),
+    },
+
     // MAP SECTION
     projectData.sections.map?.enabled && {
       type: 'map',
@@ -93,14 +113,6 @@ const ProjectPage = () => {
           visible={true}
           startAnimation={startMapAnimation}
         />
-      ),
-    },
-
-    // MODEL SECTION
-    projectData.sections.model?.enabled && {
-      type: 'model',
-      component: (
-        <MODELS.jsx></MODELS.jsx>
       ),
     },
 
@@ -131,7 +143,8 @@ const ProjectPage = () => {
     project_id,
     totalSections: sections.length,
     sectionTypes: sections.map(s => s.type),
-    startMapAnimation
+    startMapAnimation,
+    modelEnabled: projectData.sections.model?.enabled
   });
 
   return (
