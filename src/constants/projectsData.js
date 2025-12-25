@@ -1,4 +1,6 @@
 // src/constants/projectsData.js
+// FIXED: Proper path construction without assetPath (which adds BASE_URL)
+
 import { PROJECT_ASSETS } from '../assets/index.js';
 
 // ===================================
@@ -10,8 +12,6 @@ export const PROJECT_MH1 = {
     map: PROJECT_ASSETS.mh1.map,
     logos: PROJECT_ASSETS.mh1.logos,
     carousels: PROJECT_ASSETS.mh1.carousels,
-    // Model path
-    model: '/assets/projects/mh1/models/computer.glb', // Update this path to your actual FBX file
   },
   sections: {
     hero: {
@@ -27,13 +27,17 @@ export const PROJECT_MH1 = {
     },
     model: {
       enabled: true,
-      title: '3D Visualization',
-      modelUrl: '/assets/projects/mh1/models/computer.glb', // Path to your FBX file
-      modelScale: 0.01,
-      modelPosition: [0, -1, 0],
+      title: '3D Model Visualization',
+      // CRITICAL: Path must be relative to public folder, BASE_URL is added automatically
+      // If your file is at: public/assets/projects/mh1/models/computer.glb
+      // Then use: 'assets/projects/mh1/models/computer.glb'
+      modelUrl: '/assets/projects/mh1/models/computer.glb',
+      modelType: 'glb', // 'fbx', 'gltf', or 'glb'
+      modelScale: 0.5, // Adjust based on your model size
+      modelPosition: [0, -0.5, 0],
       modelRotation: [0, 0, 0],
-      cameraPosition: [0, 2, 6],
-      cameraFov: 45,
+      cameraPosition: [0, 1, 3],
+      cameraFov: 50,
       environment: 'city',
       backgroundColor: '#000000',
     },
@@ -69,7 +73,6 @@ export const PROJECT_MH2 = {
     logos: PROJECT_ASSETS.mh2.logos,
     carousel1: PROJECT_ASSETS.mh2.carousel1,
     carousel2: PROJECT_ASSETS.mh2.carousel2,
-    model: '/assets/projects/mh2/Mh2.fbx', // Add model path if needed
   },
   sections: {
     hero: {
@@ -84,11 +87,12 @@ export const PROJECT_MH2 = {
       animateOnEntry: true,
     },
     model: {
-      enabled: false, // Set to true when you have a model ready
+      enabled: false, // Set to true when you have a model
       title: '3D Model Visualization',
-      modelUrl: '/assets/projects/mh2/Mh2.fbx',
-      modelScale: 0.01,
-      modelPosition: [0, -1, 0],
+      modelUrl: 'assets/projects/mh2/models/building.glb',
+      modelType: 'glb',
+      modelScale: 1,
+      modelPosition: [0, 0, 0],
       modelRotation: [0, 0, 0],
       cameraPosition: [0, 2, 6],
       cameraFov: 45,

@@ -1,185 +1,125 @@
 // src/components/3d/projects/ModelLoader.jsx
-import { forwardRef, useEffect, useState, useCallback } from 'react';
+// FIXED: Proper path handling and error catching
+
+import { forwardRef, useEffect, useState } from 'react';
 import { useFBX, useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
 
 const ModelLoader = forwardRef(({ 
   url,
-  type = 'glb', // 'fbx', 'gltf', or 'glb'
-  scale = 1.0,
-  position = [0, -1, 0],
+  type = 'gltf', // 'fbx', 'gltf', or 'glb'
+  scale = 1,
+  position = [0, 0, 0],
   rotation = [0, 0, 0],
   onLoad,
   onError,
 }, ref) => {
-  const [model, setModel] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Get base URL and build correct path
-  const baseUrl = import.meta.env.BASE_URL || '';
-  const fullUrl = url.startsWith('/') 
-    ? `${baseUrl}${url.substring(1)}` // Remove leading slash and add baseUrl
-    : `${baseUrl}${url}`;
-
-  console.log('🔍 ModelLoader path resolution:', {
-    original: url,
-    baseUrl,
-    fullUrl,
-    windowOrigin: window.location.origin
+  
+  // CRITICAL: Clean the URL - remove any double slashes except after http:
+  const cleanUrl = url.replace(/([^:]\/)\/+/g, "$1");
+  
+  console.log('🔍 ModelLoader Debug:', {
+    originalUrl: url,
+    cleanedUrl: cleanUrl,
+    type: type,
+    baseUrl: import.meta.env.BASE_URL
   });
 
-  // Load model based on type
-  let loadedData = null;
-  
+  let model = null;
+  let loadError = null;
+
+  // Load based on type with error handling
   try {
     if (type === 'fbx') {
-      loadedData = useFBX(fullUrl);
+      model = useFBX(cleanUrl);
     } else if (type === 'gltf' || type === 'glb') {
-      const { scene } = useGLTF(fullUrl);
-      loadedData = scene;
+      const gltfData = useGLTF(cleanUrl);
+      model = gltfData.scene;
+      
+      // Check if scene is valid
+      if (!gltfData.scene) {
+        console.error('❌ GLTF/GLB scene not found in loaded data');
+        setError('Model scene not found');
+      }
     }
   } catch (err) {
-    // Catch the error but don't set state here to avoid re-renders
     console.error('❌ Model loading error caught:', err);
-    // We'll handle the error in useEffect
+    loadError = err;
+    setError(err.message || 'Failed to load model');
+    
+    if (onError) {
+      onError(err);
+    }
   }
 
-  // Process the loaded model
-  const processModel = useCallback((data) => {
-    if (!data) return null;
-
-    console.log('🎨 Processing 3D model...');
-    
-    // Clone the model
-    const modelClone = data.clone();
-    
-    // Set up shadows and materials
-    modelClone.traverse((child) => {
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach(mat => {
-              mat.needsUpdate = true;
-              mat.side = THREE.DoubleSide;
-            });
-          } else {
+  useEffect(() => {
+    if (model) {
+      // Traverse and set up the model
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          
+          // Ensure materials are visible
+          if (child.material) {
             child.material.needsUpdate = true;
-            child.material.side = THREE.DoubleSide;
           }
         }
-      }
-    });
-
-    // Apply transformations
-    modelClone.scale.set(scale, scale, scale);
-    modelClone.position.set(...position);
-    modelClone.rotation.set(...rotation);
-
-    return modelClone;
-  }, [scale, position, rotation]);
-
-  // Handle loading and errors
-  useEffect(() => {
-    if (error) {
-      // Already in error state
-      return;
-    }
-
-    if (loadedData) {
-      try {
-        const processedModel = processModel(loadedData);
-        if (processedModel) {
-          setModel(processedModel);
-          setLoading(false);
-          
-          console.log(`✅ ${type.toUpperCase()} Model loaded successfully!`);
-          
-          if (onLoad) {
-            onLoad(processedModel);
-          }
-        }
-      } catch (err) {
-        console.error('❌ Error processing model:', err);
-        setError(err);
-        setLoading(false);
-        
-        if (onError) {
-          onError(err);
-        }
+      });
+      
+      console.log(`✅ ${type.toUpperCase()} Model loaded successfully:`, cleanUrl);
+      
+      // Callback when model loads
+      if (onLoad) {
+        onLoad(model);
       }
     }
-  }, [loadedData, error, processModel, type, onLoad, onError]);
+  }, [model, cleanUrl, type, onLoad]);
 
-  // Test file accessibility on mount
-  useEffect(() => {
-    const testFile = async () => {
-      try {
-        console.log('📁 Testing file access:', fullUrl);
-        const response = await fetch(fullUrl);
-        console.log('📁 File test result:', {
-          ok: response.ok,
-          status: response.status,
-          url: response.url
-        });
-        
-        if (!response.ok) {
-          throw new Error(`File not found: ${response.status} ${response.statusText}`);
-        }
-      } catch (err) {
-        console.error('📁 File test failed:', err);
-        setError(err);
-        setLoading(false);
-        
-        if (onError) {
-          onError(err);
-        }
-      }
-    };
-
-    testFile();
-  }, [fullUrl, onError]);
-
-  // Loading state
-  if (loading && !error) {
+  // If there's an error, show error message in 3D space
+  if (error || loadError) {
+    console.error('❌ Model Error State:', { error, loadError, url: cleanUrl });
     return (
-      <mesh position={position} scale={Math.max(scale * 0.3, 0.3)}>
+      <mesh position={position}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="gray" wireframe />
+        <meshStandardMaterial color="red" wireframe />
       </mesh>
     );
   }
 
-  // Error state
-  if (error) {
-    console.warn('⚠️ ModelLoader in error state:', error.message);
+  if (!model) {
+    console.warn(`⚠️ ${type.toUpperCase()} Model not loaded yet from:`, cleanUrl);
+    // Show loading placeholder
     return (
-      <group position={position}>
-        <mesh scale={Math.max(scale * 0.5, 0.5)}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="red" />
-        </mesh>
-        <mesh scale={Math.max(scale * 0.5, 0.5)}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="red" wireframe />
-        </mesh>
-      </group>
+      <mesh position={position}>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshStandardMaterial color="gray" />
+      </mesh>
     );
   }
 
-  // Success - render the model
-  return model ? (
+  return (
     <primitive
       ref={ref}
       object={model}
-      dispose={null}
+      scale={scale}
+      position={position}
+      rotation={rotation}
     />
-  ) : null;
+  );
 });
 
 ModelLoader.displayName = 'ModelLoader';
+
+// Preload function for optimization
+export const preloadModel = (url, type = 'gltf') => {
+  const cleanUrl = url.replace(/([^:]\/)\/+/g, "$1");
+  
+  if (type === 'fbx') {
+    useFBX.preload(cleanUrl);
+  } else if (type === 'gltf' || type === 'glb') {
+    useGLTF.preload(cleanUrl);
+  }
+};
 
 export default ModelLoader;
