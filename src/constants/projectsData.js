@@ -1,6 +1,4 @@
 // src/constants/projectsData.js
-// FIXED: Proper path construction without assetPath (which adds BASE_URL)
-
 import { PROJECT_ASSETS } from '../assets/index.js';
 
 // ===================================
@@ -11,7 +9,6 @@ export const PROJECT_MH1 = {
     hero: PROJECT_ASSETS.mh1.hero,
     map: PROJECT_ASSETS.mh1.map,
     logos: PROJECT_ASSETS.mh1.logos,
-    carousels: PROJECT_ASSETS.mh1.carousels,
   },
   sections: {
     hero: {
@@ -28,26 +25,33 @@ export const PROJECT_MH1 = {
     model: {
       enabled: true,
       title: '3D Model Visualization',
-      // CRITICAL: Path must be relative to public folder, BASE_URL is added automatically
-      // If your file is at: public/assets/projects/mh1/models/computer.glb
-      // Then use: 'assets/projects/mh1/models/computer.glb'
-      modelUrl: '/assets/projects/mh1/models/computer.glb',
-      modelType: 'glb', // 'fbx', 'gltf', or 'glb'
-      modelScale: 0.5, // Adjust based on your model size
+      // Path is relative to public folder
+      modelUrl: 'assets/projects/mh1/models/computer.glb',
+      modelType: 'glb',
+      modelScale: 0.5,
       modelPosition: [0, -0.5, 0],
       modelRotation: [0, 0, 0],
       cameraPosition: [0, 1, 3],
       cameraFov: 50,
       environment: 'city',
-      backgroundColor: '#000000',
+      backgroundColor: '#1a1a1a',
     },
     carousels: [
       {
-        id: 'gallery',
+        id: 'carousel1',
         enabled: true,
-        title: 'Renders',
-        images: PROJECT_ASSETS.mh1.carousels,
-        items: PROJECT_ASSETS.mh1.carousels.length,
+        title: 'Concept Phase',
+        // ✅ FIXED: Access the correct property
+        images: PROJECT_ASSETS.mh1.carousel1,
+        items: PROJECT_ASSETS.mh1.carousel1.length,
+      },
+      {
+        id: 'carousel2',
+        enabled: true,
+        title: 'Detail Phase',
+        // ✅ FIXED: Access the correct property
+        images: PROJECT_ASSETS.mh1.carousel2,
+        items: PROJECT_ASSETS.mh1.carousel2.length,
       },
     ],
   },
@@ -71,8 +75,6 @@ export const PROJECT_MH2 = {
     hero: PROJECT_ASSETS.mh2.hero,
     map: PROJECT_ASSETS.mh2.map,
     logos: PROJECT_ASSETS.mh2.logos,
-    carousel1: PROJECT_ASSETS.mh2.carousel1,
-    carousel2: PROJECT_ASSETS.mh2.carousel2,
   },
   sections: {
     hero: {
@@ -87,7 +89,7 @@ export const PROJECT_MH2 = {
       animateOnEntry: true,
     },
     model: {
-      enabled: false, // Set to true when you have a model
+      enabled: false,
       title: '3D Model Visualization',
       modelUrl: 'assets/projects/mh2/models/building.glb',
       modelType: 'glb',

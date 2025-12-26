@@ -1,14 +1,31 @@
 // src/sections/ModelSection.jsx
-// FIXED: Proper URL construction with BASE_URL handling
+// COMPLETE FINAL VERSION with error boundaries
 
 import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import ModelLoader from '../../components/3d/projects/ModelLoader.jsx';
+import ModelErrorBoundary from '../../components/3d/projects/ModelErrorBoundary.jsx';
+
+// Loading Fallback Component - animated
+const LoadingFallback = () => {
+  return (
+    <group>
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshStandardMaterial color="#4dabf7" transparent opacity={0.6} />
+      </mesh>
+      <mesh position={[0, 0, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <boxGeometry args={[0.6, 0.6, 0.6]} />
+        <meshStandardMaterial color="#4dabf7" wireframe />
+      </mesh>
+    </group>
+  );
+};
 
 const ModelSection = ({ 
   modelUrl,
-  modelType = 'glb', // 'fbx', 'gltf', or 'glb'
+  modelType = 'glb',
   modelScale = 1,
   modelPosition = [0, 0, 0],
   modelRotation = [0, 0, 0],
@@ -20,41 +37,37 @@ const ModelSection = ({
   backgroundColor = '#000000'
 }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   
-  // CRITICAL: Construct the full URL with BASE_URL
+  // Construct the full path
   const BASE_URL = import.meta.env.BASE_URL || '/';
   
-  // Clean and construct the path
-  const constructModelPath = (path) => {
-    // Remove leading slash if present
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    
-    // Combine BASE_URL with path
-    const fullPath = `${BASE_URL}${cleanPath}`.replace(/([^:]\/)\/+/g, "$1");
-    
-    return fullPath;
-  };
+  // Remove leading slash if present
+  const cleanModelUrl = modelUrl.startsWith('/') ? modelUrl.slice(1) : modelUrl;
   
-  const fullModelUrl = constructModelPath(modelUrl);
+  // Build full path
+  let fullPath = `${BASE_URL}${cleanModelUrl}`;
   
-  console.log('🎨 ModelSection Debug:', {
+  // Remove double slashes except after protocol
+  fullPath = fullPath.replace(/([^:]\/)\/+/g, "$1");
+  
+  console.log('🎨 ModelSection initialized:', {
     providedUrl: modelUrl,
     baseUrl: BASE_URL,
-    constructedUrl: fullModelUrl,
+    finalPath: fullPath,
     type: modelType
   });
   
   const handleModelLoad = (model) => {
-    console.log('✅ ModelSection: Model loaded successfully');
+    console.log('✅ ModelSection: Model loaded and ready');
     setIsLoading(false);
-    setError(null);
+    setLoadError(false);
   };
   
-  const handleModelError = (err) => {
-    console.error('❌ ModelSection: Model loading failed', err);
+  const handleError = () => {
+    console.error('❌ ModelSection: Failed to load model');
     setIsLoading(false);
-    setError(err.message || 'Failed to load model');
+    setLoadError(true);
   };
   
   return (
@@ -68,21 +81,27 @@ const ModelSection = ({
 
       {/* Canvas Container */}
       <div className="model-canvas-container">
-        {/* Error Display */}
-        {error && (
+        {/* Error Overlay */}
+        {loadError && (
           <div className="model-error-overlay">
             <div className="model-error-content">
               <h3>⚠️ Model Loading Failed</h3>
-              <p>{error}</p>
-              <p className="model-error-path">Path: {fullModelUrl}</p>
+              <p>Unable to load the 3D model</p>
+              <p className="model-error-path">Path: {fullPath}</p>
               <p className="model-error-hint">
-                Check that the file exists at: <code>public/{modelUrl}</code>
+                Check console for details and verify file exists at:
+                <br />
+                <code>public/{cleanModelUrl}</code>
               </p>
             </div>
           </div>
         )}
         
-        <Canvas shadows>
+        <Canvas 
+          shadows 
+          onError={handleError}
+          onCreated={() => console.log('🎨 Canvas created successfully')}
+        >
           <PerspectiveCamera 
             makeDefault 
             position={cameraPosition} 
@@ -95,22 +114,25 @@ const ModelSection = ({
             position={[5, 5, 5]} 
             intensity={1.2} 
             castShadow 
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
           />
           <pointLight position={[-5, 3, -5]} intensity={0.5} />
           <pointLight position={[5, 3, 5]} intensity={0.3} />
 
-          {/* 3D Model - Generic Loader */}
-          <Suspense fallback={null}>
-            <ModelLoader
-              url={fullModelUrl}
-              type={modelType}
-              scale={modelScale}
-              position={modelPosition}
-              rotation={modelRotation}
-              onLoad={handleModelLoad}
-              onError={handleModelError}
-            />
-          </Suspense>
+          {/* Model with Error Boundary and Suspense */}
+          <ModelErrorBoundary position={modelPosition}>
+            <Suspense fallback={<LoadingFallback />}>
+              <ModelLoader
+                url={fullPath}
+                type={modelType}
+                scale={modelScale}
+                position={modelPosition}
+                rotation={modelRotation}
+                onLoad={handleModelLoad}
+              />
+            </Suspense>
+          </ModelErrorBoundary>
 
           {/* Controls */}
           {showControls && (
@@ -133,21 +155,21 @@ const ModelSection = ({
         </Canvas>
 
         {/* Loading Hint */}
-        {isLoading && !error && (
-          <div className="model-loading-hint">
-            Loading 3D model...
-          </div>
-        )}
-        
-        {!isLoading && !error && (
-          <div className="model-loading-hint">
-            Use mouse to rotate • Scroll to zoom
+        {!loadError && (
+          <div 
+            className="model-loading-hint" 
+            style={{ 
+              opacity: isLoading ? 1 : 0.8,
+              transition: 'opacity 0.5s ease'
+            }}
+          >
+            {isLoading ? 'Loading 3D model...' : 'Use mouse to rotate • Scroll to zoom'}
           </div>
         )}
       </div>
 
       {/* Instructions */}
-      {!error && (
+      {!loadError && (
         <div className="model-instructions">
           <div className="model-instruction-item">
             <span className="model-instruction-icon">🖱️</span>
