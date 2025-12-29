@@ -2,42 +2,37 @@
 import React, { forwardRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 
+
 const BASE_URL = import.meta.env.BASE_URL;
 const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
+// ✅ CORRECT: Absolute path from /public
+const MODEL_PATH = assetPath('/assets/projects/mh1/models/gltf/mh1_2.gltf');
 
-export const Mh1Model = forwardRef(({
-  scale = 1,
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
-  debug = false,
-  enableShadows = true,
-  materialOverrides = {},
-  ...props
-}, ref) => {
-  
-  const { nodes, materials } = useGLTF(assetPath('/assets/projects/mh1/models/gltf/mh1_2.gltf'));
+export const Mh1Model = forwardRef((props, ref) => {
+  const {
+    scale = 1,
+    position = [0, 0, 0],
+    rotation = [0, 0, 0],
+    debug = false,
+    enableShadows = true,
+    ...rest
+  } = props;
+
+  // ✅ useGLTF handles Draco compression automatically
+  const { nodes, materials } = useGLTF(MODEL_PATH);
 
   if (debug) {
-    console.log('Mh1Model loaded:', {
+    console.log('🎨 Mh1Model loaded:', {
       materials: Object.keys(materials),
       nodes: Object.keys(nodes),
       scale,
-      position
+      position,
+      rotation
     });
   }
 
-  // Apply material overrides
-  React.useEffect(() => {
-    Object.entries(materialOverrides).forEach(([materialName, overrideProps]) => {
-      if (materials[materialName]) {
-        Object.assign(materials[materialName], overrideProps);
-        materials[materialName].needsUpdate = true;
-      }
-    });
-  }, [materials, materialOverrides]);
-  
   return (
-    <group {...props} dispose={null}>
+    <group ref={ref} {...rest} dispose={null}>
       <group position={[2.3, 0, 0]}>
         <group position={[-18.6, 0, 63.9]}>
           <mesh
@@ -246,8 +241,9 @@ export const Mh1Model = forwardRef(({
   );
 });
 
-// Set a display name for debugging
 Mh1Model.displayName = 'Mh1Model';
 
-// Preload the GLTF
-useGLTF.preload(assetPath('/assets/projects/mh1/models/gltf/mh1_2.gltf'));
+// ✅ Preload for better performance
+useGLTF.preload(MODEL_PATH);
+
+export default Mh1Model;

@@ -1,42 +1,34 @@
 // src/pages/templates/ProjectPage.jsx
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Canvas } from '@react-three/fiber';
-import { Environment, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import ProjectTemplate from './ProjectTemplate.jsx';
 import { getProjectById, getModelConfig } from '../../constants/projectsData.js';
 import { PROJECT_ASSETS, getProjectLogos } from '../../assets/index.js';
 import { MapSection } from '../../sections/projects/MapSection.jsx';
-import ModelLoader from '../../components/3d/projects/ModelLoader.jsx';
+import ModelSection from '../../sections/projects/ModelSection.jsx';
 import Carousel from '../../sections/projects/Carousel.jsx';
 
 const ProjectPage = () => {
   const { project_id } = useParams();
   const [startMapAnimation, setStartMapAnimation] = useState(false);
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
   
   const projectData = getProjectById(project_id);
   const modelConfig = getModelConfig(project_id);
 
   // Start map animation after component mounts
   useEffect(() => {
-    console.log('ProjectPage: Mounted, triggering map animation');
+    console.log('🎬 ProjectPage mounted for:', project_id);
     const timer = setTimeout(() => {
       setStartMapAnimation(true);
     }, 100);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [project_id]);
 
   if (!projectData) {
     return (
-      <div style={{ 
-        color: 'white', 
-        padding: '2rem',
-        textAlign: 'center',
-        fontSize: '1.5rem'
-      }}>
-        Project not found
+      <div className="flex items-center justify-center h-screen text-white text-2xl">
+        Project "{project_id}" not found
       </div>
     );
   }
@@ -45,14 +37,10 @@ const ProjectPage = () => {
   const projectAssets = PROJECT_ASSETS[project_id];
   
   if (!projectAssets) {
-    console.error('No assets found for project:', project_id);
+    console.error('❌ No assets found for project:', project_id);
     return (
-      <div style={{ 
-        color: 'white', 
-        padding: '2rem',
-        textAlign: 'center'
-      }}>
-        Project assets not configured
+      <div className="flex items-center justify-center h-screen text-white text-xl">
+        Project assets not configured for "{project_id}"
       </div>
     );
   }
@@ -90,101 +78,6 @@ const ProjectPage = () => {
     } : null,
   };
 
-  // Build 3D Model Canvas Component
-  const ModelCanvas = () => {
-    if (!modelConfig?.enabled) {
-      return (
-        <div className="w-full h-[600px] bg-gray-900 flex items-center justify-center rounded-lg">
-          <p className="text-white text-lg">3D model not available for this project</p>
-        </div>
-      );
-    }
-
-    const handleModelLoad = (model) => {
-      console.log(`✅ Model loaded successfully for ${project_id}:`, model);
-      setIsModelLoaded(true);
-    };
-
-    const handleModelError = (error) => {
-      console.error(`❌ Failed to load model for ${project_id}:`, error);
-      setIsModelLoaded(false);
-    };
-
-    return (
-      <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden relative">
-        <Canvas shadows>
-          {/* Camera */}
-          <PerspectiveCamera
-            makeDefault
-            position={modelConfig.cameraPosition}
-            fov={modelConfig.cameraFov}
-          />
-          
-          {/* Lighting & Environment */}
-          <Environment preset={modelConfig.environment} />
-          <ambientLight intensity={0.6} />
-          <directionalLight 
-            position={[10, 10, 5]} 
-            intensity={1} 
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-          />
-          
-          {/* Model Loader - handles all three types */}
-          <Suspense fallback={null}>
-            <ModelLoader
-              projectId={project_id}
-              componentName={modelConfig.componentName}
-              url={modelConfig.url}
-              type={modelConfig.type}
-              scale={modelConfig.scale}
-              position={modelConfig.position}
-              rotation={modelConfig.rotation}
-              debug={modelConfig.debug || false}
-              enableShadows={modelConfig.enableShadows ?? true}
-              enableMaterials={modelConfig.enableMaterials ?? true}
-              animations={modelConfig.animations || {}}
-              materialOverrides={modelConfig.materialOverrides || {}}
-              onLoad={handleModelLoad}
-              onError={handleModelError}
-            />
-          </Suspense>
-          
-          {/* Controls */}
-          <OrbitControls 
-            enableDamping 
-            dampingFactor={0.05}
-            minDistance={2}
-            maxDistance={20}
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-          />
-        </Canvas>
-        
-        {/* Loading indicator */}
-        {!isModelLoaded && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-            <div className="text-white text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Loading 3D model...</p>
-            </div>
-          </div>
-        )}
-        
-        {/* Debug info */}
-        {modelConfig.debug && (
-          <div className="absolute top-4 left-4 bg-black/70 text-white p-3 rounded text-sm">
-            <div><strong>Project:</strong> {project_id}</div>
-            <div><strong>Type:</strong> {modelConfig.componentName ? 'JSX Component' : `${modelConfig.type.toUpperCase()}`}</div>
-            <div><strong>Scale:</strong> {modelConfig.scale}</div>
-            <div><strong>Status:</strong> {isModelLoaded ? '✓ Loaded' : '⏳ Loading'}</div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // Build sections array
   const sections = [
     // HERO SECTION
@@ -196,17 +89,50 @@ const ProjectPage = () => {
       animationType: projectData.sections.hero.animationType,
     },
 
-    // MODEL SECTION
+    // MODEL SECTION - using ModelSection component
     projectData.sections.model?.enabled && {
       type: 'model',
-      title: projectData.sections.model.title,
-      component: <ModelCanvas />,
+      title: projectData.sections.model.title || '3D Model Visualization',
+      component: (
+        <ModelSection
+          // ✅ CORRECTED: Match ModelSection prop names exactly
+          componentName={modelConfig?.componentName}
+          modelUrl={modelConfig?.modelPath}  // Not modelUrl
+          modelType={modelConfig?.modelType || 'glb'}
+          
+          // ✅ CORRECTED: Use correct property names from projectsData.js
+          modelScale={modelConfig?.scale || 1}           // Was modelConfig.modelScale
+          modelPosition={modelConfig?.position || [0, 0, 0]}  // Was modelConfig.modelPosition
+          modelRotation={modelConfig?.rotation || [0, 0, 0]}  // Was modelConfig.modelRotation
+          
+          // Camera settings
+          cameraPosition={modelConfig?.cameraPosition || [0, 2, 6]}
+          cameraFov={modelConfig?.cameraFov || 50}
+          
+          // Environment settings
+          environment={modelConfig?.environment || 'city'}
+          backgroundColor={modelConfig?.backgroundColor || '#000000'}
+          
+          // Debug & Controls
+          showControls={true}
+          debug={modelConfig?.debug || false}
+          
+          // ✅ ADDED: enableShadows prop
+          enableShadows={modelConfig?.enableShadows ?? true}
+          
+          // Note: These are not used by ModelSection but passed for reference
+          title={modelConfig?.title || '3D Model'}
+          materialOverrides={modelConfig?.materialOverrides || {}}
+          animations={modelConfig?.animations || {}}
+          enableMaterials={modelConfig?.enableMaterials ?? true}
+        />
+      ),
     },
 
     // MAP SECTION
     projectData.sections.map?.enabled && {
       type: 'map',
-      title: projectData.sections.map.title,
+      title: projectData.sections.map.title || 'Project Map',
       component: (
         <MapSection
           mapImages={projectAssets.map || {}}
@@ -222,12 +148,11 @@ const ProjectPage = () => {
     ...(projectData.sections.carousels || []).map((carouselSection, index) => {
       if (!carouselSection.enabled) return null;
 
-      // Get the images array from the carousel section configuration
       const images = carouselSection.images || [];
 
       return {
         type: 'carousel',
-        title: carouselSection.title,
+        title: carouselSection.title || `Gallery ${index + 1}`,
         component: (
           <Carousel
             key={carouselSection.id || index}
@@ -242,12 +167,21 @@ const ProjectPage = () => {
     }),
   ].filter(Boolean); // Remove null entries
 
-  console.log('ProjectPage: Rendering', {
+  // Debug logging
+  console.log('📊 ProjectPage Data Flow:', {
     project_id,
-    totalSections: sections.length,
-    sectionTypes: sections.map(s => s.type),
-    modelEnabled: projectData.sections.model?.enabled,
-    modelType: modelConfig?.componentName ? 'JSX' : modelConfig?.type || 'none',
+    modelConfig: modelConfig ? {
+      // From projectsData.js
+      hasComponentName: !!modelConfig.componentName,
+      hasModelPath: !!modelConfig.modelPath,
+      scale: modelConfig.scale,
+      position: modelConfig.position,
+      rotation: modelConfig.rotation,
+      cameraPosition: modelConfig.cameraPosition,
+      cameraFov: modelConfig.cameraFov,
+      environment: modelConfig.environment,
+      backgroundColor: modelConfig.backgroundColor,
+    } : 'No model config',
   });
 
   return (
