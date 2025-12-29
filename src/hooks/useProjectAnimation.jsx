@@ -27,6 +27,7 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
   const accumulated = useRef(0);
 
   const fadeTimeout = useRef(null);
+  const cleanupDragRef = useRef(null); // Store cleanup function
 
   /* -------------------- CONSTANTS -------------------- */
 
@@ -37,6 +38,8 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
 
   const createTimeline = useCallback(() => {
     if (timeline.current) timeline.current.kill();
+
+    console.log('🎬 Creating fresh timeline for section 0');
 
     setAnimationStatus('running');
     setGradientOpacity(1);
@@ -49,7 +52,10 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
     setIsHeroUnlocked(false);
 
     timeline.current = gsap.timeline({
-      onComplete: () => setAnimationStatus('complete'),
+      onComplete: () => {
+        console.log('✅ Timeline complete - drag now available');
+        setAnimationStatus('complete');
+      },
     });
 
     timeline.current.to({}, {
@@ -79,39 +85,89 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
 
   }, []);
 
+  /* -------------------- COMPLETE RESET FUNCTION -------------------- */
+
+  const completeReset = useCallback(() => {
+    console.log('🔄 Complete reset of animation state');
+    
+    // Kill any running animations
+    if (timeline.current) {
+      timeline.current.kill();
+      timeline.current = null;
+    }
+    if (fadeTimeout.current) {
+      clearTimeout(fadeTimeout.current);
+      fadeTimeout.current = null;
+    }
+
+    // Clean up drag listeners
+    if (cleanupDragRef.current) {
+      console.log('🧹 Cleaning up previous drag listeners');
+      cleanupDragRef.current();
+      cleanupDragRef.current = null;
+    }
+
+    // Reset all state
+    setAnimationStatus('idle');
+    setGradientOpacity(1);
+    setBgOpacity(0);
+    setBgScale(1.1);
+    setTitleOpacity(0);
+    setSubtitleOpacity(0);
+    setSubtitleX(40);
+    setDragProgress(0);
+    setIsHeroUnlocked(false);
+
+    // Reset all refs
+    isDragging.current = false;
+    dragStartY.current = 0;
+    accumulated.current = 0;
+  }, []);
+
   /* -------------------- INIT / RESET -------------------- */
 
   useEffect(() => {
     if (currentSection === 0) {
-      createTimeline();
+      console.log('📍 Entering section 0');
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        completeReset();
+        createTimeline();
+      }, 50);
+      
+      return () => clearTimeout(timer);
     } else {
-      // FULL RESET when leaving hero
-      setAnimationStatus('idle');
-      setGradientOpacity(1);
-      setBgOpacity(0);
-      setBgScale(1.1);
-      setTitleOpacity(0);
-      setSubtitleOpacity(0);
-      setSubtitleX(40);
-      setDragProgress(0);
-      setIsHeroUnlocked(false);
-
-      if (timeline.current) timeline.current.kill();
-      if (fadeTimeout.current) clearTimeout(fadeTimeout.current);
+      console.log('📍 Leaving section 0');
+      completeReset();
     }
-  }, [currentSection, createTimeline]);
+  }, [currentSection, createTimeline, completeReset]);
 
   /* -------------------- DRAG SETUP -------------------- */
 
   const setupDrag = useCallback(() => {
-    if (!heroRef.current || animationStatus !== 'complete') return;
+    // Clean up previous listeners first
+    if (cleanupDragRef.current) {
+      cleanupDragRef.current();
+    }
 
+    if (!heroRef.current) {
+      console.warn('⚠️ heroRef not available for drag setup');
+      return;
+    }
+    
+    if (animationStatus !== 'complete') {
+      console.log('⏳ Waiting for animation to complete before setting up drag');
+      return;
+    }
+
+    console.log('🖱️ Setting up drag listeners');
     const el = heroRef.current;
 
     /* ----- CORE LOGIC (ORDER MATTERS) ----- */
 
     const start = (y) => {
       if (isHeroUnlocked) return;
+      console.log('🖱️ Drag started');
       isDragging.current = true;
       dragStartY.current = y;
       accumulated.current = 0;
@@ -135,10 +191,12 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
       setGradientOpacity(1 - progress);
 
       if (progress >= 1) {
+        console.log('🔓 Hero unlocked');
         isDragging.current = false;
         setIsHeroUnlocked(true);
 
         fadeTimeout.current = setTimeout(() => {
+          console.log('🌅 Starting fadeout to next section');
           gsap.to({}, {
             duration: 0.8,
             onUpdate: function () {
@@ -153,6 +211,9 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
     };
 
     const end = () => {
+      if (isDragging.current) {
+        console.log('🖱️ Drag ended');
+      }
       isDragging.current = false;
     };
 
@@ -169,26 +230,36 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
     el.addEventListener('mousedown', onMouseDown);
     el.addEventListener('mousemove', onMouseMove);
     el.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('mouseleave', onMouseUp); // Added: handle mouse leaving area
 
-    el.addEventListener('touchstart', onTouchStart);
-    el.addEventListener('touchmove', onTouchMove);
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('touchend', onTouchEnd);
 
-    return () => {
+    // Store cleanup function
+    const cleanup = () => {
+      console.log('🧹 Removing drag listeners');
       el.removeEventListener('mousedown', onMouseDown);
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('mouseleave', onMouseUp);
 
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
     };
-  }, [animationStatus, isHeroUnlocked, onAnimationComplete]);
 
-  useEffect(() => {
-    const cleanup = setupDrag();
+    cleanupDragRef.current = cleanup;
     return cleanup;
-  }, [setupDrag]);
+  }, [animationStatus, isHeroUnlocked, onAnimationComplete, DRAG_DISTANCE, FADE_DELAY]);
+
+  // Set up drag when animation status changes to 'complete'
+  useEffect(() => {
+    if (animationStatus === 'complete' && currentSection === 0) {
+      const cleanup = setupDrag();
+      return cleanup;
+    }
+  }, [setupDrag, animationStatus, currentSection]);
 
   /* -------------------- API -------------------- */
 

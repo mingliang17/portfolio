@@ -1,7 +1,7 @@
 // src/sections/ModelSection.jsx
-// COMPLETE FINAL VERSION with error boundaries
+// FIXED: Proper cleanup and reset when navigating away
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import ModelLoader from '../../components/3d/projects/ModelLoader.jsx';
@@ -38,6 +38,7 @@ const ModelSection = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [key, setKey] = useState(0); // Force remount on navigation
   
   // Construct the full path
   const BASE_URL = import.meta.env.BASE_URL || '/';
@@ -55,8 +56,23 @@ const ModelSection = ({
     providedUrl: modelUrl,
     baseUrl: BASE_URL,
     finalPath: fullPath,
-    type: modelType
+    type: modelType,
+    key: key
   });
+  
+  // Reset state when section becomes active
+  useEffect(() => {
+    console.log('🔄 ModelSection mounted/updated');
+    setIsLoading(true);
+    setLoadError(false);
+    
+    // Force Canvas remount by changing key
+    setKey(prev => prev + 1);
+    
+    return () => {
+      console.log('🧹 ModelSection cleanup');
+    };
+  }, [fullPath]);
   
   const handleModelLoad = (model) => {
     console.log('✅ ModelSection: Model loaded and ready');
@@ -97,7 +113,9 @@ const ModelSection = ({
           </div>
         )}
         
+        {/* FIXED: Add key prop to force remount */}
         <Canvas 
+          key={key}
           shadows 
           onError={handleError}
           onCreated={() => console.log('🎨 Canvas created successfully')}
@@ -109,16 +127,7 @@ const ModelSection = ({
           />
           
           {/* Lighting */}
-          <ambientLight intensity={0.6} />
-          <directionalLight 
-            position={[5, 5, 5]} 
-            intensity={1.2} 
-            castShadow 
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-          />
-          <pointLight position={[-5, 3, -5]} intensity={0.5} />
-          <pointLight position={[5, 3, 5]} intensity={0.3} />
+          <ambientLight intensity={0.01} />
 
           {/* Model with Error Boundary and Suspense */}
           <ModelErrorBoundary position={modelPosition}>

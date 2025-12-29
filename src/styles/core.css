@@ -1,42 +1,10 @@
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-primary);
-  line-height: 1.2;
-  font-weight: 700;
-}
+/* src/styles/core.css */
+/* CLEANED & CONSOLIDATED */
 
-h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
-h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
-h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
-h4 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+/* ===================================
+   RESET & BASE
+   =================================== */
 
-p {
-  font-size: var(--text-base);
-  line-height: 1.6;
-}
-
-/* Gradient Text Effect */
-.text-gradient,
-.text-gray_gradient,
-.head-text {
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.hero_tag {
-  text-align: center;
-  font-size: clamp(1.875rem, 2.5vw, 3.75rem);
-  font-family: var(--font-primary);
-  font-weight: 900;
-  line-height: 1.5;
-}
-
-/* ========================================
-   RESET
-   ======================================== */
-
-/* Browser Reset & Normalize */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -53,8 +21,8 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   font-family: var(--font-primary);
-  color: rgba(255, 255, 255, 0.87);
-  background: rgba(12,12,12,1);
+  color: var(--color-white-800);
+  background: var(--bg-primary); /* Using blue theme variable */
   overflow-x: hidden;
 }
 
@@ -69,10 +37,47 @@ body, * {
   scrollbar-width: none;
 }
 
+/* ===================================
+   TYPOGRAPHY
+   =================================== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
+h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
+h4 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+p {
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+/* Gradient Text */
+.text-gradient,
+.head-text {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===================================
+   MEDIA ELEMENTS
+   =================================== */
+
 img, picture, video, canvas, svg {
   display: block;
   max-width: 100%;
 }
+
+/* ===================================
+   INTERACTIVE ELEMENTS
+   =================================== */
 
 button, input, textarea, select {
   font: inherit;
@@ -91,4 +96,18 @@ a {
 
 ul, ol {
   list-style: none;
+}
+
+/* ===================================
+   LAYOUT UTILITIES
+   =================================== */
+
+.c-space {
+  padding: 0 var(--spacing-md);
+}
+
+@media (min-width: 640px) {
+  .c-space {
+    padding: 0 var(--spacing-2xl);
+  }
 }

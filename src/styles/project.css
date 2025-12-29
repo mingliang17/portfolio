@@ -1,9 +1,10 @@
-/* ========================================
-   PROJECT PAGES - FINAL CLEAN VERSION
-   All duplicates removed, only essential styles
-   ======================================== */
+/* src/styles/project.css */
+/* CLEANED - Using blue theme variables */
 
-/* === BASE === */
+/* ===================================
+   BASE LAYOUT
+   =================================== */
+
 .project-section-container {
   height: 100%;
   position: relative;
@@ -19,13 +20,16 @@
   justify-content: center;
 }
 
-/* === BACKGROUND SYSTEM === */
+/* ===================================
+   BACKGROUND SYSTEM
+   =================================== */
+
 .project-background-wrapper {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #ea6608;
+  background: var(--bg-primary); /* Blue theme */
 }
 
 .project-background-image {
@@ -36,41 +40,20 @@
   background-repeat: no-repeat;
 }
 
-.project-background-gradient-mask {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom, 
-    rgba(15, 23, 42, 1) 30%, 
-    rgba(15, 23, 42, 0.5) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
+.project-error {
+  color: white;
+  padding: 2rem;
 }
 
-.project-background-error {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  z-index: 10;
+.hero-section {
+  user-select: none;
+  touch-action: none;
 }
 
-/* === HERO CONTENT === */
-.project-content-center {
-  max-width: 72rem;
-  margin: 0 auto;
-  width: 100%;
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  padding: 0 var(--spacing-md);
-}
+/* ===================================
+   NAVIGATION DOTS
+   =================================== */
 
-
-/* === NAVIGATION DOTS === */
 .nav-dots {
   position: fixed;
   right: 2rem;
@@ -95,7 +78,7 @@
   background: rgba(255, 255, 255, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   padding: 0;
 }
 
@@ -107,7 +90,7 @@
 
 .nav-dot.active {
   background: rgba(245, 158, 11, 0.8);
-  border-color: #f59e0b;
+  border-color: var(--color-primary);
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
 }
 
@@ -116,7 +99,10 @@
   cursor: not-allowed;
 }
 
-/* === SCROLL PROMPT === */
+/* ===================================
+   SCROLL PROMPT & DRAG
+   =================================== */
+
 .project-scroll-prompt {
   position: absolute;
   bottom: 3rem;
@@ -124,12 +110,18 @@
   transform: translateX(-50%);
   text-align: center;
   z-index: 10;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.project-scroll-prompt.fade-in {
+  opacity: 1;
 }
 
 .project-scroll-arrow {
   width: 30px;
   height: 50px;
-  border: 3px solid #f59e0b;
+  border: 3px solid var(--color-primary);
   border-radius: 25px;
   position: relative;
   margin: 0 auto;
@@ -144,7 +136,7 @@
   transform: translateX(-50%);
   width: 8px;
   height: 8px;
-  background: #f59e0b;
+  background: var(--color-primary);
   border-radius: 50%;
   animation: project-scroll-dot 2s infinite;
 }
@@ -159,21 +151,49 @@
 
 .project-drag-text {
   cursor: grab;
-  color: #f59e0b;
+  color: var(--color-primary);
   margin-top: 1rem;
   font-size: 1rem;
   transition: color 0.2s;
   user-select: none;
 }
 
-.project-drag-text:hover,
-.project-drag-arrow:hover {
-  color: #fbbf24;
-  border-right-color: #fbbf24 !important;
-  border-bottom-color: #fbbf24 !important;
+/* ===================================
+   DRAG PROGRESS
+   =================================== */
+
+.project-drag-progress {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  text-align: center;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
-/* === UNLOCK OVERLAY === */
+.project-drag-progress-bar {
+  width: 120px;
+  height: 4px;
+  background: rgba(245, 158, 11, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+  overflow: hidden;
+}
+
+.project-drag-progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* ===================================
+   UNLOCK OVERLAY
+   =================================== */
+
 .project-unlock-overlay {
   position: fixed;
   inset: 0;
@@ -197,89 +217,16 @@
   position: absolute;
   width: 150px;
   height: 150px;
-  border: 3px solid #f59e0b;
+  border: 3px solid var(--color-primary);
   border-radius: 50%;
   border-top-color: transparent;
   border-right-color: transparent;
 }
 
-/* === DRAG PROGRESS === */
-.project-drag-progress {
-  position: fixed;
-  bottom: 6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  text-align: center;
-  color: #f59e0b;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
+/* ===================================
+   RESPONSIVE
+   =================================== */
 
-.project-drag-progress-bar {
-  width: 120px;
-  height: 4px;
-  background: rgba(245, 158, 11, 0.3);
-  border-radius: 2px;
-  margin: 0 auto 8px;
-  overflow: hidden;
-}
-
-.project-drag-progress-fill {
-  height: 100%;
-  background: #f59e0b;
-  border-radius: 2px;
-  transition: width 0.1s ease;
-}
-
-.project-error {
-  color: white;
-  padding: 2rem;
-}
-
-.project-section {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  background-color: #000;
-  user-select: none;
-  touch-action: none;
-}
-
-.hero-section.grab-cursor {
-  cursor: grab;
-}
-
-/* === ANIMATIONS === */
-@keyframes project-scroll-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes project-scroll-dot {
-  0% { 
-    opacity: 1; 
-    transform: translateX(-50%) translateY(0); 
-  }
-  100% { 
-    opacity: 0; 
-    transform: translateX(-50%) translateY(20px); 
-  }
-}
-
-@keyframes project-unlock-pulse {
-  0% { 
-    transform: scale(0.8); 
-    opacity: 0.8; 
-  }
-  100% { 
-    transform: scale(1.2); 
-    opacity: 0; 
-  }
-}
-
-/* === RESPONSIVE === */
 @media (max-width: 1024px) {
   .nav-dots {
     right: 1rem;

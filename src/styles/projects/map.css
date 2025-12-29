@@ -1,7 +1,5 @@
-/* ========================================
-   MAP SECTION - UNIFIED CSS
-   Simple layout only, GSAP controls everything
-   ======================================== */
+/* src/styles/projects/map.css */
+/* PERFORMANCE OPTIMIZED - GPU acceleration, hardware compositing */
 
 .map-section-wrapper {
   width: 100%;
@@ -23,17 +21,19 @@
   align-items: stretch;
 }
 
-/* ========================================
-   COLUMN 1: MAP ANIMATION CONTAINER
-   ======================================== */
+/* ===================================
+   COLUMN 1: MAP ANIMATION (45%)
+   OPTIMIZED: GPU acceleration
+   =================================== */
 
 .map-animation-container {
-  flex: 0 0 45%; /* CHANGED: 45% instead of 50% */
+  flex: 0 0 40%;
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  
 }
 
 .my-map-main {
@@ -41,6 +41,10 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  /* GPU optimization */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  
 }
 
 .my-map-image {
@@ -48,20 +52,31 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
-  height: 200px;
+  width: 450px;
+  height: 300px;  
+  border: red 2px solid;
+  /* GPU optimization - will be set by GSAP */
+  transform: translate(-50%, -50%) translateZ(0);
+  backface-visibility: hidden;
 }
 
 .my-map-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  scale: 1.5;
+  scale: 1;
+  /* GPU optimization */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Image rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
-/* ========================================
-   COLUMN 2: LOGOS
-   ======================================== */
+/* ===================================
+   COLUMN 2: LOGOS (10%)
+   OPTIMIZED: Hardware compositing
+   =================================== */
 
 .map-logos-column {
   flex: 0 0 10%;
@@ -71,10 +86,6 @@
   align-items: center;
   gap: 1rem;
   padding: 0;
-  border-radius: 0;
-  backdrop-filter: none;
-  background: transparent;
-  border: none;
 }
 
 .map-logo-container {
@@ -88,11 +99,12 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  transition: background 0.3s ease, 
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-  opacity: 0; /* Initially hidden - GSAP will animate this */
-  transform: translateY(30px) scale(0.8); /* Initial state for animation */
+  transition: all var(--transition-base);
+  opacity: 0;
+  /* GPU optimization */
+  transform: translateY(30px) scale(0.8) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .map-logo-img {
@@ -101,7 +113,10 @@
   object-fit: contain;
   filter: saturate(0);
   opacity: 0.6;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition: filter var(--transition-base), opacity var(--transition-base);
+  /* GPU optimization */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .map-logo-container:hover,
@@ -109,6 +124,8 @@
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  /* Smooth transform */
+  transform: translateY(0) scale(1) translateZ(0);
 }
 
 .map-logo-container:hover .map-logo-img,
@@ -117,22 +134,29 @@
   filter: saturate(1);
 }
 
-/* ========================================
-   COLUMN 3: SIDEBAR
-   ======================================== */
+/* ===================================
+   COLUMN 3: SIDEBAR (45%)
+   OPTIMIZED: Composition layer
+   =================================== */
 
 .map-description-sidebar {
-  flex: 1; /* Takes remaining 47% (100% - 45% - 8%) */
+  flex: 0 0 40%;
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin: 2rem;
+  height: 80vh;
+  align-self: center;
   padding: 1.2rem;
   border-radius: 12px;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 0; /* Initially hidden */
-  transform: translateX(50px); /* Initial state for animation */
+  /* background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1); */
+  opacity: 0;
+  /* GPU optimization */
+  transform: translateX(50px) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .sidebar-section {
@@ -161,8 +185,11 @@
   margin: 0 0 0.5rem 0;
   color: #ffffff;
   line-height: 1.3;
-  opacity: 0; /* Initially hidden */
-  transform: translateY(-20px); /* Initial state for animation */
+  opacity: 0;
+  /* GPU optimization */
+  transform: translateY(-20px) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .map-metrics-list {
@@ -173,21 +200,27 @@
 
 .map-metric-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.3rem;
   padding: 0.7rem;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background 0.3s ease, 
-              border-color 0.3s ease;
-  opacity: 0; /* Initially hidden */
-  transform: translateY(20px); /* Initial state for animation */
+  transition: all var(--transition-base);
+  opacity: 0;
+  /* GPU optimization */
+  transform: translateY(20px) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .map-metric-item:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.1);
+  /* Smooth transform on hover */
+  transform: translateY(0) translateZ(0);
 }
 
 .map-metric-label {
@@ -200,10 +233,12 @@
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #b187dc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .map-disclaimer {
@@ -212,13 +247,31 @@
   line-height: 1.5;
   margin: 0;
   font-style: italic;
-  opacity: 0; /* Initially hidden */
-  transform: translateY(20px); /* Initial state for animation */
+  opacity: 0;
+  margin-top: auto; /* Pushes itself to bottom */
+  /* GPU optimization */
+  transform: translateY(20px) translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  border: red 2px solid;
 }
 
-/* ========================================
+/* ===================================
+   PERFORMANCE: Remove will-change after animation
+   These classes are added/removed by JS
+   =================================== */
+
+.map-animation-complete .map-logo-container,
+.map-animation-complete .map-description-sidebar,
+.map-animation-complete .map-sidebar-title,
+.map-animation-complete .map-metric-item,
+.map-animation-complete .map-disclaimer {
+  will-change: auto;
+}
+
+/* ===================================
    RESPONSIVE
-   ======================================== */
+   =================================== */
 
 @media (max-width: 1200px) {
   .map-flex-container {
@@ -270,4 +323,21 @@
     width: 40px;
     height: 40px;
   }
+}
+
+/* ===================================
+   PERFORMANCE HINTS
+   =================================== */
+
+/* Prevent layout shifts during animation */
+.my-map-image,
+.map-logo-container,
+.map-metric-item {
+  contain: layout style paint;
+}
+
+/* Optimize compositing layers */
+.map-animation-container,
+.map-description-sidebar {
+  isolation: isolate;
 }

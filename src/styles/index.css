@@ -1,11 +1,10 @@
-/* ========================================
-   PORTFOLIO - MAIN CSS ENTRY POINT (CLEANED)
-   All duplicates removed, imports optimized
-   ======================================== */
+/* src/styles/index.css */
+/* FINAL - Clean import order, removed projects.css (empty) */
+
 /* === FONTS === */
 @import url('https://fonts.cdnfonts.com/css/kg-keep-your-head-up');
 
-/* === CORE === */
+/* === CORE (Order matters: variables first) === */
 @import './variables.css';
 @import './core.css';
 @import './base.css';
@@ -21,19 +20,21 @@
 @import './animations.css';
 
 /* === PROJECTS === */
-@import './projects/projects.css';
+@import './project.css';
+@import './projecttemplate.css';
 @import './projects/carousel.css';
 @import './projects/map.css';
 @import './projects/model.css';
-@import './project.css';
-@import './projecttemplate.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';
 
-/* ========================================
-   WORK EXPERIENCE SECTION (Unique to index.css)
-   ======================================== */
+/* ===================================
+   PAGE-SPECIFIC STYLES
+   Uses blue theme variables
+   =================================== */
+
+/* Work Experience Section */
 .work-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -51,8 +52,8 @@
 .work-content {
   grid-column: span 1;
   border-radius: var(--radius-lg);
-  background: var(--color-black-200);
-  border: 1px solid var(--color-black-300);
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @media (min-width: 1024px) {
@@ -66,14 +67,14 @@
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: var(--spacing-lg);
-  transition: all 0.5s ease-in-out;
+  transition: all var(--transition-slow);
   cursor: pointer;
   border-radius: var(--radius-lg);
   padding: 0 0.625rem;
 }
 
 .work-content_container:hover {
-  background: var(--color-black-300);
+  background: var(--bg-tertiary);
 }
 
 .work-content_logo {
@@ -81,7 +82,7 @@
   width: 4rem;
   height: 4rem;
   padding: 0.5rem;
-  background: var(--color-black-600);
+  background: var(--bg-primary);
 }
 
 .work-content_bar {
@@ -89,21 +90,19 @@
   width: 2px;
   margin-top: 1rem;
   height: 100%;
-  background: var(--color-black-300);
-  transition: background 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background var(--transition-base);
 }
 
 .work-content_container:hover .work-content_bar {
-  background: var(--color-black-500);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .work-content_container:last-child .work-content_bar {
   display: none;
 }
 
-/* ========================================
-   CLIENT REVIEWS (Unique to index.css)
-   ======================================== */
+/* Client Reviews */
 .client-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -120,7 +119,7 @@
 .client-review {
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  background: rgba(42, 42, 42, 0.5);
+  background: var(--bg-secondary);
 }
 
 .client-content {
@@ -139,9 +138,7 @@
   }
 }
 
-/* ========================================
-   CONTACT SECTION (Unique to index.css)
-   ======================================== */
+/* Contact Section */
 .contact-container {
   max-width: 36rem;
   position: relative;
@@ -157,14 +154,14 @@
 
 .field-input {
   width: 100%;
-  background: var(--color-black-300);
+  background: var(--bg-secondary);
   padding: 0.5rem var(--spacing-lg);
   min-height: 3.5rem;
   border-radius: var(--radius-lg);
   color: var(--color-white-800);
   font-size: var(--text-lg);
   box-shadow: var(--shadow-2xl);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .field-input::placeholder {
@@ -176,9 +173,7 @@
   outline-offset: 2px;
 }
 
-/* ========================================
-   COPY CONTAINER (Unique to index.css)
-   ======================================== */
+/* Copy Container */
 .copy-container {
   cursor: pointer;
   display: flex;
@@ -190,29 +185,4 @@
 
 .copy-container:hover {
   transform: scale(1.05);
-}
-
-/* ========================================
-   RESPONSIVE UTILITIES
-   ======================================== */
-@media (max-width: 768px) {
-  .c-space {
-    padding: 0 var(--spacing-md);
-  }
-  
-  .hero_tag {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .c-space {
-    padding: 0 var(--spacing-xl);
-  }
-}
-
-@media (min-width: 1025px) {
-  .c-space {
-    padding: 0 var(--spacing-2xl);
-  }
 }
