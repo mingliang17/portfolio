@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 
-export const useProjectAnimation = (currentSection, onAnimationComplete) => {
+export const useHeroAnimation = (currentSection, onAnimationComplete) => {
   /* -------------------- STATE -------------------- */
 
   const [animationStatus, setAnimationStatus] = useState('idle');
@@ -285,4 +285,4 @@ export const useProjectAnimation = (currentSection, onAnimationComplete) => {
   };
 };
 
-export default useProjectAnimation;
+export default useHeroAnimation;

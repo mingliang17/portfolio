@@ -1,8 +1,6 @@
 // src/assets/index.js
 import { ICONS } from "./icons.js";
-
-const BASE_URL = import.meta.env.BASE_URL;
-const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
+import { assetPath } from "@/utils/assetPath.js";
 
 // ===================================
 // 3D MODELS & TEXTURES
@@ -24,9 +22,6 @@ export const TEXTURES = {
     normal: assetPath('textures/earth-normal.jpg'),
   },
 };
-
-// ===================================
-// PROJECT ASSETS - CAROUSEL ITEMS
 
 // MH1 Carousel Items
 const MH1_CAROUSEL_1_ITEMS = [

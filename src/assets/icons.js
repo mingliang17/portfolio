@@ -1,6 +1,4 @@
-const BASE_URL = import.meta.env.BASE_URL;
-const assetPath = (path) => `${BASE_URL}${path}`.replace(/\/+/g, '/');
-
+import { assetPath } from "@/utils/assetPath.js";
 
 export const ICONS = {
   github: {

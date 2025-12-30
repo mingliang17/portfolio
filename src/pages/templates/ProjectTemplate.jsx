@@ -3,7 +3,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import ProjectLayout from './ProjectLayout.jsx';
 import { HeroContent, HeroBackground } from '../../components/project/ProjectComponents.jsx';
 import { ScrollPrompt } from '../../components/common/LayoutComponents.jsx';
-import { useProjectAnimation } from '../../hooks/useProjectAnimation.jsx';
+import { useHeroAnimation } from '../../hooks/useHeroAnimation.jsx';
 import { useProjectNavigation } from '../../hooks/useProjectNavigation.js';
 
 const ProjectTemplate = ({
@@ -51,7 +51,7 @@ const {
   isHeroUnlocked,
 
   setHeroSectionRef,
-} = useProjectAnimation(currentSection, handleAnimationComplete);
+} = useHeroAnimation(currentSection, handleAnimationComplete);
 
   const showDragUI = animationStatus === 'complete' && !isHeroUnlocked;
   const showSubtitle = animationStatus !== 'idle';
