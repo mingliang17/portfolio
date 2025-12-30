@@ -6,9 +6,15 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 export default defineConfig({
   base: '/portfolio/',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, "src"),
+    },
+  },
   
   plugins: [
     react(),

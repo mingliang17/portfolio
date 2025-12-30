@@ -1,7 +1,7 @@
 import { Suspense, useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import Earth from '../components/3d/Earth.jsx';
+import Earth from '../components/home/Earth.jsx';
 import { globeProjects } from '../constants/index.js';
 
 const Home = () => {

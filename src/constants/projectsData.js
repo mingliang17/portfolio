@@ -33,12 +33,12 @@ export const PROJECT_MH1 = {
       componentName: 'Mh1Model',
       
       // Display settings
-      scale: 0.01,
-      position: [0, -0.5, 0],
-      rotation: [0, Math.PI / 4, Math.PI / 2],
+      scale: 0.06,
+      position: [0, 0, 0],
+      rotation: [0, Math.PI / 4, 0],
       
       // Camera & Environment
-      cameraPosition: [0, 1, 4],
+      cameraPosition: [0, 1, 5],
       cameraFov: 50,
       environment: 'city',
       backgroundColor: '#1a1a1a',

@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
-import { Mh1Model } from './3d/projects/Mh1.jsx';
+import { Model } from '@/components/3d/Mh1.jsx';
 
 export default function TestModelSimple() {
   return (
@@ -34,7 +34,7 @@ export default function TestModelSimple() {
 
         {/* Model */}
         <Suspense fallback={null}>
-          <Mh1Model
+          <Model
             scale={0.05}
             position={[0, -1, 0]}
             rotation={[0, Math.PI / 4, 0]}

@@ -1,4 +1,5 @@
 /* src/styles/projects/model.css */
+/* ✅ COMPLETE ENHANCED VERSION */
 
 /* ========================================
    MODEL SECTION STYLES
@@ -15,172 +16,7 @@
   box-sizing: border-box;
   background: transparent;
   gap: 1rem;
-}
-
-/* Header */
-.model-section-header {
-  width: 100%;
-  text-align: center;
-  z-index: 10;
-  margin-bottom: 1rem;
-}
-
-.model-section-title {
-  font-size: 2rem;
-  font-weight: 300;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(200, 220, 255, 0.9) 50%,
-    rgba(255, 255, 255, 0.9) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: liquid-shimmer 3s ease-in-out infinite;
-}
-
-/* Canvas Container */
-.model-canvas-container {
   position: relative;
-  width: 90%;
-  max-width: 1200px;
-  height: 70vh;
-  min-height: 500px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    inset 0 0 40px rgba(255, 255, 255, 0.05);
-}
-
-.model-canvas-container canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* Loading Hint */
-.model-loading-hint {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  pointer-events: none;
-  z-index: 10;
-  animation: liquid-float 3s ease-in-out infinite;
-}
-
-/* Instructions */
-.model-instructions {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.model-instruction-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
-  transition: color 0.3s ease;
-}
-
-.model-instruction-item:hover {
-  color: rgba(255, 255, 255, 1);
-}
-
-.model-instruction-icon {
-  font-size: 1.2rem;
-  opacity: 0.8;
-}
-
-/* Animations */
-@keyframes liquid-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes liquid-float {
-  0%, 100% { transform: translateX(-50%) translateY(0px); }
-  50% { transform: translateX(-50%) translateY(-10px); }
-}
-
-/* Error Display */
-.model-error-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-  padding: 2rem;
-}
-
-.model-error-content {
-  background: rgba(139, 0, 0, 0.2);
-  border: 2px solid rgba(255, 0, 0, 0.5);
-  border-radius: 16px;
-  padding: 2rem;
-  max-width: 600px;
-  text-align: center;
-}
-
-.model-error-content h3 {
-  color: #ff6b6b;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-}
-
-.model-error-content p {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
-}
-
-.model-error-path {
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: #ffcc00;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 0.5rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-  word-break: break-all;
-}
-
-.model-error-hint {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 1rem;
-}
-
-.model-error-hint code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-family: monospace;
-  color: #4dabf7;
 }
 
 /* Responsive */
@@ -188,108 +24,19 @@
   .model-section-wrapper {
     padding: 1.5rem;
   }
-
-  .model-canvas-container {
-    width: 95%;
-    height: 60vh;
-    min-height: 400px;
-  }
-
-  .model-instructions {
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  .model-error-content {
-    padding: 1.5rem;
-  }
 }
 
 @media (max-width: 768px) {
-  .model-section-title {
-    font-size: 1.5rem;
-  }
-
-  .model-canvas-container {
-    width: 100%;
-    height: 50vh;
-    min-height: 350px;
-  }
 
   .model-instructions {
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  .model-loading-hint {
-    font-size: 0.8rem;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem;
   }
 }
 
 @media (max-width: 480px) {
   .model-section-wrapper {
     padding: 1rem;
-  }
-
-  .model-section-title {
-    font-size: 1.25rem;
-  }
-
-  .model-canvas-container {
-    height: 45vh;
-    min-height: 300px;
-  }
-
-  .model-instruction-item {
-    font-size: 0.8rem;
-  }
-}
-
-/* Add these styles to your global CSS or component-specific CSS */
-
-.model-section-wrapper {
-  width: 100%;
-  margin-bottom: 4rem;
-}
-
-.model-section-header {
-  margin-bottom: 1.5rem;
-}
-
-.model-section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  letter-spacing: -0.025em;
-}
-
-.model-canvas-container {
-  width: 100%;
-  height: 600px;
-  position: relative;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-/* Loading animations */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .model-canvas-container {
-    height: 400px;
-  }
-  
-  .model-section-title {
-    font-size: 1.5rem;
   }
 }

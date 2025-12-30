@@ -6,7 +6,7 @@ import Navbar from './components/common/Navbar.jsx';
 import Contact from './sections/Contact.jsx';
 import ProjectPage from './pages/templates/ProjectPage.jsx';
 // In your App.jsx or router configuration, add:
-import TestModelSimple from './components/TestModelSimple.jsx';
+import TestModelSimple from '@/testing/TestModelSimple.jsx';
 
 const Home = lazy(() => import('./pages/Home.jsx'));
 // const Earth = lazy(() => import('./pages/projects/Earth.jsx'));

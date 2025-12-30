@@ -15,7 +15,6 @@ const ProjectPage = () => {
   const projectData = getProjectById(project_id);
   const modelConfig = getModelConfig(project_id);
 
-  // Start map animation after component mounts
   useEffect(() => {
     console.log('🎬 ProjectPage mounted for:', project_id);
     const timer = setTimeout(() => {
@@ -33,7 +32,6 @@ const ProjectPage = () => {
     );
   }
 
-  // Get project assets
   const projectAssets = PROJECT_ASSETS[project_id];
   
   if (!projectAssets) {
@@ -45,7 +43,6 @@ const ProjectPage = () => {
     );
   }
 
-  // Prepare map description
   const mapDescription = {
     title: 'Data Metrics',
     metrics: [
@@ -89,42 +86,38 @@ const ProjectPage = () => {
       animationType: projectData.sections.hero.animationType,
     },
 
-    // MODEL SECTION - using ModelSection component
+    // MODEL SECTION
     projectData.sections.model?.enabled && {
       type: 'model',
-      title: projectData.sections.model.title || '3D Model Visualization',
+      title: modelConfig?.title || '3D Model Visualization',
       component: (
         <ModelSection
-          // ✅ CORRECTED: Match ModelSection prop names exactly
+          // Model identification
           componentName={modelConfig?.componentName}
-          modelUrl={modelConfig?.modelPath}  // Not modelUrl
-          modelType={modelConfig?.modelType || 'glb'}
+          modelUrl={modelConfig?.modelPath}
+          modelType={modelConfig?.modelType || 'gltf'}
           
-          // ✅ CORRECTED: Use correct property names from projectsData.js
-          modelScale={modelConfig?.scale || 1}           // Was modelConfig.modelScale
-          modelPosition={modelConfig?.position || [0, 0, 0]}  // Was modelConfig.modelPosition
-          modelRotation={modelConfig?.rotation || [0, 0, 0]}  // Was modelConfig.modelRotation
+          // Transform settings from projectsData.js
+          modelScale={modelConfig?.scale || 1}
+          modelPosition={modelConfig?.position || [0, 0, 0]}
+          modelRotation={modelConfig?.rotation || [0, 0, 0]}
           
-          // Camera settings
+          // Camera settings from projectsData.js
           cameraPosition={modelConfig?.cameraPosition || [0, 2, 6]}
           cameraFov={modelConfig?.cameraFov || 50}
           
-          // Environment settings
+          // Environment settings from projectsData.js
           environment={modelConfig?.environment || 'city'}
           backgroundColor={modelConfig?.backgroundColor || '#000000'}
           
-          // Debug & Controls
+          // Controls & Debug
           showControls={true}
           debug={modelConfig?.debug || false}
-          
-          // ✅ ADDED: enableShadows prop
           enableShadows={modelConfig?.enableShadows ?? true}
           
-          // Note: These are not used by ModelSection but passed for reference
-          title={modelConfig?.title || '3D Model'}
+          // Additional settings
           materialOverrides={modelConfig?.materialOverrides || {}}
           animations={modelConfig?.animations || {}}
-          enableMaterials={modelConfig?.enableMaterials ?? true}
         />
       ),
     },
@@ -165,15 +158,15 @@ const ProjectPage = () => {
         ),
       };
     }),
-  ].filter(Boolean); // Remove null entries
+  ].filter(Boolean);
 
   // Debug logging
   console.log('📊 ProjectPage Data Flow:', {
     project_id,
+    hasModelConfig: !!modelConfig,
     modelConfig: modelConfig ? {
-      // From projectsData.js
-      hasComponentName: !!modelConfig.componentName,
-      hasModelPath: !!modelConfig.modelPath,
+      componentName: modelConfig.componentName,
+      modelPath: modelConfig.modelPath,
       scale: modelConfig.scale,
       position: modelConfig.position,
       rotation: modelConfig.rotation,
@@ -181,6 +174,7 @@ const ProjectPage = () => {
       cameraFov: modelConfig.cameraFov,
       environment: modelConfig.environment,
       backgroundColor: modelConfig.backgroundColor,
+      enableShadows: modelConfig.enableShadows,
     } : 'No model config',
   });
 
