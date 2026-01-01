@@ -2,7 +2,7 @@
 import { PROJECT_ASSETS } from '../assets/index.js';
 
 // ===================================
-// PROJECT MH1 - Uses Custom JSX Component
+// PROJECT MH1 - Complete Configuration
 // ===================================
 export const PROJECT_MH1 = {
   id: 'mh1',
@@ -19,33 +19,81 @@ export const PROJECT_MH1 = {
       title: 'Project MH1',
       subtitle: 'Redefining Agriculture Through Genetic Innovation',
       animationType: 'unlock',
+      snapToTop: true, // Enable smooth snap
+    },
+    model: {
+      enabled: true,
+      title: '3D Model Visualization',
+      componentName: 'Mh1Model',
+      scale: 0.06,
+      position: [0, 0, 0],
+      rotation: [0, Math.PI / 4, 0],
+      cameraPosition: [0, 1, 5],
+      cameraFov: 50,  
+      environment: 'city',
+      backgroundColor: '#1a1a1a',
+      debug: true,
+      enableShadows: true,
+      snapToTop: true,
+      fitInViewport: false, // CHANGED: Model section now scrolls
     },
     map: {
       enabled: true,
       title: 'Project Location',
       animateOnEntry: true,
+      snapToTop: true, // Enable smooth snap
+      fitInViewport: true, // Section fits in one viewport
     },
-    model: {
+    spin: {
       enabled: true,
-      title: '3D Model Visualization',
+      title: 'Design Evolution',
       
-      // OPTION 1: Custom JSX Component (your Mh1.jsx)
+      // Model configuration
       componentName: 'Mh1Model',
-      
-      // Display settings
-      scale: 0.06,
+      scale: 0.04,
       position: [0, 0, 0],
-      rotation: [0, Math.PI / 4, 0],
+      rotation: [0, 0, 0],
       
-      // Camera & Environment
-      cameraPosition: [0, 1, 5],
+      // Camera settings
+      cameraPosition: [0, 0, 8],
       cameraFov: 50,
-      environment: 'city',
-      backgroundColor: '#1a1a1a',
       
-      // Debug
-      debug: true,
+      // Environment
+      environment: 'city',
+      backgroundColor: '#0a1929',
       enableShadows: true,
+      
+      // Scroll & Rotation settings
+      rotationsPerScroll: 2,
+      scrollMultiplier: 2.5, // 250vh tall
+      
+      // IMPORTANT: Spin section doesn't snap
+      snapToTop: false,
+      fitInViewport: false, // Overflows beyond one viewport
+      
+      // Checkpoints
+      checkpoints: [
+        {
+          title: 'Conceptual Phase',
+          description: 'Initial design concepts focused on sustainable agricultural infrastructure with cutting-edge genetic research facilities.'
+        },
+        {
+          title: 'Structural Analysis',
+          description: 'Advanced structural engineering ensuring maximum efficiency and environmental integration with local ecosystems.'
+        },
+        {
+          title: 'Material Selection',
+          description: 'Eco-friendly materials chosen for durability, sustainability, and minimal environmental impact throughout the lifecycle.'
+        },
+        {
+          title: 'Integration Design',
+          description: 'Seamless integration of laboratory spaces with agricultural zones, optimizing workflow and research capabilities.'
+        },
+        {
+          title: 'Final Implementation',
+          description: 'Complete realization of the vision with state-of-the-art facilities ready for groundbreaking genetic research.'
+        }
+      ]
     },
     carousels: [
       {
@@ -54,6 +102,8 @@ export const PROJECT_MH1 = {
         title: 'Concept Phase',
         images: PROJECT_ASSETS.mh1.carousel1,
         items: PROJECT_ASSETS.mh1.carousel1.length,
+        snapToTop: true, // Enable smooth snap
+        fitInViewport: true,
       },
       {
         id: 'carousel2',
@@ -61,6 +111,8 @@ export const PROJECT_MH1 = {
         title: 'Detail Phase',
         images: PROJECT_ASSETS.mh1.carousel2,
         items: PROJECT_ASSETS.mh1.carousel2.length,
+        snapToTop: true, // Enable smooth snap
+        fitInViewport: true,
       },
     ],
   },
@@ -76,7 +128,7 @@ export const PROJECT_MH1 = {
 };
 
 // ===================================
-// PROJECT MH2 - Uses Generic GLTF File
+// PROJECT MH2
 // ===================================
 export const PROJECT_MH2 = {
   id: 'mh2',
@@ -93,34 +145,34 @@ export const PROJECT_MH2 = {
       title: 'Project MH2',
       subtitle: 'Adaptive Spatial Infrastructure',
       animationType: 'fade',
+      snapToTop: true,
     },
     map: {
       enabled: true,
       title: 'Spatial Analysis',
       animateOnEntry: true,
+      snapToTop: true,
+      fitInViewport: true,
     },
     model: {
       enabled: true,
       title: '3D Model Visualization',
-      
-      // OPTION 2: Generic GLTF/GLB file path
-      // Path relative to /public
       modelPath: 'assets/projects/mh2/models/building.glb',
-      modelType: 'gltf', // 'gltf', 'glb', or 'fbx'
-      
-      // Display settings
+      modelType: 'gltf',
       scale: 0.5,
       position: [0, -1, 0],
       rotation: [0, Math.PI / 3, 0],
-      
-      // Camera & Environment
       cameraPosition: [0, 2, 8],
       cameraFov: 45,
       environment: 'studio',
       backgroundColor: '#0a0a0a',
-      
       debug: false,
       enableShadows: true,
+      snapToTop: true,
+      fitInViewport: true,
+    },
+    spin: {
+      enabled: false,
     },
     carousels: [
       {
@@ -129,6 +181,8 @@ export const PROJECT_MH2 = {
         title: 'Concept Phase',
         images: PROJECT_ASSETS.mh2.carousel1,
         items: PROJECT_ASSETS.mh2.carousel1.length,
+        snapToTop: true,
+        fitInViewport: true,
       },
     ],
   },
@@ -159,10 +213,15 @@ export const getModelConfig = (projectId) => {
   const project = getProjectById(projectId);
   return project?.sections?.model || null;
 };
+export const getSpinConfig = (projectId) => {
+  const project = getProjectById(projectId);
+  return project?.sections?.spin || null;
+};
 
 export default {
   projects: ALL_PROJECTS,
   getProjectById,
   getProjectIds,
   getModelConfig,
+  getSpinConfig,
 };

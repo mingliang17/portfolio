@@ -1,5 +1,5 @@
-// src/sections/MapSection.jsx
-// OPTIMIZED: Delta-based timing, will-change optimization, smoother animations
+// src/sections/projects/MapSection.jsx
+// FIXED: Animation only triggers after section transition completes
 
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -25,13 +25,12 @@ export const MapSection = ({
   startAnimation = false
 }) => {
   const [hoveredLogo, setHoveredLogo] = useState(null);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
   
   const hasAnimatedRef = useRef(false);
   const masterTimelineRef = useRef(null);
-  const animationStartTimeRef = useRef(null);
+  const sectionRef = useRef(null);
 
-  // Refs for ALL elements
-  const mapContainerRef = useRef(null);
   const mapImageRefs = useRef({
     A: null,
     B: null,
@@ -41,13 +40,11 @@ export const MapSection = ({
   });
   
   const logoRefs = useRef({});
-  
   const sidebarRef = useRef(null);
   const titleRef = useRef(null);
   const metricRefs = useRef([]);
   const disclaimerRef = useRef(null);
 
-  // Convert logos to array
   const logosArray = React.useMemo(() => {
     if (!logos || typeof logos !== 'object') return [];
     return Object.entries(logos)
@@ -56,7 +53,6 @@ export const MapSection = ({
 
   const metricsArray = description.metrics || [];
 
-  // Image paths
   const paths = {
     A: mapImages.A || '',
     B: mapImages.B || '',
@@ -65,13 +61,45 @@ export const MapSection = ({
     E: mapImages.E || ''
   };
 
-  // Main animation - OPTIMIZED with will-change and better timing
+  // Wait for section to be in view and centered before animating
   useEffect(() => {
-    if (!visible || !startAnimation || hasAnimatedRef.current) return;
+    if (!visible || !sectionRef.current) return;
 
-    console.log('🎬 MapSection: Starting optimized animation');
+    const checkIfCentered = () => {
+      const rect = sectionRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      // Check if section is centered (within 20% of viewport center)
+      const sectionCenter = rect.top + rect.height / 2;
+      const viewportCenter = viewportHeight / 2;
+      const distance = Math.abs(sectionCenter - viewportCenter);
+      const threshold = viewportHeight * 0.2;
+
+      if (distance < threshold && !shouldAnimate) {
+        console.log('🎬 MapSection: Section centered, starting animation');
+        setShouldAnimate(true);
+      }
+    };
+
+    const handleScroll = () => {
+      if (!shouldAnimate) {
+        checkIfCentered();
+      }
+    };
+
+    // Check immediately and on scroll
+    checkIfCentered();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visible, shouldAnimate]);
+
+  // Main animation - only runs when shouldAnimate is true
+  useEffect(() => {
+    if (!visible || !shouldAnimate || hasAnimatedRef.current) return;
+
+    console.log('🎬 MapSection: Starting animation sequence');
     hasAnimatedRef.current = true;
-    animationStartTimeRef.current = performance.now();
 
     // Wait for DOM to be ready
     requestAnimationFrame(() => {
@@ -82,30 +110,15 @@ export const MapSection = ({
       const metricEls = metricRefs.current.filter(Boolean);
       const disclaimer = disclaimerRef.current;
 
-      console.log('📊 Elements check:', {
-        mapA: !!mapImgs.A,
-        mapB: !!mapImgs.B,
-        mapC: !!mapImgs.C,
-        mapD: !!mapImgs.D,
-        mapE: !!mapImgs.E,
-        logos: logoEls.length,
-        sidebar: !!sidebar,
-        title: !!title,
-        metrics: metricEls.length,
-        disclaimer: !!disclaimer
-      });
-
       if (!mapImgs.A || !sidebar) {
         console.error('❌ Missing essential elements');
         return;
       }
 
-      // Kill existing timeline
       if (masterTimelineRef.current) {
         masterTimelineRef.current.kill();
       }
 
-      // Set will-change for performance optimization
       const allElements = [
         mapImgs.A, mapImgs.B, mapImgs.C, mapImgs.D, mapImgs.E,
         ...logoEls,
@@ -113,38 +126,25 @@ export const MapSection = ({
       ].filter(Boolean);
 
       allElements.forEach(el => {
-        if (el) {
-          el.style.willChange = 'transform, opacity';
-        }
+        if (el) el.style.willChange = 'transform, opacity';
       });
 
-      // Create optimized timeline with better easing
       const master = gsap.timeline({
         defaults: { 
           ease: 'power2.out',
-          force3D: true // Force GPU acceleration
+          force3D: true
         },
         onComplete: () => {
           console.log('✅ MapSection: Animation complete');
-          const duration = performance.now() - animationStartTimeRef.current;
-          console.log(`⏱️ Total animation time: ${(duration / 1000).toFixed(2)}s`);
-          
-          // Remove will-change after animation completes
           allElements.forEach(el => {
-            if (el) {
-              el.style.willChange = 'auto';
-            }
+            if (el) el.style.willChange = 'auto';
           });
         }
       });
 
       masterTimelineRef.current = master;
 
-      // ========================================
-      // INITIAL STATE: HIDE EVERYTHING
-      // ========================================
-      console.log('🔧 Setting initial states');
-
+      // Set initial states
       gsap.set([mapImgs.A, mapImgs.B, mapImgs.C, mapImgs.D, mapImgs.E], {
         autoAlpha: 0,
         force3D: true
@@ -193,40 +193,30 @@ export const MapSection = ({
         });
       }
 
-      // ========================================
-      // COLUMN 1: MYMAP ANIMATION - OPTIMIZED
-      // ========================================
-      console.log('📊 COLUMN 1: MyMap animation');
-
-      // Phase 1: Fade in Map A (faster)
+      // Animation sequence
       master.to(mapImgs.A, {
         autoAlpha: 1,
         duration: 0.6,
         ease: 'power2.out',
-        onStart: () => console.log('  🗺️ Map A fade in')
-      }, '+=0.2'); // Reduced delay
+      }, '+=0.2');
 
-      // Phase 2: Fade in Maps B & C (faster)
       master.to([mapImgs.B, mapImgs.C], {
         autoAlpha: 1,
         duration: 0.6,
         ease: 'power2.out',
-        onStart: () => console.log('  🗺️ Maps B & C fade in')
-      }, '+=0.15'); // Reduced delay
+      }, '+=0.15');
 
-      // Phase 3: Movement and zoom (smoother, faster)
       master.to(mapImgs.A, {
         y: -100,
-        duration: 1.0, // Reduced from 1.5s
-        ease: 'power3.inOut', // Smoother easing
-        onStart: () => console.log('  🗺️ Map movement')
+        duration: 1.0,
+        ease: 'power3.inOut',
       }, '+=0.2');
 
       master.to(mapImgs.B, {
         y: -100,
         duration: 1.0,
         ease: 'power3.inOut'
-      }, '<'); // Start at same time
+      }, '<');
 
       master.to([mapImgs.C, mapImgs.D, mapImgs.E], {
         x: -350,
@@ -236,89 +226,63 @@ export const MapSection = ({
         ease: 'power3.inOut'
       }, '<');
 
-      // Phase 4: Fade in Map D (faster)
       master.to(mapImgs.D, {
         autoAlpha: 1,
         duration: 0.4,
         ease: 'power2.out',
-        onStart: () => console.log('  🗺️ Map D fade in')
-      }, '-=0.7'); // Better overlap
+      }, '-=0.7');
 
-      // Phase 5: Fade in Map E (faster)
       master.to(mapImgs.E, {
         autoAlpha: 1,
         duration: 0.4,
         ease: 'power2.out',
-        onStart: () => console.log('  🗺️ Map E fade in')
-      }, '-=0.35'); // Better overlap
-
-      // ========================================
-      // COLUMN 2: LOGOS ANIMATION - OPTIMIZED
-      // ========================================
-      console.log('📊 COLUMN 2: Logos animation');
+      }, '-=0.35');
 
       if (logoEls.length > 0) {
-        // Faster, smoother logo animations
         logoEls.forEach((logo, index) => {
           master.to(logo, {
             autoAlpha: 1,
             y: 0,
             scale: 1,
-            duration: 0.5, // Faster
-            ease: 'back.out(1.5)', // Bouncier
-            onStart: () => console.log(`  🎨 Logo ${index + 1} animating`)
-          }, index === 0 ? '+=0.2' : '+=0.2'); // Consistent spacing
+            duration: 0.5,
+            ease: 'back.out(1.5)',
+          }, index === 0 ? '+=0.2' : '+=0.2');
         });
       }
 
-      // ========================================
-      // COLUMN 3: SIDEBAR ANIMATION - OPTIMIZED
-      // ========================================
-      console.log('📊 COLUMN 3: Sidebar animation');
-
-      // Sidebar container (faster)
       master.to(sidebar, {
         autoAlpha: 1,
         x: 0,
-        duration: 0.7, // Faster
+        duration: 0.7,
         ease: 'power3.out',
-        onStart: () => console.log('  📄 Sidebar fade in')
       }, '+=0.3');
 
-      // Title (faster)
       if (title) {
         master.to(title, {
           autoAlpha: 1,
           y: 0,
           duration: 0.5,
           ease: 'power2.out',
-          onStart: () => console.log('  📄 Title fade in')
         }, '-=0.5');
       }
 
-      // Metrics (faster, better stagger)
       metricEls.forEach((metric, index) => {
         master.to(metric, {
           autoAlpha: 1,
           y: 0,
-          duration: 0.4, // Faster
+          duration: 0.4,
           ease: 'power2.out',
-          onStart: () => console.log(`  📄 Metric ${index + 1} fade in`)
-        }, index === 0 ? '+=0.15' : '+=0.12'); // Tighter spacing
+        }, index === 0 ? '+=0.15' : '+=0.12');
       });
 
-      // Disclaimer (faster)
       if (disclaimer) {
         master.to(disclaimer, {
           autoAlpha: 1,
           y: 0,
           duration: 0.5,
           ease: 'power2.out',
-          onStart: () => console.log('  📄 Disclaimer fade in')
         }, '+=0.2');
       }
-
-      console.log('🚀 Master timeline started');
     });
 
     return () => {
@@ -326,7 +290,6 @@ export const MapSection = ({
         masterTimelineRef.current.kill();
       }
       
-      // Clean up will-change
       const allRefs = [
         mapImageRefs.current.A,
         mapImageRefs.current.B,
@@ -341,24 +304,21 @@ export const MapSection = ({
       ].filter(Boolean);
       
       allRefs.forEach(el => {
-        if (el) {
-          el.style.willChange = 'auto';
-        }
+        if (el) el.style.willChange = 'auto';
       });
     };
-  }, [visible, startAnimation, logosArray, metricsArray.length, paths]);
+  }, [visible, shouldAnimate, logosArray, metricsArray.length, paths]);
 
   if (!visible) return null;
 
   return (
-    <section className="map-section-wrapper">
+    <section ref={sectionRef} className="map-section-wrapper">
       <div className="map-flex-container">
         
         {/* COLUMN 1: MAP ANIMATION */}
-        <div className="map-animation-container" ref={mapContainerRef}>
+        <div className="map-animation-container">
           <div className="my-map-main">
             
-            {/* Map Images */}
             <div ref={el => mapImageRefs.current.A = el} className="my-map-image">
               {paths.A && (
                 <img 

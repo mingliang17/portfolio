@@ -16,8 +16,8 @@
  */
 
 // ===================================
-export { useHeroAnimation } from './useHeroAnimation.jsx';
-export { useProjectNavigation } from './useProjectNavigation.js';
+// export { useHeroAnimation } from './useHeroAnimation.jsx';
+// export { useProjectNavigation } from './useProjectNavigation.js';
 export { useNavbarHeight } from './useNavbarHeight.js';
 
 // Default export for convenience

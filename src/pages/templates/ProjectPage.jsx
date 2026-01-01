@@ -1,28 +1,19 @@
-// src/pages/templates/ProjectPage.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import ProjectTemplate from './ProjectTemplate.jsx';
-import { getProjectById, getModelConfig } from '../../constants/projectsData.js';
+import { getProjectById, getModelConfig, getSpinConfig } from '../../constants/projectsData.js';
 import { PROJECT_ASSETS, getProjectLogos } from '../../assets/index.js';
 import { MapSection } from '../../sections/projects/MapSection.jsx';
 import ModelSection from '../../sections/projects/ModelSection.jsx';
+import SpinSection from '../../sections/projects/SpinSection.jsx';
 import Carousel from '../../sections/projects/Carousel.jsx';
 
 const ProjectPage = () => {
   const { project_id } = useParams();
-  const [startMapAnimation, setStartMapAnimation] = useState(false);
   
   const projectData = getProjectById(project_id);
   const modelConfig = getModelConfig(project_id);
-
-  useEffect(() => {
-    console.log('🎬 ProjectPage mounted for:', project_id);
-    const timer = setTimeout(() => {
-      setStartMapAnimation(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [project_id]);
+  const spinConfig = getSpinConfig(project_id);
 
   if (!projectData) {
     return (
@@ -46,36 +37,16 @@ const ProjectPage = () => {
   const mapDescription = {
     title: 'Data Metrics',
     metrics: [
-      { 
-        label: 'Collaborators', 
-        value: projectData.metadata?.collaborators || 'N/A' 
-      },
-      { 
-        label: 'Type', 
-        value: projectData.metadata?.type || 'N/A' 
-      },
-      { 
-        label: 'Description', 
-        value: projectData.metadata?.description || 'N/A' 
-      },
-      { 
-        label: 'Duration', 
-        value: projectData.metadata?.duration || 'N/A' 
-      },
-      { 
-        label: 'Status', 
-        value: projectData.metadata?.status || 'N/A' 
-      },
+      { label: 'Collaborators', value: projectData.metadata?.collaborators || 'N/A' },
+      { label: 'Type', value: projectData.metadata?.type || 'N/A' },
+      { label: 'Description', value: projectData.metadata?.description || 'N/A' },
+      { label: 'Duration', value: projectData.metadata?.duration || 'N/A' },
+      { label: 'Status', value: projectData.metadata?.status || 'N/A' },
     ],
     disclaimer: projectData.metadata?.disclaimer || '',
-    additionalInfo: projectData.metadata?.budget || projectData.metadata?.technologies ? {
-      budget: projectData.metadata?.budget,
-      technologies: projectData.metadata?.technologies,
-      locations: projectData.metadata?.locations,
-    } : null,
   };
 
-  // Build sections array
+  // Build sections array with snap configuration
   const sections = [
     // HERO SECTION
     projectData.sections.hero?.enabled && {
@@ -83,41 +54,29 @@ const ProjectPage = () => {
       title: projectData.sections.hero.title,
       subtitle: projectData.sections.hero.subtitle,
       backgroundImage: projectAssets.hero,
-      animationType: projectData.sections.hero.animationType,
+      snapToTop: projectData.sections.hero.snapToTop !== false,
+      fitInViewport: true,
     },
 
     // MODEL SECTION
     projectData.sections.model?.enabled && {
       type: 'model',
-      title: modelConfig?.title || '3D Model Visualization',
+      snapToTop: modelConfig?.snapToTop !== false,
+      fitInViewport: modelConfig?.fitInViewport !== false,
       component: (
         <ModelSection
-          // Model identification
           componentName={modelConfig?.componentName}
           modelUrl={modelConfig?.modelPath}
           modelType={modelConfig?.modelType || 'gltf'}
-          
-          // Transform settings from projectsData.js
           modelScale={modelConfig?.scale || 1}
           modelPosition={modelConfig?.position || [0, 0, 0]}
           modelRotation={modelConfig?.rotation || [0, 0, 0]}
-          
-          // Camera settings from projectsData.js
           cameraPosition={modelConfig?.cameraPosition || [0, 2, 6]}
           cameraFov={modelConfig?.cameraFov || 50}
-          
-          // Environment settings from projectsData.js
           environment={modelConfig?.environment || 'city'}
           backgroundColor={modelConfig?.backgroundColor || '#000000'}
-          
-          // Controls & Debug
           showControls={true}
-          debug={modelConfig?.debug || false}
           enableShadows={modelConfig?.enableShadows ?? true}
-          
-          // Additional settings
-          materialOverrides={modelConfig?.materialOverrides || {}}
-          animations={modelConfig?.animations || {}}
         />
       ),
     },
@@ -125,14 +84,40 @@ const ProjectPage = () => {
     // MAP SECTION
     projectData.sections.map?.enabled && {
       type: 'map',
-      title: projectData.sections.map.title || 'Project Map',
+      snapToTop: projectData.sections.map.snapToTop !== false,
+      fitInViewport: projectData.sections.map.fitInViewport !== false,
       component: (
         <MapSection
           mapImages={projectAssets.map || {}}
           logos={getProjectLogos(project_id)}
           description={mapDescription}
           visible={true}
-          startAnimation={startMapAnimation}
+          startAnimation={true}
+        />
+      ),
+    },
+
+    // SPIN SECTION
+    spinConfig?.enabled && {
+      type: 'spin',
+      snapToTop: spinConfig.snapToTop !== false,
+      fitInViewport: spinConfig.fitInViewport !== false,
+      component: (
+        <SpinSection
+          componentName={spinConfig.componentName}
+          modelUrl={spinConfig.modelPath}
+          modelType={spinConfig.modelType || 'gltf'}
+          scale={spinConfig.scale || 1}
+          position={spinConfig.position || [0, 0, 0]}
+          rotation={spinConfig.rotation || [0, 0, 0]}
+          cameraPosition={spinConfig.cameraPosition || [0, 0, 8]}
+          cameraFov={spinConfig.cameraFov || 50}
+          environment={spinConfig.environment || 'city'}
+          backgroundColor={spinConfig.backgroundColor || '#000000'}
+          enableShadows={spinConfig.enableShadows ?? true}
+          checkpoints={spinConfig.checkpoints || []}
+          rotationsPerScroll={spinConfig.rotationsPerScroll || 2}
+          scrollMultiplier={spinConfig.scrollMultiplier || 2}
         />
       ),
     },
@@ -140,16 +125,14 @@ const ProjectPage = () => {
     // CAROUSEL SECTIONS
     ...(projectData.sections.carousels || []).map((carouselSection, index) => {
       if (!carouselSection.enabled) return null;
-
-      const images = carouselSection.images || [];
-
       return {
         type: 'carousel',
-        title: carouselSection.title || `Gallery ${index + 1}`,
+        snapToTop: carouselSection.snapToTop !== false,
+        fitInViewport: carouselSection.fitInViewport !== false,
         component: (
           <Carousel
             key={carouselSection.id || index}
-            carouselData={images}
+            carouselData={carouselSection.images || []}
             title={carouselSection.title || `Gallery ${index + 1}`}
             autoPlay={false}
             showControls={true}
@@ -158,35 +141,19 @@ const ProjectPage = () => {
         ),
       };
     }),
+
+
+
+    
   ].filter(Boolean);
 
-  // Debug logging
-  console.log('📊 ProjectPage Data Flow:', {
-    project_id,
-    hasModelConfig: !!modelConfig,
-    modelConfig: modelConfig ? {
-      componentName: modelConfig.componentName,
-      modelPath: modelConfig.modelPath,
-      scale: modelConfig.scale,
-      position: modelConfig.position,
-      rotation: modelConfig.rotation,
-      cameraPosition: modelConfig.cameraPosition,
-      cameraFov: modelConfig.cameraFov,
-      environment: modelConfig.environment,
-      backgroundColor: modelConfig.backgroundColor,
-      enableShadows: modelConfig.enableShadows,
-    } : 'No model config',
-  });
+
+  
 
   return (
     <ProjectTemplate
       projectData={projectData}
       sections={sections}
-      totalSections={sections.length}
-      enableNavbar={true}
-      onSectionChange={(sectionIndex) =>
-        console.log(`📍 ${project_id}: Navigated to section ${sectionIndex}`)
-      }
     />
   );
 };

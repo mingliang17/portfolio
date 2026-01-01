@@ -5,6 +5,9 @@
    RESET & BASE
    =================================== */
 
+/* src/styles/core.css */
+/* UPDATED: Enable smooth scrolling globally */
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -15,6 +18,9 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* IMPORTANT: Allow full scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body {
@@ -22,8 +28,10 @@ body {
   line-height: 1.5;
   font-family: var(--font-primary);
   color: var(--color-white-800);
-  background: var(--bg-primary); /* Using blue theme variable */
+  background: var(--bg-primary);
+  /* IMPORTANT: Allow full scrolling */
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Hide scrollbar */

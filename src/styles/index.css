@@ -25,6 +25,7 @@
 @import './projects/carousel.css';
 @import './projects/map.css';
 @import './projects/model.css';
+@import './projects/spin.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';
