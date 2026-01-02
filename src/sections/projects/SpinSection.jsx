@@ -1,93 +1,60 @@
-// src/sections/projects/SpinSection.jsx
-// UPDATED: Show drag indicator at end of section
-
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera, Environment } from '@react-three/drei';
+import * as THREE from 'three';
 import ModelLoader from '../../components/project/ModelLoaderComponent.jsx';
-import gsap from 'gsap';
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
-const assetPath = (path) => `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+const assetPath = (path) =>
+  `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 
-const RotatingModel = ({ 
-  componentName, 
-  modelUrl, 
-  modelType, 
-  scale, 
-  position, 
+const RotatingModel = ({
+  componentName,
+  modelUrl,
+  modelType,
+  scale,
+  position,
   rotation: initialRotation,
   scrollProgress,
   rotationsPerScroll = 2,
-  enableShadows 
+  enableShadows,
+  checkpointPositions
 }) => {
-  const modelRef = useRef();
+  const ref = useRef();
   const processedUrl = modelUrl ? assetPath(modelUrl) : null;
 
   useFrame(() => {
-    if (modelRef.current) {
-      const targetRotationY = (initialRotation?.[1] || 0) + (scrollProgress * Math.PI * 2 * rotationsPerScroll);
-      modelRef.current.rotation.y += (targetRotationY - modelRef.current.rotation.y) * 0.1;
+    if (!ref.current) return;
+
+    const targetY = (initialRotation?.[1] || 0) + scrollProgress * Math.PI * 2 * rotationsPerScroll;
+    ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, targetY, 0.1);
+
+    if (checkpointPositions.length > 0) {
+      const nearestIndex = checkpointPositions.reduce((closest, cp, i) => {
+        return Math.abs(cp - scrollProgress) < Math.abs(checkpointPositions[closest] - scrollProgress) ? i : closest;
+      }, 0);
+
+      const isEven = nearestIndex % 2 === 0;
+      const targetShiftX = isEven ? -0.7 : 0.7;
+      const targetShiftY = isEven ? 0.5 : -0.5;
+
+      ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, position[0] + targetShiftX, 0.05);
+      ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, position[1] + targetShiftY, 0.05);
     }
   });
 
   return (
-    <group ref={modelRef}>
+    <group ref={ref}>
       <ModelLoader
         componentName={componentName}
         url={processedUrl}
         type={modelType}
         scale={scale}
-        position={position}
+        position={[0, 0, 0]} 
         rotation={initialRotation}
         enableShadows={enableShadows}
       />
     </group>
-  );
-};
-
-const Checkpoint = ({ 
-  checkpoint, 
-  index, 
-  isActive, 
-  isVisible,
-  side 
-}) => {
-  const ref = useRef();
-
-  useEffect(() => {
-    if (ref.current) {
-      if (isVisible) {
-        gsap.to(ref.current, {
-          opacity: isActive ? 1 : 0.3,
-          x: 0,
-          duration: 0.8,
-          ease: 'power3.out'
-        });
-      } else {
-        gsap.to(ref.current, {
-          opacity: 0,
-          x: side === 'left' ? -100 : 100,
-          duration: 0.5,
-          ease: 'power2.in'
-        });
-      }
-    }
-  }, [isActive, isVisible, side]);
-
-  return (
-    <div
-      ref={ref}
-      className={`checkpoint-card checkpoint-${side}`}
-      style={{
-        opacity: 0,
-        transform: side === 'left' ? 'translateX(-100px)' : 'translateX(100px)'
-      }}
-    >
-      <div className="checkpoint-number">{index + 1}</div>
-      <h3 className="checkpoint-title">{checkpoint.title}</h3>
-      <p className="checkpoint-description">{checkpoint.description}</p>
-    </div>
   );
 };
 
@@ -101,81 +68,62 @@ const SpinSection = ({
   cameraPosition = [0, 0, 8],
   cameraFov = 50,
   environment = 'city',
-  backgroundColor = '#000000',
+  backgroundColor = '#000',
   enableShadows = true,
   checkpoints = [],
-  rotationsPerScroll = 2,
-  scrollMultiplier = 4
+  rotationsPerScroll = 2
 }) => {
   const containerRef = useRef();
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeCheckpoint, setActiveCheckpoint] = useState(0);
-  const [isNearEnd, setIsNearEnd] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [isAtEnd, setIsAtEnd] = useState(false);
+
+  const sectionHeightVh = (checkpoints.length * 100) - 100;
 
   const checkpointPositions = useMemo(() => {
     if (!checkpoints.length) return [];
-    return checkpoints.map((_, index) => index / (checkpoints.length - 1 || 1));
+    return checkpoints.map((_, i) => i / (checkpoints.length - 1 || 1));
   }, [checkpoints]);
 
   useEffect(() => {
-    const handleScroll = () => {
+    const onScroll = () => {
       if (!containerRef.current) return;
-
       const rect = containerRef.current.getBoundingClientRect();
-      const containerHeight = rect.height;
       const viewportHeight = window.innerHeight;
-      
-      const scrollStart = rect.top - viewportHeight;
-      const scrollEnd = rect.bottom;
-      const scrollRange = scrollEnd - scrollStart;
-      const currentScroll = -scrollStart;
-      
-      const progress = Math.max(0, Math.min(1, currentScroll / scrollRange));
+
+      const totalHeight = rect.height - viewportHeight;
+      const scrolled = Math.min(Math.max(-rect.top, 0), totalHeight);
+      const progress = totalHeight > 0 ? scrolled / totalHeight : 0;
       setScrollProgress(progress);
 
-      // Check if near end (last 10%)
-      setIsNearEnd(progress > 0.9);
+      // 1) REQ 1: Visible as soon as the top of section hits top of viewport
+      const isVisible = rect.top <= 10 && rect.bottom >= viewportHeight;
+      setIsActive(isVisible);
 
-      const checkpoint = checkpointPositions.findIndex((pos, idx) => {
-        const nextPos = checkpointPositions[idx + 1] || 1;
-        return progress >= pos && progress < nextPos;
-      });
-      
-      if (checkpoint !== -1 && checkpoint !== activeCheckpoint) {
-        setActiveCheckpoint(checkpoint);
-      }
+      // 2) REQ 2: Detect if we've reached the absolute bottom
+      // Using a small threshold (0.99) for better UX
+      setIsAtEnd(progress >= 0.99);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [checkpointPositions, activeCheckpoint]);
-
-  const containerHeight = `${scrollMultiplier * 100}vh`;
+  const handleNextSection = () => {
+    if (!containerRef.current) return;
+    const nextY = window.pageYOffset + containerRef.current.getBoundingClientRect().bottom;
+    window.scrollTo({ top: nextY, behavior: 'smooth' });
+  };
 
   return (
-    <div 
-      ref={containerRef}
-      className="spin-section-container"
-      style={{ height: containerHeight }}
-      data-near-end={isNearEnd}
-    >
-      {/* Sticky Canvas */}
-      <div className="spin-canvas-wrapper">
+    <section ref={containerRef} className="spin-section-container" style={{ height: `${sectionHeightVh}vh` }}>
+      
+      <div className={`spin-canvas-fixed-wrapper ${isActive ? 'active' : ''}`}>
         <Canvas shadows={enableShadows}>
-          <PerspectiveCamera
-            makeDefault
-            position={cameraPosition}
-            fov={cameraFov}
-          />
-
+          <PerspectiveCamera makeDefault position={cameraPosition} fov={cameraFov} />
           <ambientLight intensity={0.4} />
-          <directionalLight
-            position={[5, 10, 5]}
-            intensity={1}
-            castShadow={enableShadows}
-          />
+          <directionalLight position={[5, 10, 5]} intensity={1} castShadow={enableShadows} />
 
           <RotatingModel
             componentName={componentName}
@@ -187,69 +135,38 @@ const SpinSection = ({
             scrollProgress={scrollProgress}
             rotationsPerScroll={rotationsPerScroll}
             enableShadows={enableShadows}
+            checkpointPositions={checkpointPositions}
           />
 
           <Environment preset={environment} />
           <color attach="background" args={[backgroundColor]} />
         </Canvas>
-      </div>
 
-      {/* Checkpoints */}
-      <div className="spin-checkpoints-container">
-        {checkpoints.map((checkpoint, index) => {
-          const checkpointProgress = checkpointPositions[index];
-          const nextProgress = checkpointPositions[index + 1] || 1;
-          
-          const isVisible = scrollProgress >= (checkpointProgress - 0.15) && 
-                           scrollProgress <= (nextProgress + 0.15);
-          const isActive = activeCheckpoint === index;
-          const side = index % 2 === 0 ? 'left' : 'right';
-
-          return (
-            <div
-              key={index}
-              className="checkpoint-wrapper"
-              style={{
-                top: `${checkpointProgress * 100}%`,
-              }}
-            >
-              <Checkpoint
-                checkpoint={checkpoint}
-                index={index}
-                isActive={isActive}
-                isVisible={isVisible}
-                side={side}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Progress Indicator */}
-      <div className="spin-progress-indicator">
-        <div className="spin-progress-line">
-          <div 
-            className="spin-progress-fill"
-            style={{ height: `${scrollProgress * 100}%` }}
-          />
+        {/* REQ 2: LOCK BUTTON */}
+        <div className={`lock-overlay ${isAtEnd ? 'visible' : ''}`}>
+             <button className="continue-btn" onClick={handleNextSection}>
+                Continue to Next Section
+                <span className="btn-arrow">↓</span>
+             </button>
         </div>
-        {checkpointPositions.map((pos, idx) => (
-          <div
-            key={idx}
-            className={`spin-progress-dot ${activeCheckpoint === idx ? 'active' : ''}`}
-            style={{ top: `${pos * 100}%` }}
-          />
+      </div>
+
+      <div className="spin-checkpoints-container">
+        {checkpoints.map((checkpoint, index) => (
+          <div 
+            key={index} 
+            className="checkpoint-wrapper" 
+            style={{ top: `${checkpointPositions[index] * 100}%` }}
+          >
+            <div className={`checkpoint-card checkpoint-${index % 2 === 0 ? 'left' : 'right'}`}>
+              <div className="checkpoint-number">{index + 1}</div>
+              <h3 className="checkpoint-title">{checkpoint.title}</h3>
+              <p className="checkpoint-description">{checkpoint.description}</p>
+            </div>
+          </div>
         ))}
       </div>
-
-      {/* Scroll Hint */}
-      {scrollProgress < 0.05 && (
-        <div className="spin-scroll-hint">
-          <div className="spin-scroll-arrow" />
-          <p>Scroll to explore</p>
-        </div>
-      )}
-    </div>
+    </section>
   );
 };
 
