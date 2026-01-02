@@ -1,10 +1,9 @@
 // src/sections/projects/ModelSection.jsx
-// FIXED: Model stays centered, proper height calculation
+// FIXED: Model moves with scroll, dynamic height
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import {
-  OrbitControls,
   Environment,
   PerspectiveCamera,
 } from '@react-three/drei';
@@ -14,16 +13,31 @@ const BASE_URL = import.meta.env.BASE_URL || '/';
 const assetPath = (path) =>
   `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 
-const Controls = ({ enabled }) => {
-  if (!enabled) return null;
+// Scrolling Camera Component
+const ScrollingCamera = ({ 
+  basePosition = [0, 2, 6], 
+  scrollProgress = 0,
+  verticalRange = 4 // How much camera moves vertically
+}) => {
+  const cameraRef = useRef();
+
+  useFrame(({ camera }) => {
+    if (cameraRef.current) {
+      // Move camera down as we scroll
+      const targetY = basePosition[1] - (scrollProgress * verticalRange);
+      camera.position.y = targetY;
+      camera.position.x = basePosition[0];
+      camera.position.z = basePosition[2];
+      camera.lookAt(0, targetY, 0);
+    }
+  });
+
   return (
-    <OrbitControls
+    <PerspectiveCamera
+      ref={cameraRef}
       makeDefault
-      enableDamping
-      dampingFactor={0.06}
-      minDistance={1}
-      maxDistance={50}
-      maxPolarAngle={Math.PI / 1.8}
+      position={basePosition}
+      fov={50}
     />
   );
 };
@@ -47,8 +61,8 @@ const ModelSection = ({
   enableShadows = true,
 }) => {
   const [loaded, setLoaded] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const sectionRef = useRef(null);
-  const canvasWrapperRef = useRef(null);
   
   const processedUrl = modelUrl ? assetPath(modelUrl) : null;
 
@@ -56,32 +70,23 @@ const ModelSection = ({
     setLoaded(false);
   }, [processedUrl, componentName]);
 
-  // Keep canvas centered as section scrolls
+  // Calculate scroll progress through this section
   useEffect(() => {
     const handleScroll = () => {
-      if (!sectionRef.current || !canvasWrapperRef.current) return;
+      if (!sectionRef.current) return;
 
-      const sectionRect = sectionRef.current.getBoundingClientRect();
+      const rect = sectionRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
+      const sectionHeight = rect.height;
 
-      // Calculate how much of the section is visible
-      const visibleTop = Math.max(0, sectionRect.top);
-      const visibleBottom = Math.min(viewportHeight, sectionRect.bottom);
-      const visibleHeight = visibleBottom - visibleTop;
+      // Calculate how far through the section we've scrolled
+      const scrollStart = rect.top;
+      const scrollEnd = rect.bottom - viewportHeight;
+      const scrollRange = sectionHeight - viewportHeight;
 
-      // Only apply sticky positioning if section is visible
-      if (visibleHeight > 0 && sectionRect.top <= 0 && sectionRect.bottom >= viewportHeight) {
-        canvasWrapperRef.current.style.position = 'sticky';
-        canvasWrapperRef.current.style.top = '0';
-      } else if (sectionRect.bottom < viewportHeight && sectionRect.bottom > 0) {
-        // At bottom of section - keep canvas at bottom
-        canvasWrapperRef.current.style.position = 'absolute';
-        canvasWrapperRef.current.style.top = 'auto';
-        canvasWrapperRef.current.style.bottom = '0';
-      } else {
-        canvasWrapperRef.current.style.position = 'sticky';
-        canvasWrapperRef.current.style.top = '0';
-      }
+      // Progress from 0 (top of section at top of viewport) to 1 (bottom of section at bottom of viewport)
+      const progress = Math.max(0, Math.min(1, -scrollStart / scrollRange));
+      setScrollProgress(progress);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -92,16 +97,16 @@ const ModelSection = ({
 
   return (
     <div ref={sectionRef} className="model-section-wrapper">
-      <div ref={canvasWrapperRef} className="model-canvas-sticky">
+      {/* Sticky canvas container */}
+      <div className="model-canvas-sticky">
         <Canvas
           shadows={enableShadows}
-          className="w-full h-full"
           frameloop="always"
         >
-          <PerspectiveCamera
-            makeDefault
-            position={cameraPosition}
-            fov={cameraFov}
+          <ScrollingCamera 
+            basePosition={cameraPosition} 
+            scrollProgress={scrollProgress}
+            verticalRange={6}
           />
 
           <ambientLight intensity={0.4} />
@@ -124,9 +129,12 @@ const ModelSection = ({
 
           <Environment preset={environment} />
           <color attach="background" args={[backgroundColor]} />
-
-          <Controls enabled={showControls && loaded} />
         </Canvas>
+
+        {/* Scroll progress indicator */}
+        <div className="model-scroll-indicator">
+          <div className="model-scroll-progress" style={{ height: `${scrollProgress * 100}%` }} />
+        </div>
       </div>
 
       {!loaded && (

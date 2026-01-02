@@ -22,20 +22,20 @@ export const PROJECT_MH1 = {
       snapToTop: true, // Enable smooth snap
     },
     model: {
-      enabled: true,
+    enabled: true,
       title: '3D Model Visualization',
       componentName: 'Mh1Model',
       scale: 0.06,
       position: [0, 0, 0],
       rotation: [0, Math.PI / 4, 0],
-      cameraPosition: [0, 1, 5],
-      cameraFov: 50,  
+      cameraPosition: [0, 2, 6],
+      cameraFov: 50,
       environment: 'city',
       backgroundColor: '#1a1a1a',
       debug: true,
       enableShadows: true,
-      snapToTop: true,
-      fitInViewport: false, // CHANGED: Model section now scrolls
+      snapToTop: false,  // No snap for model section
+      fitInViewport: true, // Allow scrolling through model
     },
     map: {
       enabled: true,
