@@ -26,6 +26,7 @@
 @import './projects/map.css';
 @import './projects/model.css';
 @import './projects/spin.css';
+@import './projects/anime.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';

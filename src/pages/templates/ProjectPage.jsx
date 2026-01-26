@@ -7,6 +7,7 @@ import { MapSection } from '../../sections/projects/MapSection.jsx';
 import ModelSection from '../../sections/projects/ModelSection.jsx';
 import SpinSection from '../../sections/projects/SpinSection.jsx';
 import Carousel from '../../sections/projects/Carousel.jsx';
+import AnimeSection from '../../sections/projects/AnimeSection.jsx';
 
 const ProjectPage = () => {
   const { project_id } = useParams();
@@ -97,6 +98,14 @@ const ProjectPage = () => {
       ),
     },
 
+    // ANIME SECTION
+      projectData.sections.anime?.enabled && {
+      type: 'anime',
+      snapToTop: true,      // Enable snapping so we land perfectly at the start
+      fitInViewport: false, // We need it to be long
+      scrollMultiplier: 8,  // Add this! This tells ProjectTemplate to make the height 800vh
+      component: <AnimeSection />
+    },
     // SPIN SECTION
     spinConfig?.enabled && {
       type: 'spin',

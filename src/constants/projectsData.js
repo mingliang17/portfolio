@@ -44,6 +44,12 @@ export const PROJECT_MH1 = {
       snapToTop: true, // Enable smooth snap
       fitInViewport: true, // Section fits in one viewport
     },
+    anime: {
+      enabled: true,
+      title: 'Interactive Exploration',
+      snapToTop: false,
+      fitInViewport: false,
+    },
     spin: {
       enabled: true,
       title: 'Design Evolution',
