@@ -1,12 +1,5 @@
 /* src/styles/core.css */
-/* CLEANED & CONSOLIDATED */
-
-/* ===================================
-   RESET & BASE
-   =================================== */
-
-/* src/styles/core.css */
-/* UPDATED: Enable smooth scrolling globally */
+/* FIXED: Allow overflow for sticky positioning */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -18,8 +11,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* IMPORTANT: Allow full scrolling */
-  overflow-y: auto;
+  /* ✅ FIXED: Allow vertical overflow for sticky */
+  overflow-y: visible;
   overflow-x: hidden;
 }
 
@@ -29,12 +22,12 @@ body {
   font-family: var(--font-primary);
   color: var(--color-white-800);
   background: var(--bg-primary);
-  /* IMPORTANT: Allow full scrolling */
+  /* ✅ CRITICAL FIX: Change from 'auto' to 'visible' */
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible; /* Changed from 'auto' */
 }
 
-/* Hide scrollbar */
+/* Hide scrollbar but keep functionality */
 body::-webkit-scrollbar,
 *::-webkit-scrollbar {
   display: none;

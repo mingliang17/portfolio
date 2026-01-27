@@ -16,7 +16,7 @@ const RotatingModel = ({
   position,
   rotation: initialRotation,
   scrollProgress,
-  rotationsPerScroll = 2,
+  rotationsPerScroll = 1,
   enableShadows,
   checkpointPositions
 }) => {

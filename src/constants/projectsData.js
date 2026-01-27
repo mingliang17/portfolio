@@ -44,11 +44,38 @@ export const PROJECT_MH1 = {
       snapToTop: true, // Enable smooth snap
       fitInViewport: true, // Section fits in one viewport
     },
-    anime: {
+ anime: {
       enabled: true,
-      title: 'Interactive Exploration',
-      snapToTop: false,
-      fitInViewport: false,
+      title: 'Interactive Reconstruction',
+      modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+      snapToTop: false,  // Natural scroll like Spin
+      fitInViewport: false,  // Long section
+      checkpoints: [
+        {
+          title: 'Initial State',
+          description: 'Model fully assembled and ready for detailed analysis of all components'
+        },
+        {
+          title: 'Structural Scan',
+          description: 'Analyzing component architecture, relationships, and structural integrity'
+        },
+        {
+          title: 'Deconstruction',
+          description: 'Breaking down into individual mesh elements with precise separation'
+        },
+        {
+          title: 'Scattered State',
+          description: 'All components separated and visible for individual inspection'
+        },
+        {
+          title: 'Reassembly',
+          description: 'Reconstructing piece by piece with precision and attention to detail'
+        },
+        {
+          title: 'Complete',
+          description: 'Model fully reconstructed and operational, ready for final review'
+        }
+      ]
     },
     spin: {
       enabled: true,

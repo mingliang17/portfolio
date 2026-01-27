@@ -1,93 +1,153 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+// src/sections/projects/AnimeSection.jsx
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { PerspectiveCamera, Environment, useGLTF } from '@react-three/drei';
+import { Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { createTimeline } from 'animejs'; 
+// UPDATED: Anime.js v4 functional imports
+import { createTimeline, animate } from 'animejs'; 
 import { assetPath } from '@/utils/assetPath.js';
 
-const ModelEngine = ({ animationState, onLoaded }) => {
+// ===================================
+// RECONSTRUCTION MODEL
+// ===================================
+const ReconstructingModel = ({ 
+  modelPath, 
+  onMeshCountDetected 
+}) => {
   const groupRef = useRef();
-  const { scene } = useGLTF(assetPath('assets/projects/mh1/models/gltf/mh1_2.gltf'));
   const meshesRef = useRef([]);
+  const animationStateRef = useRef({
+    rotation: 0,
+    meshes: []
+  });
+
+  const { scene } = useGLTF(assetPath(modelPath));
 
   useEffect(() => {
-    if (!scene) return;
-    const meshes = [];
+    if (!scene || !groupRef.current) return;
+
+    groupRef.current.clear();
     const clonedScene = scene.clone(true);
+    const meshes = [];
+
     clonedScene.traverse((child) => {
       if (child.isMesh) {
         child.material = child.material.clone();
         child.material.transparent = true;
+        child.userData.originalPosition = child.position.clone();
         meshes.push(child);
       }
     });
+
     meshesRef.current = meshes;
     groupRef.current.add(clonedScene);
-    if (onLoaded) onLoaded(meshes.length);
-  }, [scene, onLoaded]);
+
+    animationStateRef.current.meshes = meshes.map(() => ({
+      scatterOffset: { x: 0, y: 0, z: 0 },
+      opacity: 1
+    }));
+
+    groupRef.current.userData.animationState = animationStateRef.current;
+    if (onMeshCountDetected) onMeshCountDetected(meshes.length);
+  }, [scene, onMeshCountDetected]);
 
   useFrame(() => {
-    if (!animationState.current || meshesRef.current.length === 0) return;
-    const state = animationState.current;
+    if (meshesRef.current.length === 0) return;
+    const state = animationStateRef.current;
     groupRef.current.rotation.y = state.rotation;
+
     meshesRef.current.forEach((mesh, i) => {
-      const pos = state.meshPositions[i];
-      const opacityObj = state.meshOpacity[i];
-      if (pos) mesh.position.set(pos.x, pos.y, pos.z);
-      if (opacityObj) mesh.material.opacity = opacityObj.value;
+      const mState = state.meshes[i];
+      if (!mState) return;
+      const orig = mesh.userData.originalPosition;
+      mesh.position.set(
+        orig.x + mState.scatterOffset.x,
+        orig.y + mState.scatterOffset.y,
+        orig.z + mState.scatterOffset.z
+      );
+      mesh.material.opacity = mState.opacity;
     });
   });
 
   return <group ref={groupRef} scale={0.06} position={[0, -1, 0]} />;
 };
 
-const AnimeSection = () => {
-  // We don't need a local trackRef anymore, we use the one provided by ProjectTemplate
-  const [meshCount, setMeshCount] = useState(0);
+// ===================================
+// MAIN ANIME SECTION
+// ===================================
+const AnimeSection = ({
+  modelPath = 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+  checkpoints = [
+    { title: 'System Offline', description: 'Initializing core systems...' },
+    { title: 'Structural Analysis', description: 'Scanning geometry architecture.' },
+    { title: 'Deconstruction', description: 'Separating mesh components.' },
+    { title: 'Data Cloud', description: 'Processing vertex data streams.' },
+    { title: 'Re-Materializing', description: 'Compiling structure patterns.' },
+    { title: 'System Restored', description: 'Reconstruction complete.' }
+  ],
+  debugMode = true 
+}) => {
+  const trackRef = useRef(); 
+  const canvasGroupRef = useRef();
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentPhase, setCurrentPhase] = useState(1);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [meshCount, setMeshCount] = useState(0);
   const timelineRef = useRef(null);
 
-  const animationState = useRef({
-    rotation: 0,
-    meshPositions: [], 
-    meshOpacity: []   
-  });
+  const checkpointPositions = useMemo(() => 
+    checkpoints.map((_, i) => i / (checkpoints.length - 1 || 1)), 
+    [checkpoints]
+  );
 
-  const phases = [
-    { id: 1, title: "Structural Scan", color: "#667eea" },
-    { id: 2, title: "Deconstruction", color: "#f59e0b" },
-    { id: 3, title: "Reassembly", color: "#10b981" },
-    { id: 4, title: "Complete", color: "#8b5cf6" }
-  ];
-
-  const handleModelLoaded = useCallback((count) => {
-    animationState.current.meshPositions = Array.from({ length: count }, () => ({ x: 0, y: 0, z: 0 }));
-    animationState.current.meshOpacity = Array.from({ length: count }, () => ({ value: 1 }));
-    setMeshCount(count);
-  }, []);
-
+  // UPDATED: Anime.js v4 Timeline creation
   useEffect(() => {
-    if (meshCount === 0) return;
-    const tl = createTimeline({ autoplay: false, duration: 10000 });
-    const state = animationState.current;
+    if (meshCount === 0 || !canvasGroupRef.current) return;
+    const animState = canvasGroupRef.current.children[0]?.userData?.animationState;
+    if (!animState) return;
 
-    // Timeline Definition
-    tl.add(state, { rotation: Math.PI * 2, duration: 2000 }, 0);
-    const step = 4000 / meshCount;
-    for (let i = 0; i < meshCount; i++) {
-      const start = 2000 + (i * step);
-      tl.add(state.meshPositions[i], {
-        x: (Math.random() - 0.5) * 40, y: (Math.random() - 0.5) * 40, z: (Math.random() - 0.5) * 40,
-        duration: 2000, ease: 'outExpo'
-      }, start);
-      tl.add(state.meshOpacity[i], { value: 0, duration: 1000 }, start + 500);
-    }
-    // Reassembly
-    tl.add(state, { rotation: Math.PI * 8, duration: 4000 }, 6000);
-    state.meshPositions.forEach((pos, i) => {
-        tl.add(pos, { x: 0, y: 0, z: 0, duration: 2000 }, 6500 + (i * (2000/meshCount)));
-        tl.add(animationState.current.meshOpacity[i], { value: 1, duration: 1000 }, 7000 + (i * (1000/meshCount)));
+    // Use v4 createTimeline
+    const tl = createTimeline({
+      autoplay: false,
+    });
+
+    const phaseDur = 1000;
+
+    // Phase: Rotation (Applied across the whole timeline)
+    tl.add(animState, {
+      rotation: Math.PI * 8,
+      duration: phaseDur * 6,
+      ease: 'linear'
+    }, 0);
+
+    // Phase: Deconstruction & Reassembly
+    animState.meshes.forEach((m, i) => {
+      const delay = (i / meshCount) * 1000;
+      
+      // Explode
+      tl.add(m.scatterOffset, {
+        x: (Math.random() - 0.5) * 60,
+        y: (Math.random() - 0.5) * 60,
+        z: (Math.random() - 0.5) * 60,
+        duration: phaseDur,
+        ease: 'outExpo'
+      }, phaseDur + delay);
+
+      tl.add(m, {
+        opacity: 0.3,
+        duration: phaseDur * 0.5,
+      }, phaseDur + delay);
+
+      // Reassemble
+      tl.add(m.scatterOffset, {
+        x: 0, y: 0, z: 0,
+        duration: phaseDur,
+        ease: 'outElastic(1, .8)'
+      }, phaseDur * 4 + delay);
+
+      tl.add(m, {
+        opacity: 1,
+        duration: phaseDur * 0.5,
+      }, phaseDur * 4 + delay);
     });
 
     timelineRef.current = tl;
@@ -95,58 +155,111 @@ const AnimeSection = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Find the parent section created by ProjectTemplate
-      const parentSection = document.querySelector('.overflow-section'); 
-      if (!parentSection || !timelineRef.current) return;
+      if (!trackRef.current || !timelineRef.current) return;
 
-      const rect = parentSection.getBoundingClientRect();
-      const windowH = window.innerHeight;
+      const rect = trackRef.current.getBoundingClientRect();
+      const trackHeight = rect.height;
+      const vh = window.innerHeight;
       
-      // Calculate how far we have scrolled into the 800vh parent
-      const totalScrollable = rect.height - windowH;
-      const progress = Math.min(Math.max(-rect.top / totalScrollable, 0), 1);
-      
-      timelineRef.current.seek(progress * timelineRef.current.duration);
+      const progress = Math.max(0, Math.min(1, -rect.top / (trackHeight - vh)));
+
       setScrollProgress(progress);
+      // v4 Seek uses milliseconds (progress * total duration)
+      timelineRef.current.seek(progress * timelineRef.current.duration);
+
+      const nearest = checkpointPositions.reduce((prev, curr, idx) => 
+        Math.abs(curr - progress) < Math.abs(checkpointPositions[prev] - progress) ? idx : prev, 0);
       
-      if (progress < 0.2) setCurrentPhase(1);
-      else if (progress < 0.6) setCurrentPhase(2);
-      else if (progress < 0.85) setCurrentPhase(3);
-      else setCurrentPhase(4);
+      if (nearest !== activeIdx) setActiveIdx(nearest);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [meshCount]);
+  }, [activeIdx, checkpointPositions]);
 
   return (
-    <div style={{ 
-      position: 'sticky', 
-      top: 0, 
-      height: '100vh', 
-      width: '100%', 
-      background: '#050a0f',
-      overflow: 'hidden' 
-    }}>
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <Canvas shadows>
-          <PerspectiveCamera makeDefault position={[0, 1, 18]} fov={30} />
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} />
-          <ModelEngine animationState={animationState} onLoaded={handleModelLoaded} />
-          <Environment preset="city" />
-        </Canvas>
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 10, padding: '10vh 10%', color: 'white', pointerEvents: 'none' }}>
-        <p style={{ color: phases[currentPhase-1].color, fontWeight: 'bold' }}>PHASE 0{currentPhase}</p>
-        <h2 style={{ fontSize: '4rem', margin: 0 }}>{phases[currentPhase-1].title}</h2>
-        <div style={{ width: '300px', height: '2px', background: 'rgba(255,255,255,0.1)', marginTop: '20px' }}>
-          <div style={{ height: '100%', width: `${scrollProgress * 100}%`, background: phases[currentPhase-1].color }} />
+    <section 
+      ref={trackRef}
+      style={{ 
+        position: 'relative',
+        width: '100%',
+        height: '600vh', 
+        backgroundColor: '#050505',
+        ...(debugMode && { border: '5px solid red' }) // TRACK
+      }}
+    >
+      <div 
+        style={{
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          zIndex: 10,
+          ...(debugMode && { border: '5px solid lime' }) // VIEWPORT
+        }}
+      >
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          <Canvas camera={{ position: [0, 5, 30], fov: 45 }}>
+            <color attach="background" args={['#0a0a0a']} />
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={1.5} />
+            <group ref={canvasGroupRef}>
+              <ReconstructingModel 
+                modelPath={modelPath}
+                onMeshCountDetected={setMeshCount}
+              />
+            </group>
+            <Environment preset="city" />
+          </Canvas>
         </div>
+
+        {/* UI Overlay */}
+        <div style={{ position: 'relative', zIndex: 10, color: 'white', textAlign: 'center', pointerEvents: 'none' }}>
+          <h2 style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', margin: 0, fontWeight: 900, textTransform: 'uppercase' }}>
+            {checkpoints[activeIdx].title}
+          </h2>
+          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)', color: '#00ffcc' }}>
+            {checkpoints[activeIdx].description}
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div style={{
+          position: 'absolute',
+          bottom: '2rem',
+          width: '300px',
+          height: '4px',
+          background: 'rgba(255,255,255,0.2)',
+          borderRadius: '2px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${scrollProgress * 100}%`,
+            background: '#00ffcc',
+            transition: 'width 0.1s linear'
+          }} />
+        </div>
+
+        {debugMode && (
+          <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,255,0,0.2)', padding: '10px', border: '1px solid lime', color: 'lime', fontFamily: 'monospace', fontSize: '12px' }}>
+            <div>PROG: {(scrollProgress * 100).toFixed(2)}%</div>
+            <div>MESH: {meshCount}</div>
+            <div style={{ color: 'red' }}>RED = TRACK</div>
+            <div style={{ color: 'lime' }}>LIME = STICKY</div>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 };
+
+useGLTF.preload(assetPath('assets/projects/mh1/models/gltf/mh1_2.gltf'));
 
 export default AnimeSection;

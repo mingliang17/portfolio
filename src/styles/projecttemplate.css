@@ -1,5 +1,5 @@
 /* src/styles/projecttemplate.css */
-/* COMPLETE: Fade transitions, no overlap, drag prompts */
+/* FIXED: Remove overflow restrictions for sticky positioning */
 
 /* ===================================
    MAIN CONTAINER
@@ -9,9 +9,9 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
+  /* ✅ CRITICAL FIX: Remove overflow-y: auto */
   overflow-x: hidden;
-  overflow-y: auto;
-  /* Remove smooth scroll to allow manual control */
+  overflow-y: visible; /* Changed from 'auto' - allows sticky */
   scroll-behavior: auto;
 }
 
@@ -187,20 +187,21 @@
   min-height: 100vh;
   background: var(--bg-primary);
   z-index: 1;
+  /* ✅ CRITICAL FIX: No overflow restrictions */
+  overflow: visible;
 }
 
 /* ===================================
-   UNIFIED SECTIONS - NO OVERLAP
+   UNIFIED SECTIONS - ALLOW OVERFLOW
    =================================== */
 
 .unified-section {
   position: relative;
   width: 100%;
-  /* Each section takes up space in document flow */
   display: block;
+  /* ✅ CRITICAL FIX: No overflow restrictions */
+  overflow: visible;
 }
-
-
 
 /* Snap sections - fit in viewport */
 .snap-section {
@@ -214,18 +215,7 @@
 .overflow-section {
   min-height: 100vh;
   height: auto;
-  overflow: visible;
-}
-
-/* Section-specific adjustments */
-.unified-section-map,
-.unified-section-model,
-.unified-section-carousel {
-  /* These typically fit in viewport */
-}
-
-.unified-section-spin {
-  /* Spin section has dynamic height */
+  /* ✅ CRITICAL: Allow overflow for sticky children */
   overflow: visible;
 }
 
@@ -374,12 +364,9 @@
   }
 }
 
-/* Section locked state */
 .unified-section[data-locked="true"] {
   pointer-events: auto;
 }
-
-
 
 .debug-info {
   position: fixed;
@@ -390,7 +377,7 @@
   padding: 10px;
   font-size: 12px;
   z-index: 9999;
-  display: none; /* Set to 'block' for debugging */
+  display: none;
 }
 
 .section-drag-prompt {

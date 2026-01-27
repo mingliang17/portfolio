@@ -98,13 +98,42 @@ const ProjectPage = () => {
       ),
     },
 
-    // ANIME SECTION
-      projectData.sections.anime?.enabled && {
+    // ANIME SECTION - NEW (Based on Spin structure)
+    projectData.sections.anime?.enabled && {
       type: 'anime',
-      snapToTop: true,      // Enable snapping so we land perfectly at the start
-      fitInViewport: false, // We need it to be long
-      scrollMultiplier: 8,  // Add this! This tells ProjectTemplate to make the height 800vh
-      component: <AnimeSection />
+      snapToTop: false,      // Don't snap - natural scroll like Spin
+      fitInViewport: false,  // Overflows - long section
+      component: (
+        <AnimeSection
+          modelPath={projectData.sections.anime.modelPath || 'assets/projects/mh1/models/gltf/mh1_2.gltf'}
+          checkpoints={projectData.sections.anime.checkpoints || [
+            {
+              title: 'Initial State',
+              description: 'Model fully assembled and ready for analysis'
+            },
+            {
+              title: 'Structural Scan',
+              description: 'Analyzing component architecture and relationships'
+            },
+            {
+              title: 'Deconstruction',
+              description: 'Breaking down into individual mesh elements'
+            },
+            {
+              title: 'Scattered State',
+              description: 'All components separated and visible'
+            },
+            {
+              title: 'Reassembly',
+              description: 'Reconstructing piece by piece with precision'
+            },
+            {
+              title: 'Complete',
+              description: 'Model fully reconstructed and operational'
+            }
+          ]}
+        />
+      ),
     },
     // SPIN SECTION
     spinConfig?.enabled && {
