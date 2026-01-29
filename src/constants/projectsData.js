@@ -48,8 +48,8 @@ export const PROJECT_MH1 = {
       enabled: true,
       title: 'Interactive Reconstruction',
       modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
-      snapToTop: false,  // Natural scroll like Spin
-      fitInViewport: false,  // Long section
+      snapToTop: true,  // Natural scroll like Spin
+      fitInViewport: true,  // Long section
       checkpoints: [
         {
           title: 'Initial State',

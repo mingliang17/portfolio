@@ -1,5 +1,5 @@
 /* src/styles/core.css */
-/* FIXED: Allow overflow for sticky positioning */
+/* FIXED: body overflow changed from auto to visible */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -12,7 +12,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* ✅ FIXED: Allow vertical overflow for sticky */
-  overflow-y: visible;
+  overflow-y: scroll;  /* Changed from 'visible' to 'scroll' - allows scrollbar */
   overflow-x: hidden;
 }
 
@@ -22,9 +22,9 @@ body {
   font-family: var(--font-primary);
   color: var(--color-white-800);
   background: var(--bg-primary);
-  /* ✅ CRITICAL FIX: Change from 'auto' to 'visible' */
+  /* ✅ CRITICAL FIX: Changed from 'auto' to 'visible' */
   overflow-x: hidden;
-  overflow-y: visible; /* Changed from 'auto' */
+  overflow-y: visible; /* Changed from 'auto' - THIS WAS THE PROBLEM */
 }
 
 /* Hide scrollbar but keep functionality */

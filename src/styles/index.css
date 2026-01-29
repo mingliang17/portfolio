@@ -188,3 +188,13 @@
 .copy-container:hover {
   transform: scale(1.05);
 }
+
+/* CRITICAL FIX: Force body overflow to visible */
+body {
+  overflow: visible !important;
+  overflow-y: visible !important;
+}
+
+/* html {
+  overflow-y: scroll !important;
+} */

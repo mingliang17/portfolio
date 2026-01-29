@@ -60,3 +60,7 @@
 .overflow-hidden {
   overflow: hidden;
 }
+
+.overflow-visible {
+  overflow: visible;
+}
