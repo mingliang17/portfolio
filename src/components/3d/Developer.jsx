@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useAnimations, useFBX, useGLTF } from '@react-three/drei';
 import { SkeletonUtils } from 'three-stdlib';
-import { assetPath } from '../utils/assetPath.js'; 
-
+import { assetPath } from "@/utils/assetPath.js";
 
 const Developer = ({ animationName = 'waving', ...props }) => {
   const group = useRef();
@@ -41,13 +40,13 @@ const Developer = ({ animationName = 'waving', ...props }) => {
   useEffect(() => {
     console.log('Requested animation:', animationName);
     console.log('Available actions:', Object.keys(actions));
-    
+
     const currentAction = actions[animationName];
     if (!currentAction) {
       console.warn(`Animation "${animationName}" not found`);
       return;
     }
-    
+
     currentAction.reset().fadeIn(0.5).play();
     return () => {
       currentAction.fadeOut(0.5);

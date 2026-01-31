@@ -521,7 +521,7 @@ const DNATimeline = ({
       </div>
 
       {/* Canvas */}
-      <div className="fixed top-0 left-0 w-full h-screen">
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
         <Canvas
           camera={{
             position: [0, 0, cameraDistance],

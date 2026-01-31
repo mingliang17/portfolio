@@ -195,6 +195,13 @@ body {
   overflow-y: visible !important;
 }
 
-/* html {
-  overflow-y: scroll !important;
-} */
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
+/* Section snapping utility */
+section, .section-snap {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}

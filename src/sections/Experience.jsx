@@ -1,14 +1,14 @@
 import { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import Developer from '../components/Developer.jsx';
+import Developer from '../components/3d/Developer.jsx';
 import { CanvasLoader } from '../components/common/LayoutComponents.jsx';
 import { workExperiences } from '../constants/index.js';
-import { assetPath } from '../utils/assetPath.js'; 
+import { assetPath } from '../utils/assetPath.js';
 
 const Experience = () => {
   const [animationName, setAnimationName] = useState('waving');
-  
+
   return (
     <section className="c-space my-20" id="work">
       <div className="w-full text-white-600">

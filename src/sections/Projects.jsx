@@ -4,8 +4,7 @@ import { Center, OrbitControls } from '@react-three/drei';
 
 import { myProjects } from "../constants/index.js";
 import { CanvasLoader } from '../components/common/LayoutComponents.jsx';
-import DemoComputer from '../components/DemoComputer.jsx';
-import { assetPath } from '../utils/assetPath.js'; 
+import { assetPath } from '../utils/assetPath.js';
 
 const Projects = () => {
   const [selectedProjectIndex, setSelectedProjectIndex] = useState(0);
@@ -43,7 +42,7 @@ const Projects = () => {
             <div className="flex items-center gap-3">
               {currentProject.tags.map((tag) => (
                 <div key={tag.id} className="tech-logo">
-                  <img src={assetPath(tag.path)} alt={tag.name} className="w-6 h-6"/>
+                  <img src={assetPath(tag.path)} alt={tag.name} className="w-6 h-6" />
                 </div>
               ))}
             </div>
@@ -65,14 +64,14 @@ const Projects = () => {
         </div>
 
         {/* 3D Canvas */}
-        <div className="border border-black-300 bg-black-200 rounded-lg h-96 md:h-full">  
+        <div className="border border-black-300 bg-black-200 rounded-lg h-96 md:h-full">
           <Canvas>
             <ambientLight intensity={Math.PI} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
             <Center>
               <Suspense fallback={<CanvasLoader />}>
                 <group scale={2} position={[0, -3, 0]} rotation={[0, -0.1, 0]}>
-                  <DemoComputer texture={currentProject.texture} />
+                  "Demo COmputer"
                 </group>
               </Suspense>
             </Center>
