@@ -42,28 +42,29 @@ const Carousel = ({
   const MAGNIFY_SIZE = 500;      // Size of the magnifying glass circle
   const MAGNIFY_ZOOM = 2.5;     // Zoom factor
 
+  // Interaction Delay
+  const [isInteractive, setIsInteractive] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInteractive(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Normalize carousel data
   const normalizedData = React.useMemo(() => {
-    if (!carouselData || !Array.isArray(carouselData)) {
-      console.warn('Carousel: Invalid carouselData, expected array');
-      return [];
-    }
-    
+    if (!carouselData || !Array.isArray(carouselData)) return [];
     return carouselData.map((item, index) => {
       if (typeof item === 'string') {
-        return {
-          id: index,
-          image: item,
-          title: `Image ${index + 1}`,
-          description: ''
-        };
+        return { id: index, image: item, title: `Image ${index + 1}`, description: '' };
       }
-      
       return {
         id: item.id ?? index,
         image: item.image || '',
         title: item.title || `Image ${index + 1}`,
-        description: item.description || ''
+        description: item.description || '',
+        information: item.information || ''
       };
     });
   }, [carouselData]);
@@ -93,7 +94,6 @@ const Carousel = ({
 
   const getItemStyle = (index) => {
     let position = index - currentIndex;
-
     if (position < -2) {
       const altPos = position + totalItems;
       if (altPos <= 2) position = altPos;
@@ -123,316 +123,132 @@ const Carousel = ({
     };
   };
 
-  // NEW LOGIC: Calculate container dimensions for EACH INDIVIDUAL IMAGE
   const calculateContainerDimensionsForImage = useCallback((naturalWidth, naturalHeight) => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
-    // Determine which is the longer side of THIS image
-    const isLandscape = naturalWidth >= naturalHeight; // >= handles squares
-    
-    let scaledWidth, scaledHeight, scaleFactor;
+    const isLandscape = naturalWidth >= naturalHeight;
+    let scaledWidth, scaledHeight;
     
     if (isLandscape) {
-      // Landscape or square: Width is longer side
-      // Set container width to 95% of viewport width
-      scaledWidth = Math.min(naturalWidth, viewportWidth * 0.95);
+      scaledWidth = Math.min(naturalWidth, viewportWidth * 0.9);
       scaledHeight = (scaledWidth / naturalWidth) * naturalHeight;
-      
-      // Check if the scaled height exceeds viewport height (with margin)
-      if (scaledHeight > viewportHeight * 0.95) {
-        // If yes, scale by height instead
-        scaledHeight = Math.min(naturalHeight, viewportHeight * 0.95);
+      if (scaledHeight > viewportHeight * 0.9) {
+        scaledHeight = viewportHeight * 0.9;
         scaledWidth = (scaledHeight / naturalHeight) * naturalWidth;
       }
     } else {
-      // Portrait: Height is longer side
-      // Set container height to 95% of viewport height
-      scaledHeight = Math.min(naturalHeight, viewportHeight * 0.95);
+      scaledHeight = Math.min(naturalHeight, viewportHeight * 0.9);
       scaledWidth = (scaledHeight / naturalHeight) * naturalWidth;
-      
-      // Check if the scaled width exceeds viewport width (with margin)
-      if (scaledWidth > viewportWidth * 0.95) {
-        // If yes, scale by width instead
-        scaledWidth = Math.min(naturalWidth, viewportWidth * 0.95);
+      if (scaledWidth > viewportWidth * 0.9) {
+        scaledWidth = viewportWidth * 0.9;
         scaledHeight = (scaledWidth / naturalWidth) * naturalHeight;
       }
     }
     
-    // Calculate scale factor
-    scaleFactor = scaledWidth / naturalWidth;
-    
-    // Round to nearest pixel
-    return {
-      width: Math.round(scaledWidth),
-      height: Math.round(scaledHeight),
-      scale: scaleFactor,
-      isLandscape
-    };
+    return { width: Math.round(scaledWidth), height: Math.round(scaledHeight) };
   }, []);
 
   const openZoom = useCallback((image, index) => {
+    if (!isInteractive) return;
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-
     const itemEl = itemRefs.current[index];
-    if (itemEl) {
-      const rect = itemEl.getBoundingClientRect();
-      setItemRect(rect);
-    }
-
+    if (itemEl) setItemRect(itemEl.getBoundingClientRect());
     setZoomedImage(image);
     setMagnifyActive(false);
     setImageLoaded(false);
-    setImageDimensions({ width: 0, height: 0 });
-    setContainerDimensions({ width: 0, height: 0 });
-  }, []);
+  }, [isInteractive]);
 
   const closeZoom = useCallback(() => {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     setZoomedImage(null);
     setItemRect(null);
     setMagnifyActive(false);
-    setImageLoaded(false);
-    setImageDimensions({ width: 0, height: 0 });
-    setContainerDimensions({ width: 0, height: 0 });
   }, []);
 
   const handleItemMouseEnter = useCallback((index) => {
     if (zoomedImage || index !== currentIndex) return;
-
     hoverTimeoutRef.current = setTimeout(() => {
-      const item = normalizedData[index];
-      openZoom(item.image, index);
+      openZoom(normalizedData[index].image, index);
     }, 800);
   }, [zoomedImage, currentIndex, openZoom, normalizedData]);
 
   const handleItemMouseLeave = useCallback(() => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-  }, []);
-
-  const handleOverlayMouseEnter = useCallback(() => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-  }, []);
-
-  const handleOverlayMouseLeave = useCallback(() => {
-    closeTimeoutRef.current = setTimeout(closeZoom, 300);
-  }, [closeZoom]);
-
-  const handleImageContainerMouseEnter = useCallback(() => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
   }, []);
 
   const handleImageClick = useCallback(() => {
-    setMagnifyActive((prev) => {
-      console.log(prev ? '🔍 Magnifier OFF' : '🔍 Magnifier ON');
-      return !prev;
-    });
+    setMagnifyActive(prev => !prev);
   }, []);
 
-  // Magnifier positioning for individually scaled images
   const handleImageMouseMove = useCallback((e) => {
-    if (!magnifyActive || !zoomImageRef.current || !zoomContainerRef.current) return;
-
-    const container = zoomContainerRef.current;
-    const img = zoomImageRef.current;
+    if (!magnifyActive || !zoomContainerRef.current) return;
+    const rect = zoomContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const clampedX = Math.max(0, Math.min(containerDimensions.width, x));
+    const clampedY = Math.max(0, Math.min(containerDimensions.height, y));
     
-    // Get container rect
-    const containerRect = container.getBoundingClientRect();
+    setMagnifyPosition({ x: clampedX + rect.left, y: clampedY + rect.top });
     
-    // Get mouse position relative to container
-    const mouseX = e.clientX - containerRect.left;
-    const mouseY = e.clientY - containerRect.top;
-    
-    // Clamp mouse position within container bounds
-    const clampedX = Math.max(0, Math.min(containerDimensions.width, mouseX));
-    const clampedY = Math.max(0, Math.min(containerDimensions.height, mouseY));
-    
-    // Since image uses object-fit: contain and fills the container,
-    // calculate relative position (0 to 1)
     const relX = clampedX / containerDimensions.width;
     const relY = clampedY / containerDimensions.height;
     
-    // Set magnifier position
-    setMagnifyPosition({ 
-      x: clampedX + containerRect.left,
-      y: clampedY + containerRect.top
-    });
-    
-    // Calculate background offset for magnifier
-    const bgOffsetX = relX * imageDimensions.width * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2;
-    const bgOffsetY = relY * imageDimensions.height * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2;
-    
-    setMagnifyOffset({ 
-      x: bgOffsetX, 
-      y: bgOffsetY,
+    setMagnifyOffset({
+      x: relX * imageDimensions.width * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2,
+      y: relY * imageDimensions.height * MAGNIFY_ZOOM - MAGNIFY_SIZE / 2,
       width: imageDimensions.width,
       height: imageDimensions.height
     });
-  }, [magnifyActive, MAGNIFY_SIZE, MAGNIFY_ZOOM, containerDimensions, imageDimensions]);
+  }, [magnifyActive, containerDimensions, imageDimensions, MAGNIFY_SIZE, MAGNIFY_ZOOM]);
 
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    };
-  }, []);
-
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (zoomedImage) {
         if (e.key === 'Escape') closeZoom();
-        if (e.key === ' ') handleImageClick();
         return;
       }
       if (e.key === 'ArrowLeft') goToPrev();
       if (e.key === 'ArrowRight') goToNext();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToPrev, goToNext, zoomedImage, closeZoom, handleImageClick]);
+  }, [zoomedImage, closeZoom, goToPrev, goToNext]);
 
-  // Auto-play functionality
-  useEffect(() => {
-    if (!autoPlay || zoomedImage || totalItems <= 1) return;
-    
-    const interval = setInterval(() => {
-      goToNext();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [autoPlay, zoomedImage, totalItems, goToNext]);
-
-  // Handle window resize for current image
-  useEffect(() => {
-    const handleResize = () => {
-      if (imageDimensions.width && imageDimensions.height && zoomedImage) {
-        const newDimensions = calculateContainerDimensionsForImage(
-          imageDimensions.width,
-          imageDimensions.height
-        );
-        setContainerDimensions(newDimensions);
-        console.log(`Resized: Container now ${newDimensions.width}x${newDimensions.height}`);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [imageDimensions, zoomedImage, calculateContainerDimensionsForImage]);
-
-  if (totalItems === 0) {
-    return (
-      <div className="carousel-container">
-        <div className="carousel-header">
-          <h2 className="carousel-title">{title}</h2>
-        </div>
-        <div className="carousel-empty-state">
-          <p className="carousel-empty">No images available</p>
-        </div>
-      </div>
-    );
-  }
-
+  if (totalItems === 0) return null;
   const currentItem = normalizedData[currentIndex] || {};
 
   return (
     <>
-      {/* Zoom Overlay Portal */}
       {zoomedImage && createPortal(
-        <div 
-          className="zoom-overlay"
-          onMouseEnter={handleOverlayMouseEnter}
-          onMouseLeave={handleOverlayMouseLeave}
-          onClick={closeZoom}
-        >          
-          <div className={`zoom-glass ${!zoomedImage ? 'closing' : ''}`} />
-
+        <div className="zoom-overlay" onClick={closeZoom}>
+          <div className="zoom-glass" />
           <div 
-            className={`zoom-image-container ${itemRect ? 'expanding' : ''} ${!zoomedImage ? 'shrinking' : ''} ${magnifyActive ? 'magnify-active' : ''}`}
-            style={{
-              '--start-x': itemRect ? `${itemRect.left + itemRect.width / 2 - window.innerWidth / 2}px` : '0px',
-              '--start-y': itemRect ? `${itemRect.top + itemRect.height / 2 - window.innerHeight / 2}px` : '0px',
-              '--start-scale': itemRect ? Math.min(itemRect.width / Math.max(containerDimensions.width || 400, 100), 1) : 1,
-              '--start-width': itemRect ? `${itemRect.width}px` : '400px',
-              '--start-height': itemRect ? `${itemRect.height}px` : '300px',
-              '--target-width': containerDimensions.width ? `${containerDimensions.width}px` : 'auto',
-              '--target-height': containerDimensions.height ? `${containerDimensions.height}px` : 'auto'
-            }}
-            onMouseEnter={handleImageContainerMouseEnter}
-            onClick={(e) => e.stopPropagation()}
+            className="zoom-image-container"
             ref={zoomContainerRef}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: containerDimensions.width ? `${containerDimensions.width}px` : 'auto',
+              height: containerDimensions.height ? `${containerDimensions.height}px` : 'auto'
+            }}
           >
-            <button 
-              className="zoom-close-btn"
-              onClick={closeZoom}
-              title="Close Zoom"
-            >
+            <button className="zoom-close-btn" onClick={closeZoom}>
               <img src={ICONS.close.src} alt="Close" />
             </button>
-
             <div className="zoom-image-wrapper">
-              {!imageLoaded && (
-                <div className="zoom-loading">Loading image...</div>
-              )}
-              <div 
-                className="zoom-image" 
+              <img
+                src={zoomedImage}
+                alt="Zoomed"
+                className="zoom-image"
                 onClick={handleImageClick}
                 onMouseMove={handleImageMouseMove}
-                style={{ 
-                  display: imageLoaded ? 'block' : 'none',
-                  // Debug border to see container bounds
-                  // border: '1px solid red'
+                onLoad={(e) => {
+                  const dims = calculateContainerDimensionsForImage(e.target.naturalWidth, e.target.naturalHeight);
+                  setImageDimensions({ width: e.target.naturalWidth, height: e.target.naturalHeight });
+                  setContainerDimensions(dims);
+                  setImageLoaded(true);
                 }}
-              >
-                <img
-                  src={zoomedImage}
-                  alt={currentItem.title || 'Zoomed Image'}
-                  ref={zoomImageRef}
-                  onLoad={(e) => {
-                    const img = e.target;
-                    const naturalWidth = img.naturalWidth;
-                    const naturalHeight = img.naturalHeight;
-                    
-                    console.log(`Original image: ${naturalWidth}x${naturalHeight}`);
-                    console.log(`Viewport: ${window.innerWidth}x${window.innerHeight}`);
-                    
-                    // Calculate container dimensions based on THIS image's dimensions
-                    const containerDims = calculateContainerDimensionsForImage(
-                      naturalWidth,
-                      naturalHeight
-                    );
-                    
-                    setImageDimensions({ 
-                      width: naturalWidth, 
-                      height: naturalHeight 
-                    });
-                    
-                    setContainerDimensions(containerDims);
-                    setImageLoaded(true);
-                    
-                    console.log(`Container calculated for THIS image: ${containerDims.width}x${containerDims.height} (scale: ${containerDims.scale.toFixed(2)})`);
-                    console.log(`Is landscape: ${containerDims.isLandscape}`);
-                  }}
-                  onError={() => {
-                    console.error('Failed to load zoom image');
-                    setImageLoaded(true);
-                  }}
-                />
-              </div>
+              />
             </div>
-
-            {/* Magnifier */}
-            {magnifyActive && imageLoaded && containerDimensions.width > 0 && (
+            {magnifyActive && imageLoaded && (
               <div 
                 className="magnify-lens"
                 style={{
@@ -440,116 +256,86 @@ const Carousel = ({
                   top: `${magnifyPosition.y}px`,
                   width: `${MAGNIFY_SIZE}px`,
                   height: `${MAGNIFY_SIZE}px`,
-                  backgroundSize: `${magnifyOffset.width * MAGNIFY_ZOOM}px ${magnifyOffset.height * MAGNIFY_ZOOM}px`,
-                  backgroundPosition: `-${magnifyOffset.x}px -${magnifyOffset.y}px`,
                   backgroundImage: `url(${zoomedImage})`,
+                  backgroundSize: `${imageDimensions.width * MAGNIFY_ZOOM}px ${imageDimensions.height * MAGNIFY_ZOOM}px`,
+                  backgroundPosition: `-${magnifyOffset.x}px -${magnifyOffset.y}px`
                 }}
               />
             )}
-
-            {/* Hints */}
-            {!magnifyActive ? (
-              <div className="zoom-hint">
-                Click image to enable magnifier (Zoom: {MAGNIFY_ZOOM}x)
-              </div>
-            ) : (
-              <div className="zoom-hint zoom-hint-active">
-                Click again to disable magnifier • Press ESC to close
-              </div>
-            )}
+            <div className="zoom-hint">
+              {magnifyActive ? 'Click again to disable magnifier' : 'Click to magnify'}
+            </div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* Carousel Container */}
       <div className="carousel-container">
-        {/* Title Header */}
         {title && (
           <div className="carousel-header">
             <h2 className="carousel-title">{title}</h2>
           </div>
         )}
 
-        {/* Main Carousel */}
-        <div className="carousel">
+        {isInteractive && !zoomedImage && (
+          <div className="carousel-hover-hint" style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            zIndex: 20, pointerEvents: 'none', background: 'rgba(0,0,0,0.6)', color: 'white',
+            padding: '0.5rem 1rem', borderRadius: '2rem', backdropFilter: 'blur(4px)',
+            fontSize: '0.9rem', opacity: 0, animation: 'fadeInHint 0.5s ease forwards'
+          }}>
+            Hover image to enlarge
+          </div>
+        )}
+
+        <div className={`carousel ${!isInteractive ? 'carousel-locked' : ''}`}>
           <div className="carousel-wrapper">
             {normalizedData.map((item, index) => (
               <div 
                 className="carousel-item"
                 key={item.id}
-                data-position={index - currentIndex}
                 style={getItemStyle(index)}
                 ref={(el) => (itemRefs.current[index] = el)}
                 onMouseEnter={() => handleItemMouseEnter(index)}
                 onMouseLeave={handleItemMouseLeave}
                 onClick={() => index === currentIndex && openZoom(item.image, index)}
               >
-                <div className="item-frame" />
                 <div className="item-image-wrapper">
-                  <img
-                    className="item-image"
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                  />
+                  <img className="item-image" src={item.image} alt={item.title} loading="lazy" />
                 </div>
-                {index === currentIndex && (item.title || item.description) && (
-                  <div className="item-label">
-                    {item.title}
-                  </div>
-                )}
               </div>
             ))}
           </div>
 
-          {/* Navigation Controls */}
           {showControls && totalItems > 1 && (
             <>
-              <button 
-                className="carousel-prev" 
-                onClick={goToPrev}
-                disabled={isAnimating || totalItems <= 1}
-                aria-label="Previous slide"
-              >
-                <img src={ICONS.leftArrow.src} alt="ICONS.leftArrow.title" />
+              <button className="carousel-prev" onClick={goToPrev} disabled={isAnimating}>
+                <img src={ICONS.leftArrow.src} alt="Prev" />
               </button>
-              <button 
-                className="carousel-next" 
-                onClick={goToNext}
-                disabled={isAnimating || totalItems <= 1}
-                aria-label="Next slide"
-              >
-                <img src={ICONS.rightArrow.src} alt={ICONS.rightArrow.title} />
+              <button className="carousel-next" onClick={goToNext} disabled={isAnimating}>
+                <img src={ICONS.rightArrow.src} alt="Next" />
               </button>
             </>
           )}
         </div>
 
-        {/* Bottom Panel */}
         <div className="bottom-panel">
-          {/* Description */}
           {currentItem.description && (
             <div className="description-panel">
               <p>{currentItem.description}</p>
             </div>
           )}
-
-          {/* Indicators */}
           {showIndicators && totalItems > 1 && (
             <div className="indicators">
-              {normalizedData.map((item, index) => (
+              {normalizedData.map((_, index) => (
                 <button
-                  key={item.id}
+                  key={index}
                   className={`indicator ${index === currentIndex ? 'active' : ''}`}
                   onClick={() => goToSlide(index)}
-                  aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>
           )}
-
-          {/* Information */}
           {currentItem.information && (
             <div className="information-panel">
               <pre>{currentItem.information}</pre>

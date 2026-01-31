@@ -1,198 +1,331 @@
-import React from 'react';
+// src/pages/templates/ProjectPage.jsx
+// COMPLETE REWRITE - Premium glass-panel transition system
+
+import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import ProjectTemplate from './ProjectTemplate.jsx';
-import { getProjectById, getModelConfig, getSpinConfig } from '../../constants/projectsData.js';
-import { PROJECT_ASSETS, getProjectLogos } from '../../assets/index.js';
-import { MapSection } from '../../sections/projects/MapSection.jsx';
-import ModelSection from '../../sections/projects/ModelSection.jsx';
-import SpinSection from '../../sections/projects/SpinSection.jsx';
-import Carousel from '../../sections/projects/Carousel.jsx';
-import AnimeSection from '../../sections/projects/AnimeSection.jsx';
+import { getProjectById } from '@/constants/projectsData.js';
+import { useUnifiedScroll } from '@/hooks/useUnifiedScroll.js';
+
+// Section Components
+import { HeroBackground, HeroContent } from '@/components/project/ProjectComponents.jsx';
+import HeroSection from '@/sections/projects/HeroSection.jsx';
+import MapSection from '@/sections/projects/MapSection.jsx';
+import ModelSection from '@/sections/projects/ModelSection.jsx';
+import SpinSection from '@/sections/projects/SpinSection.jsx';
+import AnimeSection from '@/sections/projects/AnimeSection.jsx';
+import Carousel from '@/sections/projects/Carousel.jsx';
+import LongSectionWrapper from '@/components/project/LongSectionWrapper.jsx';
 
 const ProjectPage = () => {
   const { project_id } = useParams();
-  
-  const projectData = getProjectById(project_id);
-  const modelConfig = getModelConfig(project_id);
-  const spinConfig = getSpinConfig(project_id);
+  const project = getProjectById(project_id);
 
-  if (!projectData) {
+  // Build sections configuration
+  const sectionsConfig = useMemo(() => {
+    if (!project) return [];
+
+    const sections = [];
+    const { sections: projectSections, assets } = project;
+
+    // Hero Section (always first)
+    if (projectSections.hero?.enabled) {
+      sections.push({
+        id: 'hero',
+        type: 'hero',
+        component: 'HeroSection',
+        config: projectSections.hero,
+        assets: { hero: assets.hero }
+      });
+    }
+
+    // Map Section
+    if (projectSections.map?.enabled) {
+      sections.push({
+        id: 'map',
+        type: 'normal',
+        component: 'MapSection',
+        config: projectSections.map,
+        assets: {
+          mapImages: assets.map,
+          logos: assets.logos
+        }
+      });
+    }
+
+    // Model Section
+    if (projectSections.model?.enabled) {
+      sections.push({
+        id: 'model',
+        type: 'normal', // Model sections are typically scrollable
+        component: 'ModelSection',
+        config: projectSections.model,
+        assets: {}
+      });
+    }
+
+    // Anime Section
+    if (projectSections.anime?.enabled) {
+      sections.push({
+        id: 'anime',
+        type: 'long', // Anime sections are long
+        component: 'AnimeSection',
+        config: projectSections.anime,
+        assets: {}
+      });
+    }
+
+    // Spin Section
+    if (projectSections.spin?.enabled) {
+      sections.push({
+        id: 'spin',
+        type: 'long', // Spin sections are long
+        component: 'SpinSection',
+        config: projectSections.spin,
+        assets: {}
+      });
+    }
+
+    // Carousels
+    if (projectSections.carousels) {
+      projectSections.carousels.forEach((carousel) => {
+        if (carousel.enabled) {
+          sections.push({
+            id: carousel.id,
+            type: 'normal',
+            component: 'Carousel',
+            config: carousel,
+            assets: { images: carousel.images }
+          });
+        }
+      });
+    }
+
+    return sections;
+  }, [project]);
+
+  // Initialize unified scroll system
+  const {
+    containerRef,
+    sectionRefs,
+    currentSectionIndex,
+    isTransitioning,
+    transitionDirection,
+    internalScrollProgress,
+    goToSection,
+    totalSections,
+    isLongSection
+  } = useUnifiedScroll(sectionsConfig, {
+    transitionDuration: 1.2, // SLOWER TRANSITION (Req 2)
+    easingFunction: 'power3.inOut', // LIQUID FEEL (Req 2)
+    rotationDegrees: 15, // HORIZONTAL TILT (Req 2)
+    enableDebug: true
+  });
+
+  // Listen for section changes to trigger animations
+  useEffect(() => {
+    const handleSectionChange = (e) => {
+      const { index, section, direction } = e.detail;
+      console.log(`📍 Section changed to: ${section?.id} (index: ${index})`);
+    };
+
+    window.addEventListener('sectionChanged', handleSectionChange);
+    return () => window.removeEventListener('sectionChanged', handleSectionChange);
+  }, []);
+
+  // Prevent native scroll and add body class
+  useEffect(() => {
+    document.body.classList.add('unified-scroll-active');
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.classList.remove('unified-scroll-active');
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  if (!project) {
     return (
-      <div className="flex items-center justify-center h-screen text-white text-2xl">
-        Project "{project_id}" not found
+      <div className="project-error">
+        <h1>Project not found</h1>
+        <p>Project ID: {project_id}</p>
       </div>
     );
   }
 
-  const projectAssets = PROJECT_ASSETS[project_id];
-  
-  if (!projectAssets) {
-    console.error('❌ No assets found for project:', project_id);
-    return (
-      <div className="flex items-center justify-center h-screen text-white text-xl">
-        Project assets not configured for "{project_id}"
-      </div>
-    );
-  }
+  const renderSection = (section, index) => {
+    const { component, config, assets } = section;
 
-  const mapDescription = {
-    title: 'Data Metrics',
-    metrics: [
-      { label: 'Collaborators', value: projectData.metadata?.collaborators || 'N/A' },
-      { label: 'Type', value: projectData.metadata?.type || 'N/A' },
-      { label: 'Description', value: projectData.metadata?.description || 'N/A' },
-      { label: 'Duration', value: projectData.metadata?.duration || 'N/A' },
-      { label: 'Status', value: projectData.metadata?.status || 'N/A' },
-    ],
-    disclaimer: projectData.metadata?.disclaimer || '',
+    const sectionProps = {
+      ref: (el) => (sectionRefs.current[index] = el),
+      key: section.id,
+      className: `unified-section section-${section.id}`,
+      'data-section-index': index,
+      'data-section-type': section.type
+    };
+
+    switch (component) {
+      case 'HeroSection':
+        return (
+          <section {...sectionProps}>
+            <HeroSection
+              imagePath={assets.hero}
+              title={config.title}
+              subtitle={config.subtitle}
+              isActive={index === currentSectionIndex}
+            />
+          </section>
+        );
+
+      case 'MapSection':
+        // REQ 1: Fix MapSection animation triggering
+        // Using `key` to force remount if needed, or relying on `startAnimation` updates
+        const isMapActive = index === currentSectionIndex;
+        return (
+          <section {...sectionProps}>
+            <MapSection
+              mapImages={assets.mapImages}
+              logos={assets.logos}
+              description={project.metadata}
+              visible={isMapActive}
+              startAnimation={isMapActive}
+              // Force update when active state changes to ensure animation trigger
+              key={`map-${index}-${isMapActive ? 'active' : 'inactive'}`} 
+            />
+          </section>
+        );
+
+      case 'ModelSection':
+        return (
+          <section {...sectionProps}>
+            <LongSectionWrapper sectionId={section.id}>
+              <ModelSection
+                componentName={config.componentName}
+                modelUrl={config.modelPath}
+                modelType={config.modelType}
+                scale={config.scale}
+                position={config.position}
+                rotation={config.rotation}
+                cameraPosition={config.cameraPosition}
+                cameraFov={config.cameraFov}
+                environment={config.environment}
+                backgroundColor={config.backgroundColor}
+                enableShadows={config.enableShadows}
+              />
+            </LongSectionWrapper>
+          </section>
+        );
+
+      case 'AnimeSection':
+        return (
+          <section {...sectionProps}>
+            <LongSectionWrapper sectionId={section.id}>
+              <AnimeSection
+                modelPath={config.modelPath}
+                checkpoints={config.checkpoints}
+                debugMode={false}
+                isActive={index === currentSectionIndex}
+                scrollProgress={index === currentSectionIndex ? internalScrollProgress : 0}
+              />
+            </LongSectionWrapper>
+          </section>
+        );
+
+      case 'SpinSection':
+        return (
+          <section {...sectionProps}>
+            <LongSectionWrapper sectionId={section.id}>
+              <SpinSection
+                componentName={config.componentName}
+                modelUrl={config.modelPath}
+                modelType={config.modelType}
+                scale={config.scale}
+                position={config.position}
+                rotation={config.rotation}
+                cameraPosition={config.cameraPosition}
+                cameraFov={config.cameraFov}
+                environment={config.environment}
+                backgroundColor={config.backgroundColor}
+                enableShadows={config.enableShadows}
+                checkpoints={config.checkpoints}
+                rotationsPerScroll={config.rotationsPerScroll}
+                isActive={index === currentSectionIndex}
+                scrollProgress={index === currentSectionIndex ? internalScrollProgress : 0}
+              />
+            </LongSectionWrapper>
+          </section>
+        );
+
+      case 'Carousel':
+        return (
+          <section {...sectionProps}>
+            <Carousel
+              carouselData={assets.images}
+              title={config.title}
+              autoPlay={false}
+              showControls={true}
+              showIndicators={true}
+            />
+          </section>
+        );
+
+      default:
+        return null;
+    }
   };
 
-  // Build sections array with snap configuration
-  const sections = [
-    // HERO SECTION
-    projectData.sections.hero?.enabled && {
-      type: 'hero',
-      title: projectData.sections.hero.title,
-      subtitle: projectData.sections.hero.subtitle,
-      backgroundImage: projectAssets.hero,
-      snapToTop: projectData.sections.hero.snapToTop !== false,
-      fitInViewport: true,
-    },
-
-    // MODEL SECTION
-    projectData.sections.model?.enabled && {
-      type: 'model',
-      snapToTop: modelConfig?.snapToTop !== false,
-      fitInViewport: modelConfig?.fitInViewport !== false,
-      component: (
-        <ModelSection
-          componentName={modelConfig?.componentName}
-          modelUrl={modelConfig?.modelPath}
-          modelType={modelConfig?.modelType || 'gltf'}
-          modelScale={modelConfig?.scale || 1}
-          modelPosition={modelConfig?.position || [0, 0, 0]}
-          modelRotation={modelConfig?.rotation || [0, 0, 0]}
-          cameraPosition={modelConfig?.cameraPosition || [0, 2, 6]}
-          cameraFov={modelConfig?.cameraFov || 50}
-          environment={modelConfig?.environment || 'city'}
-          backgroundColor={modelConfig?.backgroundColor || '#000000'}
-          showControls={true}
-          enableShadows={modelConfig?.enableShadows ?? true}
-        />
-      ),
-    },
-
-    // MAP SECTION
-    projectData.sections.map?.enabled && {
-      type: 'map',
-      snapToTop: projectData.sections.map.snapToTop !== false,
-      fitInViewport: projectData.sections.map.fitInViewport !== false,
-      component: (
-        <MapSection
-          mapImages={projectAssets.map || {}}
-          logos={getProjectLogos(project_id)}
-          description={mapDescription}
-          visible={true}
-          startAnimation={true}
-        />
-      ),
-    },
-
-    // ANIME SECTION - NEW (Based on Spin structure)
-    projectData.sections.anime?.enabled && {
-      type: 'anime',
-      snapToTop: false,      // Don't snap - natural scroll like Spin
-      fitInViewport: false,  // Overflows - long section
-      component: (
-        <AnimeSection
-          modelPath={projectData.sections.anime.modelPath || 'assets/projects/mh1/models/gltf/mh1_2.gltf'}
-          checkpoints={projectData.sections.anime.checkpoints || [
-            {
-              title: 'Initial State',
-              description: 'Model fully assembled and ready for analysis'
-            },
-            {
-              title: 'Structural Scan',
-              description: 'Analyzing component architecture and relationships'
-            },
-            {
-              title: 'Deconstruction',
-              description: 'Breaking down into individual mesh elements'
-            },
-            {
-              title: 'Scattered State',
-              description: 'All components separated and visible'
-            },
-            {
-              title: 'Reassembly',
-              description: 'Reconstructing piece by piece with precision'
-            },
-            {
-              title: 'Complete',
-              description: 'Model fully reconstructed and operational'
-            }
-          ]}
-        />
-      ),
-    },
-    // SPIN SECTION
-    spinConfig?.enabled && {
-      type: 'spin',
-      snapToTop: spinConfig.snapToTop !== false,
-      fitInViewport: spinConfig.fitInViewport !== false,
-      component: (
-        <SpinSection
-          componentName={spinConfig.componentName}
-          modelUrl={spinConfig.modelPath}
-          modelType={spinConfig.modelType || 'gltf'}
-          scale={spinConfig.scale || 1}
-          position={spinConfig.position || [0, 0, 0]}
-          rotation={spinConfig.rotation || [0, 0, 0]}
-          cameraPosition={spinConfig.cameraPosition || [0, 0, 8]}
-          cameraFov={spinConfig.cameraFov || 50}
-          environment={spinConfig.environment || 'city'}
-          backgroundColor={spinConfig.backgroundColor || '#000000'}
-          enableShadows={spinConfig.enableShadows ?? true}
-          checkpoints={spinConfig.checkpoints || []}
-          rotationsPerScroll={spinConfig.rotationsPerScroll || 2}
-          scrollMultiplier={spinConfig.scrollMultiplier || 2}
-        />
-      ),
-    },
-
-    // CAROUSEL SECTIONS
-    ...(projectData.sections.carousels || []).map((carouselSection, index) => {
-      if (!carouselSection.enabled) return null;
-      return {
-        type: 'carousel',
-        snapToTop: carouselSection.snapToTop !== false,
-        fitInViewport: carouselSection.fitInViewport !== false,
-        component: (
-          <Carousel
-            key={carouselSection.id || index}
-            carouselData={carouselSection.images || []}
-            title={carouselSection.title || `Gallery ${index + 1}`}
-            autoPlay={false}
-            showControls={true}
-            showIndicators={true}
-          />
-        ),
-      };
-    }),
-
-
-
-    
-  ].filter(Boolean);
-
-
-  
-
   return (
-    <ProjectTemplate
-      projectData={projectData}
-      sections={sections}
-    />
+    <div className={`unified-project-container ${process.env.NODE_ENV === 'development' ? 'debug-mode' : ''}`} ref={containerRef}>
+      {/* Debug Overlay */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="debug-overlay">
+          <div className="debug-panel">
+            <h3>🔍 Section Debug</h3>
+            <p><strong>Current:</strong> {currentSectionIndex + 1} / {totalSections}</p>
+            <p><strong>ID:</strong> {sectionsConfig[currentSectionIndex]?.id}</p>
+            <p><strong>Type:</strong> {sectionsConfig[currentSectionIndex]?.type}</p>
+            <p><strong>Transitioning:</strong> {isTransitioning ? '⏳ Yes' : '✅ No'}</p>
+            <p><strong>Direction:</strong> {transitionDirection || 'None'}</p>
+            <p><strong>Is Long:</strong> {isLongSection ? '📜 Yes' : '📄 No'}</p>
+            <p><strong>Scroll Progress:</strong> {(internalScrollProgress * 100).toFixed(1)}%</p>
+            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #0f0' }}>
+              <p style={{ fontSize: '10px', color: '#0ff' }}>🎨 Glass Effect Active</p>
+              <p style={{ fontSize: '10px', color: '#ff0' }}>Yellow = Animating</p>
+              <p style={{ fontSize: '10px', color: '#0f0' }}>Green = Active</p>
+              <p style={{ fontSize: '10px', color: '#f00' }}>Red = Hidden</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Dots */}
+      <div className="unified-nav-dots">
+        {sectionsConfig.map((section, idx) => (
+          <button
+            key={section.id}
+            className={`unified-nav-dot ${idx === currentSectionIndex ? 'active' : ''}`}
+            onClick={() => !isTransitioning && goToSection(idx)}
+            disabled={isTransitioning}
+            aria-label={`Go to ${section.id}`}
+          >
+            <span className="dot-label">{section.id}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Sections Container */}
+      <div className="unified-content-container">
+        {sectionsConfig.map((section, index) => renderSection(section, index))}
+      </div>
+
+      {/* Transition Indicator */}
+      {isTransitioning && (
+        <div className="transition-indicator">
+          <div className={`transition-arrow ${transitionDirection}`}>
+            {transitionDirection === 'down' ? '↓' : '↑'}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

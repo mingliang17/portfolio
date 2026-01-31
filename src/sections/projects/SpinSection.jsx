@@ -26,6 +26,7 @@ const RotatingModel = ({
   useFrame(() => {
     if (!ref.current) return;
 
+    // Use current scroll progress directly
     const targetY = (initialRotation?.[1] || 0) + scrollProgress * Math.PI * 2 * rotationsPerScroll;
     ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, targetY, 0.1);
 
@@ -71,55 +72,43 @@ const SpinSection = ({
   backgroundColor = '#000',
   enableShadows = true,
   checkpoints = [],
-  rotationsPerScroll = 2
+  rotationsPerScroll = 2,
+  isActive = false,         // Controlled Prop
+  scrollProgress = 0        // Controlled Prop
 }) => {
   const containerRef = useRef();
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [isAtEnd, setIsAtEnd] = useState(false);
-
-  const sectionHeightVh = (checkpoints.length * 100) - 100;
+  
+  // Calculate section height to allow physical scrolling
+  const sectionHeightVh = (checkpoints.length * 100);
 
   const checkpointPositions = useMemo(() => {
     if (!checkpoints.length) return [];
     return checkpoints.map((_, i) => i / (checkpoints.length - 1 || 1));
   }, [checkpoints]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      const totalHeight = rect.height - viewportHeight;
-      const scrolled = Math.min(Math.max(-rect.top, 0), totalHeight);
-      const progress = totalHeight > 0 ? scrolled / totalHeight : 0;
-      setScrollProgress(progress);
-
-      // 1) REQ 1: Visible as soon as the top of section hits top of viewport
-      const isVisible = rect.top <= 10 && rect.bottom >= viewportHeight;
-      setIsActive(isVisible);
-
-      // 2) REQ 2: Detect if we've reached the absolute bottom
-      // Using a small threshold (0.99) for better UX
-      setIsAtEnd(progress >= 0.99);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  const handleNextSection = () => {
-    if (!containerRef.current) return;
-    const nextY = window.pageYOffset + containerRef.current.getBoundingClientRect().bottom;
-    window.scrollTo({ top: nextY, behavior: 'smooth' });
-  };
-
+  
   return (
-    <section ref={containerRef} className="spin-section-container" style={{ height: `${sectionHeightVh}vh` }}>
-      
-      <div className={`spin-canvas-fixed-wrapper ${isActive ? 'active' : ''}`}>
+    <section 
+        ref={containerRef} 
+        className="spin-section-container" 
+        style={{ 
+            height: `${sectionHeightVh}vh`,
+            position: 'relative' 
+        }}
+    >
+      {/* Sticky wrapper for the canvas */}
+      <div 
+        className={`spin-canvas-fixed-wrapper ${isActive ? 'active' : ''}`}
+        style={{
+            position: 'sticky',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100vh',
+            opacity: isActive ? 1 : 0,
+            pointerEvents: isActive ? 'auto' : 'none',
+            transition: 'opacity 0.6s ease'
+        }}
+      >
         <Canvas shadows={enableShadows}>
           <PerspectiveCamera makeDefault position={cameraPosition} fov={cameraFov} />
           <ambientLight intensity={0.4} />
@@ -142,12 +131,22 @@ const SpinSection = ({
           <color attach="background" args={[backgroundColor]} />
         </Canvas>
 
-        {/* REQ 2: LOCK BUTTON */}
-        <div className={`lock-overlay ${isAtEnd ? 'visible' : ''}`}>
-             <button className="continue-btn" onClick={handleNextSection}>
-                Continue to Next Section
-                <span className="btn-arrow">↓</span>
-             </button>
+        {/* REQ 2: LOCK BUTTON / Continue Indicator */}
+        <div className={`lock-overlay ${scrollProgress > 0.98 ? 'visible' : ''}`}>
+             <div className="continue-hint" style={{
+                 position: 'absolute',
+                 bottom: '20px',
+                 left: '50%',
+                 transform: 'translateX(-50%)',
+                 color: 'white',
+                 background: 'rgba(0,0,0,0.5)',
+                 padding: '10px 20px',
+                 borderRadius: '20px',
+                 opacity: scrollProgress > 0.98 ? 1 : 0,
+                 transition: 'opacity 0.3s'
+             }}>
+                Scroll to Continue ↓
+             </div>
         </div>
       </div>
 
@@ -156,7 +155,10 @@ const SpinSection = ({
           <div 
             key={index} 
             className="checkpoint-wrapper" 
-            style={{ top: `${checkpointPositions[index] * 100}%` }}
+            style={{ 
+                // Position absolute based on percentage of the TOTAL height
+                top: `${checkpointPositions[index] * 100}%` 
+            }}
           >
             <div className={`checkpoint-card checkpoint-${index % 2 === 0 ? 'left' : 'right'}`}>
               <div className="checkpoint-number">{index + 1}</div>

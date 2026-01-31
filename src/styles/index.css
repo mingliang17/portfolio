@@ -1,5 +1,5 @@
 /* src/styles/index.css */
-/* FINAL - Clean import order, removed projects.css (empty) */
+/* FINAL - Clean import order with unified scroll system */
 
 /* === FONTS === */
 @import url('https://fonts.cdnfonts.com/css/kg-keep-your-head-up');
@@ -12,6 +12,7 @@
 /* === COMPONENTS === */
 @import './components.css';
 @import './navbar.css';
+@import './unifiedScroll.css';
 
 /* === UTILITIES === */
 @import './utils.css';
@@ -22,6 +23,7 @@
 /* === PROJECTS === */
 @import './project.css';
 @import './projecttemplate.css';
+@import './unifiedscroll.css';
 @import './projects/carousel.css';
 @import './projects/map.css';
 @import './projects/model.css';
@@ -187,21 +189,4 @@
 
 .copy-container:hover {
   transform: scale(1.05);
-}
-
-/* CRITICAL FIX: Force body overflow to visible */
-body {
-  overflow: visible !important;
-  overflow-y: visible !important;
-}
-
-html {
-  scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
-}
-
-/* Section snapping utility */
-section, .section-snap {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
