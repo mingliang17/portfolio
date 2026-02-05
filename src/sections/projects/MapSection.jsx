@@ -1,9 +1,8 @@
 // src/sections/projects/MapSection.jsx
-// UPDATED: Properly handles animation reset, triggers, and metadata mapping
+// UPDATED: Optimized with gsap.context and refined structure
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import gsap from 'gsap';
-import { ICONS } from '../../assets/icons.js';
 
 export const MapSection = ({
   mapImages = {},
@@ -13,31 +12,26 @@ export const MapSection = ({
   startAnimation = false
 }) => {
   const [hoveredLogo, setHoveredLogo] = useState(null);
-  const masterTimelineRef = useRef(null);
   const sectionRef = useRef(null);
-
-  const mapImageRefs = useRef({
-    A: null, B: null, C: null, D: null, E: null
-  });
   
+  // Refs for animation targets
+  const mapImageRefs = useRef({});
   const logoRefs = useRef({});
   const sidebarRef = useRef(null);
   const titleRef = useRef(null);
   const metricRefs = useRef([]);
   const disclaimerRef = useRef(null);
 
-  const logosArray = React.useMemo(() => {
+  // Data processing
+  const logosArray = useMemo(() => {
     if (!logos || typeof logos !== 'object') return [];
     return Object.entries(logos).map(([id, data]) => ({ ...data, id }));
   }, [logos]);
 
-  const metricsArray = React.useMemo(() => {
-    // If metrics are explicitly provided, use them
+  const metricsArray = useMemo(() => {
     if (description.metrics && Array.isArray(description.metrics)) {
       return description.metrics;
     }
-    
-    // Otherwise, convert other metadata fields into metrics
     const blacklist = ['title', 'description', 'disclaimer', 'metrics', 'tags'];
     return Object.entries(description)
       .filter(([key]) => !blacklist.includes(key))
@@ -48,81 +42,65 @@ export const MapSection = ({
   }, [description]);
 
   const paths = {
-    A: mapImages.A || '', B: mapImages.B || '', C: mapImages.C || '', D: mapImages.D || '', E: mapImages.E || ''
+    A: mapImages.A || '', 
+    B: mapImages.B || '', 
+    C: mapImages.C || '', 
+    D: mapImages.D || '', 
+    E: mapImages.E || ''
   };
 
   useEffect(() => {
-    if (!visible) {
-      if (masterTimelineRef.current) masterTimelineRef.current.kill();
-      masterTimelineRef.current = null;
-      return;
-    }
+    if (!visible) return;
 
-    if (!startAnimation) return;
-
-    if (masterTimelineRef.current && masterTimelineRef.current.isActive()) return;
-
-    console.log('🗺️ MapSection: Starting animation sequence');
-    if (masterTimelineRef.current) masterTimelineRef.current.kill();
-
-    const animationTimeout = setTimeout(() => {
+    // Use gsap.context for proper scoping and cleanup
+    const ctx = gsap.context(() => {
+      // Cleanup previous potential states if needed (though context handles kills)
+      // Initial states
       const mapImgs = mapImageRefs.current;
       const logoEls = logosArray.map(logo => logoRefs.current[logo.id]).filter(Boolean);
       const sidebar = sidebarRef.current;
       const title = titleRef.current;
       const metricEls = metricRefs.current.filter(Boolean);
       const disclaimer = disclaimerRef.current;
-
-      if (!mapImgs.A || !sidebar) return;
-
-      const allElements = [
-        mapImgs.A, mapImgs.B, mapImgs.C, mapImgs.D, mapImgs.E,
-        ...logoEls, sidebar, title, ...metricEls, disclaimer
-      ].filter(Boolean);
-
-      const master = gsap.timeline({
-        defaults: { ease: 'power2.out', force3D: true },
-        onComplete: () => {
-          allElements.forEach(el => { if (el) el.style.willChange = 'auto'; });
-        }
-      });
-
-      masterTimelineRef.current = master;
-
-      // Set initial states
+      
+      // Hide everything initially
       gsap.set([mapImgs.A, mapImgs.B, mapImgs.C, mapImgs.D, mapImgs.E], { autoAlpha: 0, scale: 1, y: 0, x: 0 });
       if (logoEls.length > 0) gsap.set(logoEls, { autoAlpha: 0, y: 30, scale: 0.8 });
-      gsap.set(sidebar, { autoAlpha: 0, x: 50 });
+      if (sidebar) gsap.set(sidebar, { autoAlpha: 0, x: 50 });
       if (title) gsap.set(title, { autoAlpha: 0, y: -20 });
-      metricEls.forEach(metric => gsap.set(metric, { autoAlpha: 0, y: 20 }));
+      if (metricEls.length) gsap.set(metricEls, { autoAlpha: 0, y: 20 });
       if (disclaimer) gsap.set(disclaimer, { autoAlpha: 0, y: 20 });
+      
+      if (!startAnimation) return;
+      
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.out', force3D: true }
+      });
 
-      // Sequence
-      master.to(mapImgs.A, { autoAlpha: 1, duration: 0.6 }, '+=0.2')
-            .to([mapImgs.B, mapImgs.C], { autoAlpha: 1, duration: 0.6 }, '+=0.1');
+      // Map layers sequence
+      tl.to(mapImgs.A, { autoAlpha: 1, duration: 0.6 }, '+=0.2')
+        .to([mapImgs.B, mapImgs.C], { autoAlpha: 1, duration: 0.6 }, '+=0.1');
 
-      master.to(mapImgs.A, { y: -100, duration: 1.0, ease: 'power3.inOut' }, '+=0.1')
-            .to(mapImgs.B, { y: -100, duration: 1.0, ease: 'power3.inOut' }, '<')
-            .to([mapImgs.C, mapImgs.D, mapImgs.E], { x: -350, y: 150, scale: 12, duration: 1.0, ease: 'power3.inOut' }, '<');
+      tl.to(mapImgs.A, { y: -100, duration: 1.0, ease: 'power3.inOut' }, '+=0.1')
+        .to(mapImgs.B, { y: -100, duration: 1.0, ease: 'power3.inOut' }, '<')
+        .to([mapImgs.C, mapImgs.D, mapImgs.E], { x: -350, y: 150, scale: 12, duration: 1.0, ease: 'power3.inOut' }, '<');
 
-      master.to(mapImgs.D, { autoAlpha: 1, duration: 0.4 }, '-=0.5')
-            .to(mapImgs.E, { autoAlpha: 1, duration: 0.4 }, '-=0.2');
+      tl.to(mapImgs.D, { autoAlpha: 1, duration: 0.4 }, '-=0.5')
+        .to(mapImgs.E, { autoAlpha: 1, duration: 0.4 }, '-=0.2');
 
+      // UI Elements sequence
       if (logoEls.length > 0) {
-        master.to(logoEls, { autoAlpha: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }, '-=0.5');
+        tl.to(logoEls, { autoAlpha: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }, '-=0.5');
       }
 
-      master.to(sidebar, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3');
-      if (title) master.to(title, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.4');
-      if (metricEls.length) master.to(metricEls, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.05 }, '-=0.3');
-      if (disclaimer) master.to(disclaimer, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.2');
+      if (sidebar) tl.to(sidebar, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3');
+      if (title) tl.to(title, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.4');
+      if (metricEls.length) tl.to(metricEls, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.05 }, '-=0.3');
+      if (disclaimer) tl.to(disclaimer, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.2');
 
-    }, 50);
+    }, sectionRef);
 
-    return () => {
-      clearTimeout(animationTimeout);
-      if (masterTimelineRef.current) masterTimelineRef.current.kill();
-    };
+    return () => ctx.revert();
   }, [visible, startAnimation, logosArray.length, metricsArray.length, paths]);
 
   if (!visible) return null;

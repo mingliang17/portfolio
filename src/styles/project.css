@@ -1,9 +1,4 @@
-/* src/styles/project.css */
-/* SIMPLIFIED - No more section navigation */
-
-/* ===================================
-   BACKGROUND SYSTEM (LEGACY - KEPT FOR COMPATIBILITY)
-   =================================== */
+/* src/styles/project.css - CLEANED */
 
 .project-background-wrapper {
   position: fixed;
@@ -25,8 +20,3 @@
   color: white;
   padding: 2rem;
 }
-
-/* ===================================
-   REMOVED: All navigation dots, unlock overlays, scroll prompts
-   These are now handled in ProjectTemplate.jsx
-   =================================== */

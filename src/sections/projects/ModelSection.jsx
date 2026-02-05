@@ -8,10 +8,7 @@ import {
   PerspectiveCamera,
 } from '@react-three/drei';
 import ModelLoader from '../../components/project/ModelLoaderComponent.jsx';
-
-const BASE_URL = import.meta.env.BASE_URL || '/';
-const assetPath = (path) =>
-  `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+import { assetPath } from '@/utils/assetPath.js';
 
 // Scrolling Camera Component
 const ScrollingCamera = ({ 
@@ -59,9 +56,12 @@ const ModelSection = ({
 
   showControls = true,
   enableShadows = true,
+  
+  // Controlled props
+  isActive = false,
+  scrollProgress = 0
 }) => {
   const [loaded, setLoaded] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const sectionRef = useRef(null);
   
   const processedUrl = modelUrl ? assetPath(modelUrl) : null;
@@ -69,31 +69,6 @@ const ModelSection = ({
   useEffect(() => {
     setLoaded(false);
   }, [processedUrl, componentName]);
-
-  // Calculate scroll progress through this section
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!sectionRef.current) return;
-
-      const rect = sectionRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const sectionHeight = rect.height;
-
-      // Calculate how far through the section we've scrolled
-      const scrollStart = rect.top;
-      const scrollEnd = rect.bottom - viewportHeight;
-      const scrollRange = sectionHeight - viewportHeight;
-
-      // Progress from 0 (top of section at top of viewport) to 1 (bottom of section at bottom of viewport)
-      const progress = Math.max(0, Math.min(1, -scrollStart / scrollRange));
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <div ref={sectionRef} className="model-section-wrapper">

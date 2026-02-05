@@ -1,5 +1,3 @@
-import { assetPath } from '../utils/assetPath.js'; 
-
 const Button = ({ name, isBeam = false, containerClass }) => {
   return (
     <button className={`btn ${containerClass}`}>

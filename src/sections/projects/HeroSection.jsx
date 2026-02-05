@@ -1,155 +1,161 @@
-// src/sections/projects/HeroSection.jsx
-// Ironhill-inspired Premium Hero
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 
-export const HeroSection = ({ 
-  imagePath, 
-  title, 
-  subtitle, 
-  isActive 
+export const HeroSection = ({
+  imagePath,
+  title,
+  subtitle,
+  isActive,
+  apertureVideoPath = null,
+  overlayVideoPath = null
 }) => {
   const containerRef = useRef(null);
-  const textRef = useRef(null);
   const imageRef = useRef(null);
-  const subtitleRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const apertureRef = useRef(null);
+  const overlayVideoRef = useRef(null);
 
   useEffect(() => {
-    if (isActive) {
-      // Reset
-      gsap.set(textRef.current, { y: 100, opacity: 0 });
-      gsap.set(subtitleRef.current, { y: 50, opacity: 0 });
-      // Bokeh Entry: Start extremely blurry and larger (Req 3)
-      gsap.set(imageRef.current, { scale: 1.5, opacity: 0, filter: 'blur(60px)' });
-      
-      // Animate In with Bokeh Effect
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      
-      // Image sharpens and fades in (Slow, cinematic focus pull - Req 3)
-      tl.to(imageRef.current, {
-        opacity: 0.6,
-        scale: 1,
-        filter: 'blur(0px)', // Sharpen
-        duration: 5.0, // Much slower for cinematic feel (Req 3)
-        ease: 'power1.inOut'
-      })
-      .to(textRef.current, {
-        y: 0,
-        opacity: 1,
-        duration: 1.5,
-        stagger: 0.15
-      }, '-=3.5') // Text enters as image sharpens
-      .to(subtitleRef.current, {
-        y: 0,
-        opacity: 1,
-        duration: 1.2
-      }, '-=2.5');
+    if (!isActive) return;
 
-    }
-  }, [isActive]);
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } });
+
+      // 1. Initial State Setup (Reset)
+      gsap.set(".hero-bg-image", { scale: 1.1, opacity: 0, filter: 'blur(20px)' });
+      gsap.set([".hero-polaroid-frame", ".hero-focus-overlay", ".hero-green-layover", ".hero-vignette", ".hero-focus-frame", ".hero-bokeh-container", ".hero-lens-flares", ".hero-exposure-flash", ".hero-chromatic-aberration", ".hero-aperture-video", ".hero-overlay-video"], { opacity: 0 });
+      gsap.set(".hero-focus-pulse", { opacity: 0, scale: 1 });
+      gsap.set([".polaroid-title", ".polaroid-subtitle"], { opacity: 0, y: 20 });
+
+      // 2. Intro: Blurred with Bokeh & Vignette
+      tl.to(".hero-bg-image", { opacity: 0.6, duration: 0.8 })
+        .to([".hero-bokeh-container", ".hero-vignette", ".hero-lens-flares", ".hero-chromatic-aberration"], { opacity: 1, duration: 0.8 }, 0);
+
+      if (overlayVideoRef.current) {
+        tl.to(overlayVideoRef.current, { opacity: 0.7, duration: 0.8 }, 0);
+        overlayVideoRef.current.play();
+      }
+
+      // 3. Focus UI Appears
+      tl.to(".hero-focus-overlay", { opacity: 1, duration: 0.3 }, "+=0.2")
+        .to(".hero-green-layover", { opacity: 0.15, duration: 0.4 }, "<")
+        .to(".hero-focus-frame", { opacity: 0.8, duration: 0.4 }, "-=0.2");
+
+      // 4. Searching/Aperture Phase
+      tl.to(".hero-bg-image", { filter: 'blur(40px)', scale: 1.15, duration: 0.6 }, "+=0.2")
+        .to(".hero-exposure-flash", { opacity: 0.2, duration: 0.6 }, "<");
+
+      if (apertureVideoPath && apertureRef.current) {
+        tl.to(apertureRef.current, { opacity: 1, duration: 0.4, onStart: () => apertureRef.current.play() })
+          .to({}, { duration: 2.0 })
+          .to(apertureRef.current, { opacity: 0, duration: 0.4 });
+      }
+
+      // 5. First Focus Attempt (90%)
+      tl.to(".hero-bg-image", { filter: 'blur(8px)', scale: 1.05, duration: 0.8 }, "+=0.3")
+        .to(".hero-green-layover", { opacity: 0.25 }, "<")
+        .to(".hero-focus-pulse", { opacity: 1, scale: 1.1, duration: 0.4 }, "<");
+
+      // 6. Focus Hunt (Lose focus briefly)
+      tl.to(".hero-bg-image", { filter: 'blur(15px)', scale: 1.08, duration: 0.5 }, "+=0.3")
+        .to([".hero-green-layover", ".hero-focus-pulse"], { opacity: 0.2, duration: 0.4 }, "<");
+
+      // 7. Focus Lock (100%)
+      tl.to(".hero-bg-image", { filter: 'blur(0px)', scale: 1, opacity: 1, duration: 1.2, ease: 'power3.out' }, "+=0.2")
+        .to(".hero-green-layover", { opacity: 0.3 }, "<")
+        .to(".hero-focus-pulse", { opacity: 1, scale: 1.2, duration: 0.5, ease: 'back.out(2)' }, "<")
+        .to([".hero-bokeh-container", ".hero-chromatic-aberration", ".hero-exposure-flash"], { opacity: 0, duration: 0.8 }, "-=0.8")
+        .to(".hero-vignette", { opacity: 0.3 }, "-=0.6");
+
+      // 8. Photo Taken & Polaroid Snap
+      tl.to(".hero-focus-overlay", { opacity: 0, duration: 0.4 }, "+=0.3")
+        .to(".hero-exposure-flash", { opacity: 1, duration: 0.1, ease: 'power1.in' })
+        .to(".hero-exposure-flash", { opacity: 0, duration: 0.3 })
+        .to(wrapperRef.current, { scale: 0.68, rotation: -12, duration: 1, ease: 'power2.inOut' }, "+=0.2")
+        .to(".hero-polaroid-frame", { opacity: 1, duration: 0.7 }, "-=0.7")
+        .to([".hero-vignette", ".hero-lens-flares"], { opacity: 0, duration: 0.5 }, "-=0.5")
+        .to(".polaroid-title", { opacity: 1, y: 0, duration: 0.7 }, "+=0.2")
+        .to(".polaroid-subtitle", { opacity: 1, y: 0, duration: 0.6 }, "-=0.3");
+
+    }, containerRef);
+    return () => ctx.revert();
+  }, [isActive, apertureVideoPath]);
 
   return (
-    <div 
-      ref={containerRef}
-      className="hero-section-container"
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: '100vh',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#000'
-      }}
-    >
-      {/* Background Image with Parallax Potential */}
-      <div 
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 0
-        }}
-      >
-        <img
-          ref={imageRef}
-          src={imagePath}
-          alt={title}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: 0.6
-          }}
-        />
-        <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'radial-gradient(circle at center, transparent 0%, #000 100%)'
-        }} />
+    <section ref={containerRef} className="hero-section-container">
+      <div className="hero-vignette" />
+      <div className="hero-chromatic-aberration" />
+      <div className="hero-exposure-flash" />
+      
+      <div className="hero-lens-flares">
+        {[1, 2, 3].map(i => <div key={i} className={`lens-flare lens-flare-${i}`} />)}
       </div>
 
-      {/* Content */}
-      <div 
-        style={{
-          position: 'relative',
-          zIndex: 10,
-          textAlign: 'center',
-          mixBlendMode: 'difference',
-          color: 'white',
-          padding: '0 2rem'
-        }}
-      >
-        <h1 
-          ref={textRef}
-          style={{
-            fontSize: 'clamp(3rem, 15vw, 12rem)', // Massive typography
-            fontWeight: 900,
-            lineHeight: 0.85,
-            letterSpacing: '-0.02em',
-            margin: 0,
-            textTransform: 'uppercase',
-            willChange: 'transform, opacity'
-          }}
-        >
-          {title}
-        </h1>
-        
-        {subtitle && (
-          <p 
-            ref={subtitleRef}
-            style={{
-              fontSize: 'clamp(1rem, 2vw, 1.5rem)',
-              fontWeight: 400,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              marginTop: '2rem',
-              color: 'rgba(255,255,255,0.8)'
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
+      <div ref={wrapperRef} className="hero-bg-wrapper">
+        <div className="hero-polaroid-frame">
+          <div className="polaroid-photo-area" />
+          <div className="polaroid-text">
+            <h1 className="polaroid-title">{title}</h1>
+            {subtitle && <p className="polaroid-subtitle">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="hero-bg">
+          <img ref={imageRef} src={imagePath} alt={title} className="hero-bg-image" />
+        </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div 
-        style={{
-          position: 'absolute',
-          bottom: '2rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: 'white',
-          opacity: 0.5,
-          fontSize: '0.8rem',
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase'
-        }}
-      >
-        Scroll to Explore
+      {apertureVideoPath && (
+        <div className="hero-aperture-video-container">
+          <video ref={apertureRef} src={apertureVideoPath} className="hero-aperture-video" muted playsInline />
+        </div>
+      )}
+
+      {overlayVideoPath && (
+        <div className="hero-overlay-video-container">
+          <video ref={overlayVideoRef} src={overlayVideoPath} className="hero-overlay-video" muted loop playsInline />
+        </div>
+      )}
+
+      <div className="hero-bokeh-container">
+        {[...Array(18)].map((_, i) => (
+          <div key={i} className="bokeh-circle" style={{
+            '--delay': `${Math.random() * 3}s`,
+            '--duration': `${5 + Math.random() * 3}s`,
+            '--size': `${40 + Math.random() * 90}px`,
+            '--start-x': `${Math.random() * 100}%`,
+            '--start-y': `${Math.random() * 100}%`,
+            '--end-x': `${Math.random() * 100}%`,
+            '--end-y': `${Math.random() * 100}%`
+          }} />
+        ))}
       </div>
-    </div>
+
+      <div className="hero-focus-overlay" aria-hidden="true">
+        <div className="hero-green-layover" />
+        <div className="hero-focus-pulse" />
+        <div className="hero-focus-frame">
+          <div className="focus-corner focus-corner-tl" />
+          <div className="focus-corner focus-corner-tr" />
+          <div className="focus-corner focus-corner-bl" />
+          <div className="focus-corner focus-corner-br" />
+          <div className="focus-crosshair">
+            <div className="crosshair-h" /><div className="crosshair-v" /><div className="crosshair-center" />
+          </div>
+          <div className="focus-grid">
+            <div className="grid-line grid-h" style={{ top: '33.33%' }} />
+            <div className="grid-line grid-h" style={{ top: '66.66%' }} />
+            <div className="grid-line grid-v" style={{ left: '33.33%' }} />
+            <div className="grid-line grid-v" style={{ left: '66.66%' }} />
+          </div>
+          <div className="focus-distance-indicator">
+            <span>AF</span>
+            <div className="focus-distance-bars"><div className="distance-bar" /><div className="distance-bar" /><div className="distance-bar" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="hero-scroll-indicator">Scroll to Explore</div>
+    </section>
   );
 };
 

@@ -1,10 +1,9 @@
-/* src/styles/index.css */
-/* FINAL - Clean import order with unified scroll system */
+/* src/styles/index.css - CLEANED */
 
 /* === FONTS === */
 @import url('https://fonts.cdnfonts.com/css/kg-keep-your-head-up');
 
-/* === CORE (Order matters: variables first) === */
+/* === CORE === */
 @import './variables.css';
 @import './core.css';
 @import './base.css';
@@ -12,33 +11,32 @@
 /* === COMPONENTS === */
 @import './components.css';
 @import './navbar.css';
-@import './unifiedScroll.css';
 
 /* === UTILITIES === */
 @import './utils.css';
+@import './unifiedScroll.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';
 
 /* === PROJECTS === */
 @import './project.css';
-@import './projecttemplate.css';
-@import './unifiedscroll.css';
+
 @import './projects/carousel.css';
 @import './projects/map.css';
 @import './projects/model.css';
 @import './projects/spin.css';
 @import './projects/anime.css';
+@import './projects/hero.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';
 
 /* ===================================
    PAGE-SPECIFIC STYLES
-   Uses blue theme variables
    =================================== */
 
-/* Work Experience Section */
+/* Work Experience */
 .work-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -142,7 +140,7 @@
   }
 }
 
-/* Contact Section */
+/* Contact */
 .contact-container {
   max-width: 36rem;
   position: relative;
@@ -177,7 +175,6 @@
   outline-offset: 2px;
 }
 
-/* Copy Container */
 .copy-container {
   cursor: pointer;
   display: flex;

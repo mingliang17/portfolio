@@ -1,32 +1,20 @@
 // src/sections/projects/AnimeSection.jsx
-// COMPLETE REWRITE - Controlled Component Version
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { createTimeline } from 'animejs';
 import { assetPath } from '@/utils/assetPath.js';
 
-// ===================================
-// MODEL COMPONENT
-// ===================================
-const ReconstructingModel = ({ modelPath, onMeshCountDetected, scrollProgress = 0 }) => {
+const ReconstructingModel = ({ modelPath, scrollProgress = 0 }) => {
   const groupRef = useRef();
   const meshesRef = useRef([]);
-  const animationStateRef = useRef({
-    rotation: 0,
-    meshes: []
-  });
-  
-  // Keep track of internal timeline progress
+  const animationStateRef = useRef({ rotation: 0, meshes: [] });
   const timelineRef = useRef(null);
-
   const { scene } = useGLTF(assetPath(modelPath));
 
   useEffect(() => {
     if (!scene || !groupRef.current) return;
-
-    console.log('🎨 Loading model:', modelPath);
 
     groupRef.current.clear();
     const clonedScene = scene.clone(true);
@@ -36,96 +24,83 @@ const ReconstructingModel = ({ modelPath, onMeshCountDetected, scrollProgress = 
       if (child.isMesh) {
         child.material = child.material.clone();
         child.material.transparent = true;
-        child.userData.originalPosition = child.position.clone();
+        child.userData.origPos = child.position.clone();
         meshes.push(child);
       }
     });
 
-    console.log(`✅ Loaded ${meshes.length} meshes`);
     meshesRef.current = meshes;
     groupRef.current.add(clonedScene);
 
+    // Initialize state
     animationStateRef.current.meshes = meshes.map(() => ({
-      scatterOffset: { x: 0, y: 0, z: 0 },
+      offset: { x: 0, y: 0, z: 0 },
       opacity: 1
     }));
 
-    groupRef.current.userData.animationState = animationStateRef.current;
-    
-    // Create timeline
-    const tl = createTimeline({ autoplay: false });
-    const phaseDur = 1000;
+    // 1. CREATE TIMELINE WITH BUFFER
+    // We make the timeline longer than the scroll range to "park" the playhead
+    const tl = createTimeline({ autoplay: false, loop: false });
+    const phase = 1000;
     
     // Global Rotation
     tl.add(animationStateRef.current, {
-        rotation: Math.PI * 8,
-        duration: phaseDur * 6,
-        ease: 'linear'
-      }, 0);
+      rotation: Math.PI * 8,
+      duration: phase * 10, // Longer duration
+      ease: 'linear'
+    }, 0);
 
     meshes.forEach((m, i) => {
-      const delay = (i / meshes.length) * 1000;
       const mState = animationStateRef.current.meshes[i];
+      const delay = (i / meshes.length) * 1000;
       
       // Explosion
-      tl.add(mState.scatterOffset, {
+      tl.add(mState.offset, {
         x: (Math.random() - 0.5) * 60,
         y: (Math.random() - 0.5) * 60,
         z: (Math.random() - 0.5) * 60,
-        duration: phaseDur,
+        duration: phase,
         ease: 'outExpo'
-      }, phaseDur + delay);
+      }, phase + delay);
 
-      tl.add(mState, {
-        opacity: 0.3,
-        duration: phaseDur * 0.5,
-      }, phaseDur + delay);
+      tl.add(mState, { opacity: 0.3, duration: phase * 0.5 }, phase + delay);
 
-      // Reconstruction
-      tl.add(mState.scatterOffset, {
+      // Reconstruction (Ends at phase * 6)
+      tl.add(mState.offset, {
         x: 0, y: 0, z: 0,
-        duration: phaseDur,
+        duration: phase,
         ease: 'outElastic(1, .8)'
-      }, phaseDur * 4 + delay);
+      }, phase * 4 + delay);
 
-      tl.add(mState, {
-        opacity: 1,
-        duration: phaseDur * 0.5,
-      }, phaseDur * 4 + delay);
+      tl.add(mState, { opacity: 1, duration: phase * 0.5 }, phase * 4 + delay);
     });
 
     timelineRef.current = tl;
-    if (onMeshCountDetected) onMeshCountDetected(meshes.length);
-    
-  }, [scene, modelPath, onMeshCountDetected]);
+  }, [scene, modelPath]);
 
-  // Sync timeline with scroll prop
+  // 2. BULLETPROOF SEEK LOGIC
   useEffect(() => {
     if (timelineRef.current) {
-        const duration = timelineRef.current.duration;
-        // Clamp progress
-        const p = Math.max(0, Math.min(1, scrollProgress));
-        timelineRef.current.seek(p * duration);
+      const tl = timelineRef.current;
+      // We limit the seek range to 95% of the timeline. 
+      // The model is fully reconstructed by 80%, so it stays "parked" 
+      // in the assembled state for the final 15% of the scroll.
+      const totalDur = tl.duration;
+      const clampedProgress = Math.min(Math.max(scrollProgress, 0), 1);
+      tl.seek(clampedProgress * (totalDur * 0.95)); 
     }
   }, [scrollProgress]);
 
   useFrame(() => {
-    if (meshesRef.current.length === 0) return;
+    if (!groupRef.current || meshesRef.current.length === 0) return;
     const state = animationStateRef.current;
-    
-    // Apply state to actual meshes
     groupRef.current.rotation.y = state.rotation;
 
     meshesRef.current.forEach((mesh, i) => {
       const mState = state.meshes[i];
       if (!mState) return;
-      const orig = mesh.userData.originalPosition;
-      
-      mesh.position.set(
-        orig.x + mState.scatterOffset.x,
-        orig.y + mState.scatterOffset.y,
-        orig.z + mState.scatterOffset.z
-      );
+      const o = mesh.userData.origPos;
+      mesh.position.set(o.x + mState.offset.x, o.y + mState.offset.y, o.z + mState.offset.z);
       mesh.material.opacity = mState.opacity;
     });
   });
@@ -133,171 +108,34 @@ const ReconstructingModel = ({ modelPath, onMeshCountDetected, scrollProgress = 
   return <group ref={groupRef} scale={0.06} position={[0, -1, 0]} />;
 };
 
-// ===================================
-// MAIN ANIME SECTION
-// ===================================
-const AnimeSection = ({
-  modelPath = 'assets/projects/mh1/models/gltf/mh1_2.gltf',
-  checkpoints = [
-    { title: 'System Offline', description: 'Initializing core systems...' },
-    { title: 'Structural Analysis', description: 'Scanning geometry architecture.' },
-    { title: 'Deconstruction', description: 'Separating mesh components.' },
-    { title: 'Data Cloud', description: 'Processing vertex data streams.' },
-    { title: 'Re-Materializing', description: 'Compiling structure patterns.' },
-    { title: 'System Restored', description: 'Reconstruction complete.' }
-  ],
-  debugMode = false,
-  isActive = false,
-  scrollProgress = 0 // Controlled prop (0 to 1)
-}) => {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [meshCount, setMeshCount] = useState(0);
-  
-  // Calculate active checkpoint based on scroll progress
-  useEffect(() => {
-    const total = checkpoints.length;
-    if (total === 0) return;
-    
-    // Simple even distribution
-    const step = 1 / (total - 1 || 1);
-    
-    // Find closest checkpoint
-    let closestIdx = 0;
-    let minDiff = Infinity;
-    
-    checkpoints.forEach((_, idx) => {
-        const cpPos = idx * step;
-        const diff = Math.abs(scrollProgress - cpPos);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closestIdx = idx;
-        }
-    });
-    
-    setActiveIdx(closestIdx);
-  }, [scrollProgress, checkpoints.length]);
-
-  const sectionHeightVh = checkpoints.length * 120 + 100;
+const AnimeSection = ({ modelPath, checkpoints = [], isActive, scrollProgress }) => {
+  const activeIdx = Math.min(
+    Math.floor(scrollProgress * checkpoints.length),
+    checkpoints.length - 1
+  );
 
   return (
-    <section 
-      style={{ 
-        position: 'relative',
-        width: '100%',
-        height: `${sectionHeightVh}vh`, // This ensures physical scroll space
-        backgroundColor: '#050505',
-        color: 'white'
-      }}
-    >
-      {/* STICKY CONTAINER */}
-      <div 
-        style={{
-          position: 'sticky',
-          top: 0,
-          left: 0,
-          height: '100vh',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          zIndex: 10,
-          backgroundColor: '#0a0a0a',
-          opacity: isActive ? 1 : 0, // Fade out if not active section
-          transition: 'opacity 0.5s ease'
-        }}
-      >
-        {/* CANVAS - Only render if relevant to save resources */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-             {/* Always render canvas to maintain state, but maybe lower priority if !isActive? 
-                Actually, keeping it rendered prevents flash of reload. */}
-          <Canvas camera={{ position: [0, 5, 30], fov: 45 }} dpr={[1, 2]}>
-            <color attach="background" args={['#0a0a0a']} />
+    <section style={{ height: `${checkpoints.length * 120}vh`, backgroundColor: '#050505', position: 'relative' }}>
+      <div style={{
+        position: 'sticky', top: 0, height: '100vh', width: '100%',
+        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: isActive ? 1 : 0, transition: 'opacity 0.8s ease'
+      }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Canvas camera={{ position: [0, 5, 30], fov: 45 }}>
             <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={1.5} />
-            
-            <ReconstructingModel 
-                modelPath={modelPath}
-                onMeshCountDetected={setMeshCount}
-                scrollProgress={scrollProgress}
-            />
-            
+            <ReconstructingModel modelPath={modelPath} scrollProgress={scrollProgress} />
             <Environment preset="city" />
           </Canvas>
         </div>
 
-        {/* UI OVERLAY */}
-        <div style={{ 
-          position: 'relative', 
-          zIndex: 10, 
-          textAlign: 'center', 
-          pointerEvents: 'none',
-          maxWidth: '90%',
-          padding: '2rem'
-        }}>
-          <h2 style={{ 
-            fontSize: 'clamp(2rem, 6vw, 5rem)', 
-            margin: 0, 
-            fontWeight: 900, 
-            textTransform: 'uppercase',
-            textShadow: '0 0 20px rgba(0, 255, 204, 0.5)',
-            lineHeight: 1.2
-          }}>
-            {checkpoints[activeIdx]?.title}
-          </h2>
-          <p style={{ 
-            fontSize: 'clamp(1rem, 2vw, 1.5rem)', 
-            color: '#00ffcc',
-            marginTop: '1rem'
-          }}>
-            {checkpoints[activeIdx]?.description}
-          </p>
-        </div>
-
-        {/* PROGRESS BAR */}
-        <div style={{
-          position: 'absolute',
-          bottom: '2rem',
-          width: 'min(300px, 80%)',
-          height: '6px',
-          background: 'rgba(255,255,255,0.2)',
-          borderRadius: '3px',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${scrollProgress * 100}%`,
-            background: '#00ffcc',
-            transition: 'width 0.1s linear'
-          }} />
-        </div>
-
-        {/* CHECKPOINT DOTS */}
-        <div style={{
-          position: 'absolute',
-          bottom: '4rem',
-          display: 'flex',
-          gap: '10px'
-        }}>
-          {checkpoints.map((_, idx) => (
-            <div
-              key={idx}
-              style={{
-                width: idx === activeIdx ? '28px' : '12px',
-                height: '12px',
-                borderRadius: '6px',
-                background: idx === activeIdx ? '#00ffcc' : 'rgba(255,255,255,0.3)',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          ))}
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', pointerEvents: 'none', color: 'white' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 6vw, 5rem)', fontWeight: 900 }}>{checkpoints[activeIdx]?.title}</h2>
+          <p style={{ color: '#00ffcc' }}>{checkpoints[activeIdx]?.description}</p>
         </div>
       </div>
     </section>
   );
 };
-
-useGLTF.preload(assetPath('assets/projects/mh1/models/gltf/mh1_2.gltf'));
 
 export default AnimeSection;

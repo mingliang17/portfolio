@@ -1,18 +1,11 @@
-/* src/styles/animations.css */
-/* CLEANED - Only active animations, removed all duplicates */
+/* src/styles/animations.css - CLEANED */
 
-/* ===================================
-   SPIN & ROTATE
-   =================================== */
-
+/* Spin */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* ===================================
-   PULSE
-   =================================== */
-
+/* Pulse */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -22,10 +15,7 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ===================================
-   FADE
-   =================================== */
-
+/* Fade */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -36,10 +26,7 @@
   to { opacity: 0; }
 }
 
-/* ===================================
-   BOUNCE & FLOAT
-   =================================== */
-
+/* Bounce & Float */
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -54,10 +41,7 @@
   animation: float 6s ease-in-out infinite;
 }
 
-/* ===================================
-   LIQUID EFFECTS (Carousel)
-   =================================== */
-
+/* Liquid Effects */
 @keyframes liquid-flow {
   0%, 100% { 
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
@@ -69,82 +53,13 @@
   }
 }
 
-@keyframes liquid-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-}
-
-@keyframes liquid-float-long {
-  0%, 100% { transform: translateY(60px); }
-  50% { transform: translateY(0px); }
-}
-
 @keyframes liquid-shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
-/* ===================================
-   PROJECT ANIMATIONS
-   =================================== */
-
-@keyframes project-scroll-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes project-scroll-dot {
-  0% { 
-    opacity: 1; 
-    transform: translateX(-50%) translateY(0); 
-  }
-  100% { 
-    opacity: 0; 
-    transform: translateX(-50%) translateY(20px); 
-  }
-}
-
-@keyframes project-unlock-pulse {
-  0% { 
-    transform: scale(0.8); 
-    opacity: 0.8; 
-  }
-  100% { 
-    transform: scale(1.2); 
-    opacity: 0; 
-  }
-}
-
-/* ===================================
-   ZOOM ANIMATIONS (Carousel)
-   =================================== */
-
-@keyframes expandIn {
-  from {
-    opacity: 0;
-    transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-    width: var(--start-width, 400px);
-    height: var(--start-height, 300px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-    width: var(--target-width, auto);
-    height: var(--target-height, auto);
-  }
-}
-
-@keyframes shrinkOut {
-  from {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-    width: var(--target-width, auto);
-    height: var(--target-height, auto);
-  }
-  to {
-    opacity: 0;
-    transform: translate(var(--start-x), var(--start-y)) scale(var(--start-scale));
-    width: var(--start-width, 400px);
-    height: var(--start-height, 300px);
-  }
+/* Carousel Hint */
+@keyframes fadeInHint {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

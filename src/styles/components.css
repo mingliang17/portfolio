@@ -1,10 +1,6 @@
-/* src/styles/components.css */
-/* CLEANED - Removed all duplicates and redundant code */
+/* src/styles/components.css - CLEANED */
 
-/* ===================================
-   LOADING COMPONENTS
-   =================================== */
-
+/* Loading */
 .component-loading,
 .canvas-loader {
   width: 100%;
@@ -28,10 +24,7 @@
   animation: spin 1s linear infinite;
 }
 
-/* ===================================
-   HERO COMPONENTS
-   =================================== */
-
+/* Hero */
 .project-background-wrapper {
   position: absolute;
   inset: 0;
@@ -78,13 +71,9 @@
   margin: 0 auto;
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
   color: rgba(255, 255, 255, 0.65);
-  transition: none; /* Controlled by GSAP */
 }
 
-/* ===================================
-   RESPONSIVE
-   =================================== */
-
+/* Responsive */
 @media (max-width: 768px) {
   .hero-title {
     font-size: 2.5rem;
