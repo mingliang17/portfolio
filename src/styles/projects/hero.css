@@ -118,5 +118,5 @@
 
 .hero-scroll-indicator {
   position: absolute; bottom: 2rem; color: #fff; opacity: 0.6;
-  font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+  font-size: var(--text-2); letter-spacing: 0.2em; text-transform: uppercase;
 }

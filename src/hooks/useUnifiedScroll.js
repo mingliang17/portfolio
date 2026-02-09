@@ -1,4 +1,3 @@
-// src/hooks/useUnifiedScroll.js
 import { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 
@@ -8,11 +7,13 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     enableDebug = false
   } = options;
 
+  // State
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [internalScrollProgress, setInternalScrollProgress] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState(null);
 
+  // Refs
   const containerRef = useRef(null);
   const sectionRefs = useRef([]);
   const isTransitioningRef = useRef(false);
@@ -20,6 +21,11 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
   const lastScrollTime = useRef(Date.now());
   const internalScrollPositionRef = useRef(0);
   const ctxRef = useRef(null);
+  
+  // For checkpoint sections - track continuous scroll position
+  const continuousScrollRef = useRef(0);
+  const scrollVelocityRef = useRef(0);
+  const lastDeltaRef = useRef(0);
 
   const totalSections = sections.length;
   const currentSection = sections[currentSectionIndex] || {};
@@ -40,6 +46,11 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     return sectionEl.scrollHeight > window.innerHeight * 1.2;
   }, [currentSectionIndex, sections]);
 
+  const hasCheckpoints = useCallback(() => {
+    const section = sections[currentSectionIndex];
+    return section && section.checkpoints && Array.isArray(section.checkpoints) && section.checkpoints.length > 1;
+  }, [currentSectionIndex, sections]);
+
   const isAtSectionBoundary = useCallback((direction) => {
     if (!isLongSection()) return true;
 
@@ -58,7 +69,44 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
   }, [currentSectionIndex, isLongSection]);
 
   // ---------------------------------------------------
-  // INTERNAL SCROLL (LONG SECTIONS)
+  // CHECKPOINT SYSTEM (CONTINUOUS SCROLL WITH INERTIA)
+  // ---------------------------------------------------
+
+  const getNumCheckpoints = useCallback(() => {
+    const section = sections[currentSectionIndex];
+    if (!section) return 1;
+    
+    if (section.checkpoints && Array.isArray(section.checkpoints)) {
+      return section.checkpoints.length;
+    }
+    
+    return 1;
+  }, [currentSectionIndex, sections]);
+
+  // Apply magnetic inertia towards checkpoint positions
+  const applyCheckpointInertia = useCallback((currentPos, numCheckpoints) => {
+    if (numCheckpoints <= 1) return currentPos;
+
+    const MAGNETIC_STRENGTH = 0.15; // How strong the pull is
+    const MAGNETIC_RADIUS = 0.08;   // Distance from checkpoint where pull starts (0-1 scale)
+    
+    let adjustedPos = currentPos;
+    
+    for (let i = 0; i < numCheckpoints; i++) {
+      const checkpointPos = i / (numCheckpoints - 1);
+      const distance = Math.abs(currentPos - checkpointPos);
+      
+      if (distance < MAGNETIC_RADIUS) {
+        const pullStrength = (1 - distance / MAGNETIC_RADIUS) * MAGNETIC_STRENGTH;
+        adjustedPos = currentPos + (checkpointPos - currentPos) * pullStrength;
+      }
+    }
+    
+    return adjustedPos;
+  }, []);
+
+  // ---------------------------------------------------
+  // INTERNAL SCROLL (CONTINUOUS FOR CHECKPOINTS)
   // ---------------------------------------------------
 
   const handleInternalScroll = useCallback((delta) => {
@@ -68,37 +116,102 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     const maxScroll = sectionEl.scrollHeight - window.innerHeight;
     if (maxScroll <= 0) return false;
 
-    const newScroll = Math.max(
-      0,
-      Math.min(maxScroll, internalScrollPositionRef.current + delta)
-    );
+    const numCheckpoints = getNumCheckpoints();
+    
+    if (!hasCheckpoints()) {
+      // No checkpoints, normal scroll
+      const newScroll = Math.max(
+        0,
+        Math.min(maxScroll, internalScrollPositionRef.current + delta)
+      );
 
-    if (Math.abs(newScroll - internalScrollPositionRef.current) < 1) {
-      return false;
+      if (Math.abs(newScroll - internalScrollPositionRef.current) < 1) {
+        return false;
+      }
+
+      internalScrollPositionRef.current = newScroll;
+      setInternalScrollProgress(newScroll / maxScroll);
+
+      if (
+        sectionEl.style.position === 'sticky' ||
+        sectionEl.querySelector('[style*="sticky"]')
+      ) {
+        sectionEl.scrollTop = newScroll;
+      } else {
+        gsap.to(sectionEl, {
+          y: -newScroll,
+          duration: 0.1,
+          ease: 'power2.out',
+          overwrite: true
+        });
+      }
+
+      return true;
     }
 
-    internalScrollPositionRef.current = newScroll;
-    setInternalScrollProgress(newScroll / maxScroll);
+    // CONTINUOUS CHECKPOINT SCROLL WITH INERTIA
+    const SCROLL_SPEED = 0.0008; // How fast we scroll through checkpoints
+    const DAMPING = 0.92;        // How quickly velocity decays
+    const MIN_VELOCITY = 0.0001; // Stop when velocity is this low
+    
+    // Update velocity
+    scrollVelocityRef.current = (scrollVelocityRef.current + delta * SCROLL_SPEED) * DAMPING;
+    
+    // Cap velocity
+    const MAX_VELOCITY = 0.02;
+    scrollVelocityRef.current = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, scrollVelocityRef.current));
+    
+    // Update continuous position (0-1 range)
+    let newPos = continuousScrollRef.current + scrollVelocityRef.current;
+    
+    // Apply checkpoint magnetic inertia
+    newPos = applyCheckpointInertia(newPos, numCheckpoints);
+    
+    // Clamp to bounds
+    newPos = Math.max(0, Math.min(1, newPos));
+    
+    // Check if at boundary and trying to go further
+    if ((newPos <= 0 && delta < 0) || (newPos >= 1 && delta > 0)) {
+      // Reduce velocity when trying to go past boundary
+      scrollVelocityRef.current *= 0.5;
+      return false; // Allow section transition
+    }
+    
+    continuousScrollRef.current = newPos;
+    
+    // Convert 0-1 progress to actual scroll position
+    const scrollPos = newPos * maxScroll;
+    internalScrollPositionRef.current = scrollPos;
+    setInternalScrollProgress(newPos);
+    
+    if (enableDebug && Math.abs(delta) > 0) {
+      console.log('📜 Continuous Scroll:', {
+        progress: newPos.toFixed(4),
+        velocity: scrollVelocityRef.current.toFixed(6),
+        checkpoint: (newPos * (numCheckpoints - 1)).toFixed(2)
+      });
+    }
 
+    // Apply visual scroll
     if (
       sectionEl.style.position === 'sticky' ||
       sectionEl.querySelector('[style*="sticky"]')
     ) {
-      sectionEl.scrollTop = newScroll;
+      sectionEl.scrollTop = scrollPos;
     } else {
       gsap.to(sectionEl, {
-        y: -newScroll,
-        duration: 0.1,
-        ease: 'power2.out',
+        y: -scrollPos,
+        duration: 0.05,
+        ease: 'none',
         overwrite: true
       });
     }
 
     return true;
-  }, [currentSectionIndex]);
+  }, [currentSectionIndex, getNumCheckpoints, hasCheckpoints, applyCheckpointInertia, enableDebug]);
 
   // ---------------------------------------------------
-  // SECTION TRANSITION (FIXED)
+  // SECTION TRANSITION
   // ---------------------------------------------------
 
   const transitionToSection = useCallback((targetIndex, direction) => {
@@ -106,7 +219,17 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
       isTransitioningRef.current ||
       targetIndex < 0 ||
       targetIndex >= totalSections
-    ) return;
+    ) {
+      return;
+    }
+
+    if (enableDebug) {
+      console.log('🚀 Section Transition:', {
+        from: currentSectionIndex,
+        to: targetIndex,
+        direction
+      });
+    }
 
     isTransitioningRef.current = true;
     setIsTransitioning(true);
@@ -125,21 +248,24 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     const exitY = isMovingDown ? -400 : 400;
     const entryY = isMovingDown ? 400 : -400;
 
+    // Set initial state for incoming section
     gsap.set(targetEl, {
       display: 'block',
       visibility: 'visible',
       opacity: 0,
       y: entryY,
-      scale: 1.2,
-      filter: 'blur(60px)',
+      scale: 1.1,
+      filter: 'blur(40px)',
       zIndex: 10,
       force3D: true
     });
 
     const tl = gsap.timeline({
       onComplete: () => {
-        // 🔒 Transition finished — NOW reset scroll state
+        // Reset scroll state
         internalScrollPositionRef.current = 0;
+        continuousScrollRef.current = 0;
+        scrollVelocityRef.current = 0;
         setInternalScrollProgress(0);
 
         setCurrentSectionIndex(targetIndex);
@@ -148,13 +274,31 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
         setTransitionDirection(null);
         scrollAccumulator.current = 0;
 
+        if (enableDebug) {
+          console.log('✅ Transition Complete:', {
+            newIndex: targetIndex,
+            scrollReset: true
+          });
+        }
+
+        // Trigger section callbacks
         const targetSection = sections[targetIndex];
-        if (targetSection?.onEnter) targetSection.onEnter();
+        if (targetSection?.onEnter) {
+          targetSection.onEnter();
+        }
 
-        window.dispatchEvent(new CustomEvent('sectionChanged', {
-          detail: { index: targetIndex, section: targetSection, direction }
-        }));
+        // Dispatch custom event
+        window.dispatchEvent(
+          new CustomEvent('sectionChanged', {
+            detail: { 
+              index: targetIndex, 
+              section: targetSection, 
+              direction 
+            }
+          })
+        );
 
+        // Hide all other sections
         sectionRefs.current.forEach((el, idx) => {
           if (idx !== targetIndex && el) {
             gsap.set(el, {
@@ -170,30 +314,39 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
       }
     });
 
-    tl.to(currentEl, {
-      y: exitY,
-      opacity: 0,
-      scale: 0.8,
-      filter: 'blur(60px)',
-      duration: transitionDuration * 1.2,
-      ease: 'power2.inOut',
-      zIndex: 5,
-      force3D: true
-    }, 0);
+    // Smoother exit animation
+    tl.to(
+      currentEl,
+      {
+        y: exitY,
+        opacity: 0,
+        scale: 0.9,
+        filter: 'blur(40px)',
+        duration: transitionDuration * 1.3,
+        ease: 'power2.inOut',
+        zIndex: 5,
+        force3D: true
+      },
+      0
+    );
 
-    tl.to(targetEl, {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      filter: 'blur(0px)',
-      duration: transitionDuration * 1.2,
-      ease: 'power2.inOut',
-      zIndex: 10,
-      force3D: true,
-      clearProps: 'transform'
-    }, 0);
-
-  }, [currentSectionIndex, totalSections, transitionDuration, sections]);
+    // Smoother entrance animation
+    tl.to(
+      targetEl,
+      {
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        filter: 'blur(0px)',
+        duration: transitionDuration * 1.3,
+        ease: 'power2.inOut',
+        zIndex: 10,
+        force3D: true,
+        clearProps: 'transform'
+      },
+      0.1
+    );
+  }, [currentSectionIndex, totalSections, transitionDuration, sections, enableDebug]);
 
   // ---------------------------------------------------
   // INPUT HANDLERS
@@ -208,18 +361,22 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     const now = Date.now();
     const timeSinceLastScroll = now - lastScrollTime.current;
 
-    if (timeSinceLastScroll > 200) scrollAccumulator.current = 0;
+    if (timeSinceLastScroll > 200) {
+      scrollAccumulator.current = 0;
+    }
     lastScrollTime.current = now;
 
     const NORMAL_THRESHOLD = 80;
     const LONG_SECTION_RESISTANCE = 300;
 
     if (isLongSection()) {
-      if (!isAtSectionBoundary(direction)) {
-        handleInternalScroll(delta);
-        scrollAccumulator.current = 0;
-        return;
+      const consumed = handleInternalScroll(delta);
+      
+      if (consumed) {
+        return; // Still scrolling internally
       }
+
+      // At boundary - check if we can transition
       scrollAccumulator.current += Math.abs(delta);
       if (scrollAccumulator.current < LONG_SECTION_RESISTANCE) return;
     } else {
@@ -238,7 +395,6 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
     currentSectionIndex,
     totalSections,
     isLongSection,
-    isAtSectionBoundary,
     handleInternalScroll,
     transitionToSection
   ]);
@@ -303,7 +459,7 @@ export const useUnifiedScroll = (sections = [], options = {}) => {
   }, []);
 
   // ---------------------------------------------------
-  // API
+  // PUBLIC API
   // ---------------------------------------------------
 
   const goToSection = useCallback((index) => {

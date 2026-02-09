@@ -12,14 +12,14 @@ export const PROJECT_MH1 = {
   },
   sections: {
     hero: {
-      enabled: true,
+      enabled: false,
       title: 'Project MH1',
       subtitle: 'Redefining Agriculture Through Genetic Innovation',
       animationType: 'unlock',
       snapToTop: true,
     },
     model: {
-      enabled: true,
+      enabled: false,
       title: '3D Model Visualization',
       componentName: 'Mh1Model',
       scale: 0.06,
@@ -35,14 +35,14 @@ export const PROJECT_MH1 = {
       fitInViewport: true,
     },
     map: {
-      enabled: true,
+      enabled: false,
       title: 'Project Location',
       animateOnEntry: true,
       snapToTop: true,
       fitInViewport: true,
     },
     anime: {
-      enabled: true,
+      enabled: false,
       title: 'Interactive Reconstruction',
       modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
       snapToTop: true,
@@ -80,16 +80,16 @@ export const PROJECT_MH1 = {
           title: 'Conceptual Phase', 
           description: 'Initial design concepts focused on sustainability.',
           // Overrides: [x, y, z]
-          cameraPos: [0, 0, 10], 
-          modelRot: [0, 0, 0],
+          cameraPos: [2.5, 0, 5], 
+          modelRot: [0.25,0.75,0],
           modelPos: [0, 0, 0] 
         },
         { 
           title: 'Structural Analysis', 
           description: 'Ensuring maximum efficiency and integration.',
-          cameraPos: [0, 4, 6], // Zoomed in and up
+          cameraPos: [-1.5, 0, 6], // Zoomed in and up
           modelRot: [Math.PI / 4, Math.PI, 0], // Angled view
-          modelPos: [0, -0.5, 0]
+          modelPos: [0, 0, 0]
         },
         { 
           title: 'Material Selection', 

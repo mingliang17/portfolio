@@ -6,69 +6,91 @@
      NAVIGATION
      =================================== */
   --nav-height: 64px;
-  
+
   /* ===================================
      TYPOGRAPHY
      =================================== */
-  --font-primary: 'KG Keep Your Head Up', Avenir, Helvetica, Arial, sans-serif;
-  --font-mono: 'Courier New', monospace;
-  
-  /* Font Sizes */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
-  
+  --font-primary: "KG Keep Your Head Up", Avenir, Helvetica, Arial, sans-serif;
+
+  /* ===================================
+     RESPONSIVE TYPOGRAPHY (text-1 to text-20)
+     Scale: text-1 (Smallest) -> text-20 (Largest)
+     Using clamp(min, val, max) for fluid scaling
+     =================================== */
+
+  /* Display / Hero Sizes */
+  --text-20: clamp(4.5rem, 8vw, 6rem);    /* Massive Hero */
+  --text-19: clamp(4rem, 7vw, 5.25rem);   /* Extra Large Hero */
+  --text-18: clamp(3.5rem, 6vw, 4.5rem);  /* Large Hero */
+  --text-17: clamp(3.125rem, 5.5vw, 4rem);
+  --text-16: clamp(2.75rem, 5vw, 3.5rem); /* Section Title Large */
+  --text-15: clamp(2.375rem, 4.25vw, 3rem);
+
+  /* Heading Sizes */
+  --text-14: clamp(2rem, 3.5vw, 2.5rem);  /* Section Title Small */
+  --text-13: clamp(1.75rem, 3vw, 2.25rem);
+  --text-12: clamp(1.5rem, 2.5vw, 2rem);
+  --text-11: clamp(1.375rem, 2.25vw, 1.75rem);
+  --text-10: clamp(1.25rem, 2vw, 1.5rem);
+  --text-9: clamp(1.125rem, 1.8vw, 1.35rem);
+
+  /* Body Sizes */
+  --text-8: clamp(1rem, 1.6vw, 1.25rem);      /* Large Body */
+  --text-7: clamp(1rem, 1.5vw, 1.125rem);     /* Standard Body */
+  --text-6: clamp(0.9375rem, 1.4vw, 1.05rem); /* Slightly smaller body */
+  --text-5: clamp(0.875rem, 1.2vw, 1rem);     /* Small Body / Meta */
+
+  /* UI / Label Sizes */
+  --text-4: clamp(0.8125rem, 1.1vw, 0.9375rem);
+  --text-3: clamp(0.6875rem, 0.9vw, 0.8125rem);
+  --text-2: clamp(0.625rem, 0.8vw, 0.75rem);  /* Micro Text */
+  --text-1: clamp(0.5rem, 0.7vw, 0.625rem);   /* Atomic Text */
+
   /* ===================================
      COLORS - BLUE THEME SYSTEM  
      CHANGE THESE VALUES TO ADJUST THEME
      =================================== */
-  
+
   /* Background Colors - Blue Theme */
-  --bg-primary: #545454;           /* Dark blue - main background */
-  --bg-secondary: #132f4c;         /* Medium blue - cards/sections */
-  --bg-tertiary: #1e3a5f;          /* Lighter blue - hover states */
-  --bg-overlay: rgba(10, 25, 41, 0.9);  /* Semi-transparent dark blue */
-  
+  --bg-primary: #545454; /* Dark blue - main background */
+  --bg-secondary: #132f4c; /* Medium blue - cards/sections */
+  --bg-tertiary: #1e3a5f; /* Lighter blue - hover states */
+  --bg-overlay: rgba(10, 25, 41, 0.9); /* Semi-transparent dark blue */
+
   /* Black/Dark Shades (kept for contrast) */
   --color-black: #000000;
   --color-black-100: #0a0a0a;
   --color-black-200: #1e1e1e;
   --color-black-300: #2a2a2a;
-  
+
   /* White/Light Shades */
   --color-white: #ffffff;
   --color-white-800: #f5f5f5;
   --color-white-600: #9ca3af;
   --color-white-500: #6b7280;
-  
+
   /* ===================================
      ACCENT COLORS
      =================================== */
-  
-  /* Primary (Amber/Orange - kept from original) */
+
+  /* Primary (Amber/Orange) */
   --color-primary: #f59e0b;
   --color-primary-light: #fbbf24;
   --color-primary-dark: #d97706;
-  
+
   /* Secondary (Blue accent) */
   --color-secondary: #3b82f6;
   --color-secondary-light: #60a5fa;
   --color-secondary-dark: #2563eb;
-  
+
   /* Success */
   --color-success: #10b981;
-  
+
   /* Danger */
   --color-danger: #ef4444;
-  
+
   /* ===================================
-     SPACING (Consolidated from duplicates)
+     SPACING (Consolidated)
      =================================== */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -76,9 +98,9 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* ===================================
-     BORDER RADIUS (Consolidated)
+     BORDER RADIUS
      =================================== */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
@@ -86,23 +108,23 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
-  
+
   /* ===================================
-     SHADOWS (Consolidated)
+     SHADOWS
      =================================== */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-  
+
   /* ===================================
-     TRANSITIONS (Consolidated)
+     TRANSITIONS
      =================================== */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* ===================================
      Z-INDEX LAYERS
      =================================== */
@@ -111,7 +133,7 @@
   --z-overlay: 10;
   --z-navigation: 50;
   --z-modal: 100;
-  
+
   /* ===================================
      BACKDROP FILTERS
      =================================== */
@@ -119,22 +141,40 @@
   --backdrop-blur-md: blur(8px);
   --backdrop-blur-lg: blur(12px);
   --backdrop-blur-xl: blur(16px);
-  
+
   /* ===================================
      GRADIENTS
      =================================== */
   --gradient-primary: linear-gradient(45deg, #f59e0b, #fbbf24);
-  --gradient-text: linear-gradient(to right, #BEC1CF 60%, #D5D8EA 100%);
-  --gradient-blue-dark: linear-gradient(to bottom, 
-    var(--bg-primary) 0%, 
-    var(--bg-secondary) 50%, 
-    var(--bg-tertiary) 100%
-  );
+  --gradient-text: linear-gradient(to right, #bec1cf 60%, #d5d8ea 100%);
+  --gradient-blue-dark: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
 }
 
 /* ===================================
    UTILITY CLASSES
    =================================== */
+
+/* Font Size Utilities */
+.text-1 { font-size: var(--text-1); }
+.text-2 { font-size: var(--text-2); }
+.text-3 { font-size: var(--text-3); }
+.text-4 { font-size: var(--text-4); }
+.text-5 { font-size: var(--text-5); }
+.text-6 { font-size: var(--text-6); }
+.text-7 { font-size: var(--text-7); }
+.text-8 { font-size: var(--text-8); }
+.text-9 { font-size: var(--text-9); }
+.text-10 { font-size: var(--text-10); }
+.text-11 { font-size: var(--text-11); }
+.text-12 { font-size: var(--text-12); }
+.text-13 { font-size: var(--text-13); }
+.text-14 { font-size: var(--text-14); }
+.text-15 { font-size: var(--text-15); }
+.text-16 { font-size: var(--text-16); }
+.text-17 { font-size: var(--text-17); }
+.text-18 { font-size: var(--text-18); }
+.text-19 { font-size: var(--text-19); }
+.text-20 { font-size: var(--text-20); }
 
 /* Backgrounds */
 .bg-primary { background-color: var(--bg-primary); }
@@ -146,6 +186,12 @@
 .text-primary { color: var(--color-primary); }
 .text-secondary { color: var(--color-secondary); }
 .text-white { color: var(--color-white); }
+.text-white-800 { color: var(--color-white-800); }
+.text-white-600 { color: var(--color-white-600); }
+.text-white-500 { color: var(--color-white-500); }
+.text-black-100 { color: var(--color-black-100); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
 
 /* Border Radius */
 .rounded-sm { border-radius: var(--radius-sm); }

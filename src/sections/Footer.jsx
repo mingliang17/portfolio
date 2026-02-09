@@ -9,59 +9,33 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <footer style={{
-      padding: '3rem 1.25rem 1rem 1.25rem',
-      borderTop: '1px solid var(--color-black-300)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: '1.25rem'
-    }}>
+    <footer className="footer-container">
       {/* Terms & Privacy */}
-      <div style={{
-        color: 'var(--color-white-500)',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '0.5rem',
-        fontSize: '0.875rem'
-      }}>
-        <p style={{ cursor: 'pointer', textDecoration: 'underline' }}>Terms & Conditions</p>
+      <div className="footer-links">
+        <p className="footer-link">Terms & Conditions</p>
         <span>|</span>
-        <p style={{ cursor: 'pointer', textDecoration: 'underline' }}>Privacy Policy</p>
+        <p className="footer-link">Privacy Policy</p>
       </div>
 
       {/* Social Icons & Copyright */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '1rem',
-        justifyContent: 'center'
-      }}>
+      <div className="footer-socials">
         {socialLinks.map((link) => (
           <a
             key={link.name}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
-            style={{ width: '1.5rem', height: '1.5rem' }}
+            className="social-icon footer-social-icon"
           >
             <img
               src={assetPath(`/assets/${link.icon}`)}
               alt={link.name}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              className="footer-social-img"
             />
           </a>
         ))}
 
-        <p style={{
-          color: 'var(--color-white-500)',
-          fontSize: '0.875rem',
-          marginTop: '0.5rem',
-          textAlign: 'center'
-        }}>
+        <p className="footer-copyright">
           © 2025 Ming Liang. All rights reserved.
         </p>
       </div>

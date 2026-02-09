@@ -145,7 +145,7 @@
   padding: 10px 20px;
   border-radius: 30px;
   font-weight: bold;
-  font-size: 20px;
+  font-size: var(--text-9);
   z-index: 10000;
   pointer-events: none;
   text-shadow: 0 0 10px #fff;
@@ -204,7 +204,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: white;
-  font-size: 0.7rem;
+  font-size: var(--text-2);
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;
@@ -234,7 +234,7 @@
 }
 
 .transition-arrow {
-  font-size: 3rem;
+  font-size: var(--text-16);
   color: rgba(255, 255, 255, 0.6);
   animation: arrow-pulse 1s ease-in-out infinite;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
@@ -290,7 +290,7 @@
   border-radius: 12px;
   padding: 1.25rem;
   font-family: "Courier New", monospace;
-  font-size: 13px;
+  font-size: var(--text-4);
   color: #0f0;
   min-width: 280px;
   backdrop-filter: blur(10px);
@@ -299,7 +299,7 @@
 
 .debug-panel h3 {
   margin: 0 0 0.75rem 0;
-  font-size: 16px;
+  font-size: var(--text-7);
   color: #0ff;
   border-bottom: 2px solid #0f0;
   padding-bottom: 0.5rem;
@@ -397,7 +397,7 @@
   }
 
   .transition-arrow {
-    font-size: 2rem;
+    font-size: var(--text-14);
   }
 
   .debug-overlay {
@@ -406,7 +406,7 @@
   }
 
   .debug-panel {
-    font-size: 10px;
+    font-size: var(--text-3);
     min-width: 200px;
     padding: 0.75rem;
   }

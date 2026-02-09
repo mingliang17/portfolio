@@ -48,7 +48,7 @@
 }
 
 .carousel-title {
-  font-size: 2rem;
+  font-size: var(--text-14);
   font-weight: 300;
   background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(200,220,255,0.9) 50%, rgba(255,255,255,0.9) 100%);
   -webkit-background-clip: text;
@@ -134,7 +134,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: liquid-float 3s ease-in-out infinite;
   color: white;
-  font-size: 1.1rem;
+  font-size: var(--text-8);
   white-space: nowrap;
 }
 
@@ -213,7 +213,7 @@
 .description-panel,
 .information-panel {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
+  font-size: var(--text-4);
   line-height: 1.6;
   border-radius: 40px;
   padding: 0.5rem 1rem;
@@ -320,7 +320,7 @@
   z-index: 10;
   transition: all 0.3s ease;
   color: white;
-  font-size: 24px;
+  font-size: var(--text-12);
 }
 
 .zoom-close-btn:hover {
@@ -348,7 +348,7 @@
   left: 50%;
   transform: translateX(-50%);
   color: white;
-  font-size: 0.9rem;
+  font-size: var(--text-4);
   background: rgba(0, 0, 0, 0.7);
   padding: 8px 16px;
   border-radius: 20px;

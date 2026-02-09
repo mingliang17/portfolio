@@ -48,17 +48,16 @@
 
 /* Checkpoint title */
 .checkpoint-title {
-  font-size: clamp(2rem, 6vw, 5rem);
+  font-size: var(--text-16);
   margin: 0;
   font-weight: 900;
-  text-transform: uppercase;
   text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
   line-height: 1.2;
 }
 
 /* Checkpoint description */
 .checkpoint-description {
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: var(--text-10);
   color: #00ffcc;
   margin-top: 1rem;
   text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
@@ -147,46 +146,14 @@
    RESPONSIVE
    =================================== */
 
-@media (max-width: 768px) {
-  .checkpoint-title {
-    font-size: clamp(1.5rem, 8vw, 3rem);
-  }
-
-  .checkpoint-description {
-    font-size: clamp(0.875rem, 4vw, 1.25rem);
-  }
-
-  .anime-progress-bar {
-    width: 90%;
-  }
-
-  .checkpoint-indicators {
-    gap: 8px;
-    bottom: 3rem;
-  }
-
-  .checkpoint-dot {
-    width: 10px;
-    height: 10px;
-  }
-
-  .checkpoint-dot.active {
-    width: 24px;
-  }
-}
+  /* Removed explicit clamp overrides */
 
 @media (max-width: 480px) {
   .anime-ui-overlay {
     padding: 1rem;
   }
 
-  .checkpoint-title {
-    font-size: clamp(1.25rem, 10vw, 2.5rem);
-  }
-
-  .checkpoint-description {
-    font-size: clamp(0.75rem, 5vw, 1rem);
-  }
+  /* Removed explicit clamp overrides */
 }
 
 /* ===================================

@@ -41,13 +41,13 @@ export const MapSection = ({
       }));
   }, [description]);
 
-  const paths = {
+  const paths = useMemo(() => ({
     A: mapImages.A || '', 
     B: mapImages.B || '', 
     C: mapImages.C || '', 
     D: mapImages.D || '', 
     E: mapImages.E || ''
-  };
+  }), [mapImages]);
 
   useEffect(() => {
     if (!visible) return;
@@ -106,12 +106,12 @@ export const MapSection = ({
   if (!visible) return null;
 
   return (
-    <section ref={sectionRef} className="map-section-wrapper">
+    <section ref={sectionRef} className="map-section-wrapper flex-center">
       <div className="map-flex-container">
         <div className="map-animation-container">
           <div className="my-map-main">
             {['A', 'B', 'C', 'D', 'E'].map(layer => (
-              <div key={layer} ref={el => mapImageRefs.current[layer] = el} className={`my-map-image layer-${layer}`}>
+              <div key={layer} ref={el => mapImageRefs.current[layer] = el} className={`my-map-image absolute-center layer-${layer}`}>
                 {paths[layer] && <img src={paths[layer]} alt={`Map ${layer}`} className="my-map-img" />}
               </div>
             ))}
@@ -123,7 +123,7 @@ export const MapSection = ({
             <div
               key={logo.id}
               ref={el => logoRefs.current[logo.id] = el}
-              className={`map-logo-container ${hoveredLogo === logo.id ? 'logo-hovered' : ''}`}
+              className={`map-logo-container flex-center glass-panel ${hoveredLogo === logo.id ? 'logo-hovered' : ''}`}
               onMouseEnter={() => setHoveredLogo(logo.id)}
               onMouseLeave={() => setHoveredLogo(null)}
             >
@@ -138,7 +138,7 @@ export const MapSection = ({
               {description.title || 'Project Details'}
             </h2>
             {description.description && (
-              <p className="map-sidebar-desc" style={{ marginTop: '1rem', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6' }}>
+              <p className="map-sidebar-desc">
                 {description.description}
               </p>
             )}

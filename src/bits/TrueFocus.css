@@ -11,7 +11,7 @@
 
 .focus-word {
   position: relative;
-  font-size: 3rem;
+  font-size: var(--text-16);
   font-weight: 900;
   cursor: pointer;
   transition:

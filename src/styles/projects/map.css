@@ -3,9 +3,7 @@
 .map-section-wrapper {
   width: 100%;
   height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
   padding: 2rem;
   box-sizing: border-box;
   background: transparent;
@@ -40,10 +38,7 @@
 }
 
 .my-map-image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+
   width: 450px;
   height: 300px;
   transform: translate(-50%, -50%) translateZ(0);
@@ -74,13 +69,10 @@
 .map-logo-container {
   width: 55px;
   height: 55px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
   padding: 0.45rem;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+
   cursor: pointer;
   transition: all var(--transition-base);
   opacity: 0;
@@ -148,7 +140,7 @@
 }
 
 .map-sidebar-title {
-  font-size: 1.6rem;
+  font-size: var(--text-12);
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: #ffffff;
@@ -187,13 +179,13 @@
 }
 
 .map-metric-label {
-  font-size: 0.9rem;
+  font-size: var(--text-5);
   color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
 
 .map-metric-value {
-  font-size: 1rem;
+  font-size: var(--text-7);
   font-weight: 600;
   color: #ffffff;
   background: linear-gradient(135deg, #667eea 0%, #b187dc 100%);
@@ -205,7 +197,7 @@
 }
 
 .map-disclaimer {
-  font-size: 0.85rem;
+  font-size: var(--text-4);
   color: rgba(255, 255, 255, 0.5);
   line-height: 1.5;
   margin: 0;
@@ -288,4 +280,11 @@
 .map-animation-container,
 .map-description-sidebar {
   isolation: isolate;
+}
+
+.map-sidebar-desc {
+  margin-top: 1rem;
+  font-size: var(--text-7);
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
 }
