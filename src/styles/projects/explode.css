@@ -1,0 +1,216 @@
+/* ========================================
+   EXPLODE SECTION STYLES
+   ======================================== */
+
+/* Container - must be visible */
+.explode-section,
+.explode-section-container {
+  position: relative;
+  background-color: #050505;
+  width: 100%;
+  /* CRITICAL: overflow MUST be visible */
+  overflow: visible !important;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* Sticky viewport */
+.explode-sticky-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.explode-sticky-viewport.active {
+  opacity: 1;
+}
+
+/* Canvas container */
+.explode-canvas-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* UI overlay - Base styles */
+.explode-ui-overlay {
+  position: absolute;
+  z-index: 10;
+  color: white;
+  pointer-events: none;
+  max-width: 500px;
+  padding: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Alternating alignment */
+.explode-ui-overlay.align-left {
+  left: 5%;
+  right: auto;
+  text-align: left;
+}
+
+.explode-ui-overlay.align-right {
+  left: auto;
+  right: 5%;
+  text-align: right;
+}
+
+/* Stage title */
+.stage-title {
+  font-size: var(--text-16);
+  margin: 0;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+  line-height: 1.2;
+  transition: all 0.6s ease;
+}
+
+/* Stage description */
+.stage-description {
+  font-size: var(--text-10);
+  color: #00ffcc;
+  margin-top: 1rem;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+  transition: all 0.6s ease;
+}
+
+/* Progress bar */
+.explode-progress-bar {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(300px, 80%);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.explode-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00ffcc, #00ff88);
+  transition: width 0.05s linear;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* Stage indicators */
+.stage-indicators {
+  position: absolute;
+  bottom: 4rem;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stage-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.stage-dot.active {
+  width: 28px;
+  background: #00ffcc;
+  box-shadow: 0 0 12px #00ffcc;
+}
+
+/* Section markers (debug) */
+.section-marker {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  z-index: 9999;
+}
+
+.section-marker.top {
+  top: 10px;
+}
+
+.section-marker.bottom {
+  bottom: 10px;
+}
+
+/* Hidden indicator (debug) */
+.hidden-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  opacity: 0.5;
+  color: red;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 768px) {
+  .explode-ui-overlay {
+    max-width: 400px;
+    padding: 1.5rem;
+  }
+
+  .explode-ui-overlay.align-left {
+    left: 3%;
+  }
+
+  .explode-ui-overlay.align-right {
+    right: 3%;
+  }
+}
+
+@media (max-width: 480px) {
+  .explode-ui-overlay {
+    padding: 1rem;
+    max-width: 90%;
+  }
+
+  .explode-ui-overlay.align-left,
+  .explode-ui-overlay.align-right {
+    left: 5%;
+    right: 5%;
+    text-align: center;
+  }
+}
+
+/* ===================================
+   PERFORMANCE
+   =================================== */
+
+.explode-section,
+.explode-sticky-viewport {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Remove will-change after animation */
+.animation-complete {
+  will-change: auto !important;
+}

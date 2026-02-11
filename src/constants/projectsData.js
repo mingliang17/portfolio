@@ -57,14 +57,14 @@ export const PROJECT_MH1 = {
       ]
     },
     spin: {
-      enabled: true,
+      enabled: false,
       title: 'Design Evolution',
       componentName: 'Mh1Model',
       modelUrl: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
       scale: 0.04,
-      position: [0, 0, 0], // Base Position
-      rotation: [0, 0, 0], // Base Rotation
-      cameraPosition: [0, 0, 8], // Base Zoom/Position
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      cameraPosition: [0, 0, 30],
       cameraFov: 50,
       environment: 'city',
       backgroundColor: '#0a1929',
@@ -79,16 +79,15 @@ export const PROJECT_MH1 = {
         { 
           title: 'Conceptual Phase', 
           description: 'Initial design concepts focused on sustainability.',
-          // Overrides: [x, y, z]
           cameraPos: [2.5, 0, 5], 
-          modelRot: [0.25,0.75,0],
+          modelRot: [0.25, 0.75, 0],
           modelPos: [0, 0, 0] 
         },
         { 
           title: 'Structural Analysis', 
           description: 'Ensuring maximum efficiency and integration.',
-          cameraPos: [-1.5, 0, 6], // Zoomed in and up
-          modelRot: [Math.PI / 4, Math.PI, 0], // Angled view
+          cameraPos: [-1.5, 0, 6],
+          modelRot: [Math.PI / 4, Math.PI, 0],
           modelPos: [0, 0, 0]
         },
         { 
@@ -111,6 +110,63 @@ export const PROJECT_MH1 = {
           cameraPos: [0, 0, 8], 
           modelRot: [0, Math.PI * 2, 0],
           modelPos: [0, 0, 0]
+        }
+      ]
+    },
+    explode: {
+      enabled: true,
+      title: 'Interactive Reconstruction',
+      modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+      snapToTop: true,
+      fitInViewport: true,
+      checkpoints: [
+        { 
+          title: 'Initial State', 
+          description: 'Model fully assembled.',
+          cameraPos: [0, 5, 30],
+          modelRot: [0, 0, 0],
+          modelPos: [0, -1, 0],
+          modelScale: 0.06
+        },
+        { 
+          title: 'Structural Scan', 
+          description: 'Analyzing component architecture.',
+          cameraPos: [5, 8, 35],
+          modelRot: [0, Math.PI / 4, 0],
+          modelPos: [0, -2, 0],
+          modelScale: 0.2
+        },
+        { 
+          title: 'Deconstruction', 
+          description: 'Breaking down into mesh elements.',
+          cameraPos: [-5, 10, 40],
+          modelRot: [0, Math.PI / 2, 0],
+          modelPos: [0, -1, 0],
+          modelScale: 0.05
+        },
+        { 
+          title: 'Scattered State', 
+          description: 'All components separated.',
+          cameraPos: [0, 15, 45],
+          modelRot: [0, Math.PI, 0],
+          modelPos: [0, 0, 0],
+          modelScale: 0.04
+        },
+        { 
+          title: 'Reassembly', 
+          description: 'Reconstructing piece by piece.',
+          cameraPos: [-8, 10, 40],
+          modelRot: [0, Math.PI * 1.5, 0],
+          modelPos: [0, -1, 0],
+          modelScale: 0.05
+        },
+        { 
+          title: 'Complete', 
+          description: 'Model fully reconstructed.',
+          cameraPos: [0, 5, 30],
+          modelRot: [0, Math.PI * 2, 0],
+          modelPos: [0, -1, 0],
+          modelScale: 0.06
         }
       ]
     },
@@ -142,6 +198,7 @@ export const PROJECT_MH2 = {
     map: { enabled: true, title: 'Spatial Analysis', snapToTop: true, fitInViewport: true },
     model: { enabled: true, title: '3D Model', scale: 0.5, position: [0, -1, 0], snapToTop: true, fitInViewport: true },
     spin: { enabled: false },
+    explode: { enabled: false, stages: [] },
     carousels: [{ id: 'carousel1', enabled: true, title: 'Concept Phase', images: PROJECT_ASSETS.mh2.carousel1, snapToTop: true, fitInViewport: true }],
   },
   metadata: {
@@ -153,10 +210,22 @@ export const PROJECT_MH2 = {
   },
 };
 
-export const ALL_PROJECTS = { [PROJECT_MH1.id]: PROJECT_MH1, [PROJECT_MH2.id]: PROJECT_MH2 };
+export const ALL_PROJECTS = { 
+  [PROJECT_MH1.id]: PROJECT_MH1, 
+  [PROJECT_MH2.id]: PROJECT_MH2 
+};
+
 export const getProjectById = (id) => ALL_PROJECTS[id] || null;
 export const getProjectIds = () => Object.keys(ALL_PROJECTS);
 export const getModelConfig = (id) => getProjectById(id)?.sections?.model || null;
 export const getSpinConfig = (id) => getProjectById(id)?.sections?.spin || null;
+export const getExplodeConfig = (id) => getProjectById(id)?.sections?.explode || null;
 
-export default { projects: ALL_PROJECTS, getProjectById, getProjectIds, getModelConfig, getSpinConfig };
+export default { 
+  projects: ALL_PROJECTS, 
+  getProjectById, 
+  getProjectIds, 
+  getModelConfig, 
+  getSpinConfig, 
+  getExplodeConfig 
+};

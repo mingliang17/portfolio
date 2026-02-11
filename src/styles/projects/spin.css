@@ -100,7 +100,7 @@
   pointer-events: none;
 }
 
-/* Enhanced glow when active */
+/pm * Enhanced glow when active */
 .checkpoint-card.active::before {
   opacity: 0;
   background: radial-gradient(

@@ -21,13 +21,13 @@ export const HeroSection = ({
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } });
 
-      // 1. Initial State Setup (Reset)
+      // 1. Initial State Setup
       gsap.set(".hero-bg-image", { scale: 1.1, opacity: 0, filter: 'blur(20px)' });
       gsap.set([".hero-polaroid-frame", ".hero-focus-overlay", ".hero-green-layover", ".hero-vignette", ".hero-focus-frame", ".hero-bokeh-container", ".hero-lens-flares", ".hero-exposure-flash", ".hero-chromatic-aberration", ".hero-aperture-video", ".hero-overlay-video"], { opacity: 0 });
       gsap.set(".hero-focus-pulse", { opacity: 0, scale: 1 });
-      gsap.set([".polaroid-title", ".polaroid-subtitle"], { opacity: 0, y: 20 });
+      gsap.set([".polaroid-title", ".polaroid-subtitle"], { opacity: 0, y: 15 });
 
-      // 2. Intro: Blurred with Bokeh & Vignette
+      // 2. Intro
       tl.to(".hero-bg-image", { opacity: 0.6, duration: 0.8 })
         .to([".hero-bokeh-container", ".hero-vignette", ".hero-lens-flares", ".hero-chromatic-aberration"], { opacity: 1, duration: 0.8 }, 0);
 
@@ -36,12 +36,12 @@ export const HeroSection = ({
         overlayVideoRef.current.play();
       }
 
-      // 3. Focus UI Appears
+      // 3. Focus UI
       tl.to(".hero-focus-overlay", { opacity: 1, duration: 0.3 }, "+=0.2")
         .to(".hero-green-layover", { opacity: 0.15, duration: 0.4 }, "<")
         .to(".hero-focus-frame", { opacity: 0.8, duration: 0.4 }, "-=0.2");
 
-      // 4. Searching/Aperture Phase
+      // 4. Searching Phase
       tl.to(".hero-bg-image", { filter: 'blur(40px)', scale: 1.15, duration: 0.6 }, "+=0.2")
         .to(".hero-exposure-flash", { opacity: 0.2, duration: 0.6 }, "<");
 
@@ -51,31 +51,20 @@ export const HeroSection = ({
           .to(apertureRef.current, { opacity: 0, duration: 0.4 });
       }
 
-      // 5. First Focus Attempt (90%)
-      tl.to(".hero-bg-image", { filter: 'blur(8px)', scale: 1.05, duration: 0.8 }, "+=0.3")
-        .to(".hero-green-layover", { opacity: 0.25 }, "<")
-        .to(".hero-focus-pulse", { opacity: 1, scale: 1.1, duration: 0.4 }, "<");
-
-      // 6. Focus Hunt (Lose focus briefly)
-      tl.to(".hero-bg-image", { filter: 'blur(15px)', scale: 1.08, duration: 0.5 }, "+=0.3")
-        .to([".hero-green-layover", ".hero-focus-pulse"], { opacity: 0.2, duration: 0.4 }, "<");
-
-      // 7. Focus Lock (100%)
-      tl.to(".hero-bg-image", { filter: 'blur(0px)', scale: 1, opacity: 1, duration: 1.2, ease: 'power3.out' }, "+=0.2")
-        .to(".hero-green-layover", { opacity: 0.3 }, "<")
+      // 5. Focus Lock (Combined steps for brevity)
+      tl.to(".hero-bg-image", { filter: 'blur(0px)', scale: 1, opacity: 1, duration: 1.2, ease: 'power3.out' }, "+=0.5")
         .to(".hero-focus-pulse", { opacity: 1, scale: 1.2, duration: 0.5, ease: 'back.out(2)' }, "<")
-        .to([".hero-bokeh-container", ".hero-chromatic-aberration", ".hero-exposure-flash"], { opacity: 0, duration: 0.8 }, "-=0.8")
-        .to(".hero-vignette", { opacity: 0.3 }, "-=0.6");
+        .to([".hero-bokeh-container", ".hero-chromatic-aberration", ".hero-exposure-flash"], { opacity: 0, duration: 0.8 }, "-=0.8");
 
-      // 8. Photo Taken & Polaroid Snap
+      // 6. Photo Taken & Polaroid Snap
       tl.to(".hero-focus-overlay", { opacity: 0, duration: 0.4 }, "+=0.3")
         .to(".hero-exposure-flash", { opacity: 1, duration: 0.1, ease: 'power1.in' })
         .to(".hero-exposure-flash", { opacity: 0, duration: 0.3 })
-        .to(wrapperRef.current, { scale: 0.68, rotation: -12, duration: 1, ease: 'power2.inOut' }, "+=0.2")
-        .to(".hero-polaroid-frame", { opacity: 1, duration: 0.7 }, "-=0.7")
+        .to(wrapperRef.current, { scale: 0.65, rotation: -8, duration: 1.2, ease: 'back.out(1)' }, "+=0.1")
+        .to(".hero-polaroid-frame", { opacity: 1, duration: 0.5 }, "-=1.0")
         .to([".hero-vignette", ".hero-lens-flares"], { opacity: 0, duration: 0.5 }, "-=0.5")
-        .to(".polaroid-title", { opacity: 1, y: 0, duration: 0.7 }, "+=0.2")
-        .to(".polaroid-subtitle", { opacity: 1, y: 0, duration: 0.6 }, "-=0.3");
+        .to(".polaroid-title", { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, "-=0.2")
+        .to(".polaroid-subtitle", { opacity: 0.6, y: 0, duration: 0.8, ease: 'power2.out' }, "-=0.6");
 
     }, containerRef);
     return () => ctx.revert();
@@ -93,14 +82,15 @@ export const HeroSection = ({
 
       <div ref={wrapperRef} className="hero-bg-wrapper">
         <div className="hero-polaroid-frame">
-          <div className="polaroid-photo-area" />
-          <div className="polaroid-text">
-            <h1 className="polaroid-title">{title}</h1>
-            {subtitle && <p className="polaroid-subtitle">{subtitle}</p>}
+          <div className="polaroid-inner-container">
+            <div className="polaroid-photo-area">
+               <img ref={imageRef} src={imagePath} alt={title} className="hero-bg-image" />
+            </div>
+            <div className="polaroid-caption-area">
+              <h1 className="polaroid-title">{title}</h1>
+              {subtitle && <p className="polaroid-subtitle">{subtitle}</p>}
+            </div>
           </div>
-        </div>
-        <div className="hero-bg">
-          <img ref={imageRef} src={imagePath} alt={title} className="hero-bg-image" />
         </div>
       </div>
 
