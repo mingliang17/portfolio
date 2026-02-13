@@ -1,216 +1,125 @@
-/* ========================================
-   EXPLODE SECTION STYLES
-   ======================================== */
+/* ExplodeSection.css - Ultra-smooth animations with GPU acceleration */
 
-/* Container - must be visible */
-.explode-section,
-.explode-section-container {
+/* Main section - creates long scrollable area */
+.explode-section {
   position: relative;
-  background-color: #050505;
   width: 100%;
-  /* CRITICAL: overflow MUST be visible */
-  overflow: visible !important;
-  min-height: 100vh;
-  isolation: isolate;
+  /* Height dynamically set via inline styles based on checkpoint count */
+  overflow: visible;
+  /* Optimize rendering */
+  contain: layout style;
 }
 
-/* Sticky viewport */
+/* Sticky viewport - stays fixed while scrolling */
 .explode-sticky-viewport {
   position: sticky;
   top: 0;
-  height: 100vh;
+  left: 0;
   width: 100%;
+  height: 100vh;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+  /* GPU acceleration */
+  will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
-  will-change: transform;
-  opacity: 0;
-  transition: opacity 0.8s ease;
 }
 
-.explode-sticky-viewport.active {
-  opacity: 1;
-}
-
-/* Canvas container */
+/* Canvas container - GPU accelerated */
 .explode-canvas-container {
   position: absolute;
   inset: 0;
   z-index: 0;
+  /* Force GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+  /* Smooth rendering */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
 }
 
-/* UI overlay - Base styles */
-.explode-ui-overlay {
-  position: absolute;
-  z-index: 10;
-  color: white;
-  pointer-events: none;
-  max-width: 500px;
-  padding: 2rem;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+/* Text overlay positioning classes */
+.stage-text-overlay {
+  /* Base styles handled inline for dynamic control */
+  /* GPU acceleration for transforms */
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Alternating alignment */
-.explode-ui-overlay.align-left {
-  left: 5%;
-  right: auto;
-  text-align: left;
+.align-left {
+  /* Left alignment - handled inline */
 }
 
-.explode-ui-overlay.align-right {
-  left: auto;
-  right: 5%;
-  text-align: right;
+.align-right {
+  /* Right alignment - handled inline */
 }
 
-/* Stage title */
+/* Stage title - optimized rendering */
 .stage-title {
   font-size: var(--text-16);
   margin: 0;
   font-weight: 900;
   text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
   line-height: 1.2;
-  transition: all 0.6s ease;
+  /* Smooth text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* GPU acceleration */
+  will-change: opacity;
+  transform: translateZ(0);
 }
 
-/* Stage description */
+/* Stage description - optimized rendering */
 .stage-description {
   font-size: var(--text-10);
   color: #00ffcc;
   margin-top: 1rem;
   text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-  transition: all 0.6s ease;
+  /* Smooth text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* GPU acceleration */
+  will-change: opacity;
+  transform: translateZ(0);
 }
 
-/* Progress bar */
-.explode-progress-bar {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(300px, 80%);
-  height: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.explode-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #00ffcc, #00ff88);
-  transition: width 0.05s linear;
-  box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-}
-
-/* Stage indicators */
-.stage-indicators {
-  position: absolute;
-  bottom: 4rem;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.stage-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.stage-dot.active {
-  width: 28px;
-  background: #00ffcc;
-  box-shadow: 0 0 12px #00ffcc;
-}
-
-/* Section markers (debug) */
-.section-marker {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 0, 0, 0.9);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: bold;
-  z-index: 9999;
-}
-
-.section-marker.top {
-  top: 10px;
-}
-
-.section-marker.bottom {
-  bottom: 10px;
-}
-
-/* Hidden indicator (debug) */
-.hidden-indicator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 120px;
-  opacity: 0.5;
-  color: red;
-  font-weight: bold;
-  pointer-events: none;
-}
-
-/* ===================================
-   RESPONSIVE
-   =================================== */
-
+/* Responsive design */
 @media (max-width: 768px) {
-  .explode-ui-overlay {
-    max-width: 400px;
-    padding: 1.5rem;
-  }
-
-  .explode-ui-overlay.align-left {
-    left: 3%;
-  }
-
-  .explode-ui-overlay.align-right {
-    right: 3%;
+  .stage-text-overlay {
+    max-width: 90% !important;
+    padding: 1.5rem !important;
   }
 }
 
 @media (max-width: 480px) {
-  .explode-ui-overlay {
-    padding: 1rem;
-    max-width: 90%;
+  /* Center text on mobile */
+  .stage-text-overlay {
+    left: 5% !important;
+    right: 5% !important;
+    text-align: center !important;
+    max-width: 90% !important;
+    padding: 1rem !important;
   }
-
-  .explode-ui-overlay.align-left,
-  .explode-ui-overlay.align-right {
-    left: 5%;
-    right: 5%;
-    text-align: center;
+  
+  .stage-title {
+    font-size: var(--text-14);
+  }
+  
+  .stage-description {
+    font-size: var(--text-8);
   }
 }
 
-/* ===================================
-   PERFORMANCE
-   =================================== */
-
-.explode-section,
-.explode-sticky-viewport {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* Remove will-change after animation */
-.animation-complete {
-  will-change: auto !important;
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .explode-section,
+  .explode-sticky-viewport,
+  .explode-canvas-container,
+  .stage-text-overlay {
+    will-change: auto;
+  }
 }

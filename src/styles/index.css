@@ -191,3 +191,12 @@
 .copy-container:hover {
   transform: scale(1.05);
 }
+
+/* Unified Section - Critical for Scroll Logic */
+.unified-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden; /* Enables scrollTop to work */
+  will-change: transform; /* Performance */
+}

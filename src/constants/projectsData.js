@@ -79,7 +79,7 @@ export const PROJECT_MH1 = {
         { 
           title: 'Conceptual Phase', 
           description: 'Initial design concepts focused on sustainability.',
-          cameraPos: [2.5, 0, 5], 
+          cameraPos: [0.5, 0, 5], 
           modelRot: [0.25, 0.75, 0],
           modelPos: [0, 0, 0] 
         },
@@ -113,60 +113,67 @@ export const PROJECT_MH1 = {
         }
       ]
     },
-    explode: {
+        explode: {
       enabled: true,
       title: 'Interactive Reconstruction',
       modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
       snapToTop: true,
-      fitInViewport: true,
+      fitInViewport: false,
+      modelAnimationSmoothing: 0.12, // Optimal value for smooth transitions (0.08-0.15 range)
       checkpoints: [
         { 
-          title: 'Initial State', 
-          description: 'Model fully assembled.',
-          cameraPos: [0, 5, 30],
+          title: 'Initial State - Center',
+          description: 'Model fully assembled at center.',
+          cameraPos: [0, 5, 30],         // Camera centered
+          modelPos: [0, -1, 0],          // Model at CENTER
           modelRot: [0, 0, 0],
-          modelPos: [0, -1, 0],
-          modelScale: 0.06
+          modelScale: 0.06,
+          cameraLookAt: [0, -1, 0]       // Look at center
         },
         { 
-          title: 'Structural Scan', 
+          title: 'Structural Scan - Left',
           description: 'Analyzing component architecture.',
-          cameraPos: [5, 8, 35],
-          modelRot: [0, Math.PI / 4, 0],
-          modelPos: [0, -2, 0],
-          modelScale: 0.2
+          cameraPos: [0, 5, 30],         // Camera stays centered
+          modelPos: [-8, -1, 0],         // Model moves LEFT (negative X)
+          modelRot: [0, Math.PI / 6, 0], // Slight rotation
+          modelScale: 0.06,
+          cameraLookAt: [-8, -1, 0]      // Look at model's new position
         },
         { 
-          title: 'Deconstruction', 
+          title: 'Deconstruction - Right',
           description: 'Breaking down into mesh elements.',
-          cameraPos: [-5, 10, 40],
-          modelRot: [0, Math.PI / 2, 0],
-          modelPos: [0, -1, 0],
-          modelScale: 0.05
+          cameraPos: [0, 5, 30],         // Camera stays centered
+          modelPos: [8, -1, 0],          // Model moves RIGHT (positive X)
+          modelRot: [0, -Math.PI / 6, 0],
+          modelScale: 0.06,
+          cameraLookAt: [8, -1, 0]       // Look at model's new position
         },
         { 
-          title: 'Scattered State', 
+          title: 'Scattered State - Left High',
           description: 'All components separated.',
-          cameraPos: [0, 15, 45],
-          modelRot: [0, Math.PI, 0],
-          modelPos: [0, 0, 0],
-          modelScale: 0.04
+          cameraPos: [0, 8, 30],         // Camera slightly higher
+          modelPos: [-6, 2, 0],          // Model moves LEFT and UP
+          modelRot: [0, Math.PI / 4, 0],
+          modelScale: 0.05,
+          cameraLookAt: [-6, 2, 0]
         },
         { 
-          title: 'Reassembly', 
+          title: 'Reassembly - Right Low',
           description: 'Reconstructing piece by piece.',
-          cameraPos: [-8, 10, 40],
-          modelRot: [0, Math.PI * 1.5, 0],
-          modelPos: [0, -1, 0],
-          modelScale: 0.05
+          cameraPos: [0, 5, 30],
+          modelPos: [6, -2, 0],          // Model moves RIGHT and DOWN
+          modelRot: [0, -Math.PI / 4, 0],
+          modelScale: 0.055,
+          cameraLookAt: [6, -2, 0]
         },
         { 
-          title: 'Complete', 
+          title: 'Complete - Center',
           description: 'Model fully reconstructed.',
           cameraPos: [0, 5, 30],
-          modelRot: [0, Math.PI * 2, 0],
-          modelPos: [0, -1, 0],
-          modelScale: 0.06
+          modelPos: [0, -1, 0],          // Model returns to CENTER
+          modelRot: [0, Math.PI * 2, 0], // Full rotation
+          modelScale: 0.06,
+          cameraLookAt: [0, -1, 0]
         }
       ]
     },
