@@ -1,125 +1,201 @@
-/* ExplodeSection.css - Ultra-smooth animations with GPU acceleration */
+/* ========================================
+   EXPLODE SECTION STYLES - SMOOTH VERSION
+   ======================================== */
 
-/* Main section - creates long scrollable area */
+/* Container - MUST be visible for sticky to work */
 .explode-section {
   position: relative;
+  background-color: #0f1011;
   width: 100%;
-  /* Height dynamically set via inline styles based on checkpoint count */
-  overflow: visible;
-  /* Optimize rendering */
-  contain: layout style;
+  overflow: visible !important; /* CRITICAL */
+  isolation: isolate;
 }
 
-/* Sticky viewport - stays fixed while scrolling */
+/* Sticky viewport - stays fixed during scroll */
 .explode-sticky-viewport {
   position: sticky;
   top: 0;
-  left: 0;
-  width: 100%;
   height: 100vh;
+  width: 100%;
   overflow: hidden;
-  /* GPU acceleration */
+  z-index: 10;
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* Canvas container - GPU accelerated */
+/* Canvas container */
 .explode-canvas-container {
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Force GPU acceleration */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform;
-  /* Smooth rendering */
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
 }
 
-/* Text overlay positioning classes */
-.stage-text-overlay {
-  /* Base styles handled inline for dynamic control */
-  /* GPU acceleration for transforms */
-  transform-style: preserve-3d;
+/* Text overlays - alternating sides */
+.explode-text-overlay {
+  /* Smooth GPU-accelerated transforms */
+  will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.align-left {
-  /* Left alignment - handled inline */
-}
-
-.align-right {
-  /* Right alignment - handled inline */
-}
-
-/* Stage title - optimized rendering */
-.stage-title {
+.explode-text-overlay h2 {
   font-size: var(--text-16);
-  margin: 0;
+  margin: 0 0 1rem 0;
   font-weight: 900;
-  text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-  line-height: 1.2;
-  /* Smooth text rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  /* GPU acceleration */
-  will-change: opacity;
-  transform: translateZ(0);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-/* Stage description - optimized rendering */
-.stage-description {
+.explode-text-overlay p {
   font-size: var(--text-10);
-  color: #00ffcc;
-  margin-top: 1rem;
-  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-  /* Smooth text rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  /* GPU acceleration */
-  will-change: opacity;
-  transform: translateZ(0);
+  margin: 0;
+  line-height: 1.5;
 }
 
-/* Responsive design */
+/* Progress dots */
+.explode-progress-dots {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 20;
+}
+
+.explode-progress-dot {
+  height: 10px;
+  border-radius: 5px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.explode-progress-dot.active {
+  width: 32px;
+  background: linear-gradient(90deg, #00ffcc, #00ff88);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
+}
+
+.explode-progress-dot.inactive {
+  width: 10px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Progress counter */
+.explode-progress-counter {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  color: rgba(0, 255, 204, 0.6);
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+  font-weight: 600;
+  font-family: 'Consolas', 'Monaco', monospace;
+  z-index: 20;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ===================================
+   PERFORMANCE OPTIMIZATIONS
+   =================================== */
+
+/* GPU acceleration */
+.explode-section,
+.explode-sticky-viewport,
+.explode-canvas-container,
+.explode-text-overlay {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Smooth rendering */
+.explode-text-overlay * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent layout thrashing */
+.explode-section * {
+  box-sizing: border-box;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 1024px) {
+  .explode-text-overlay {
+    max-width: 450px;
+    padding: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
-  .stage-text-overlay {
-    max-width: 90% !important;
-    padding: 1.5rem !important;
+  .explode-text-overlay {
+    max-width: 400px;
+    padding: 1.5rem;
+  }
+  
+  .explode-text-overlay h2 {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+  }
+  
+  .explode-text-overlay p {
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   }
 }
 
 @media (max-width: 480px) {
-  /* Center text on mobile */
-  .stage-text-overlay {
-    left: 5% !important;
-    right: 5% !important;
-    text-align: center !important;
-    max-width: 90% !important;
-    padding: 1rem !important;
+  .explode-text-overlay {
+    left: 3% !important;
+    right: 3% !important;
+    max-width: 94%;
+    padding: 1rem;
   }
   
-  .stage-title {
-    font-size: var(--text-14);
+  .explode-progress-counter {
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.85rem;
   }
   
-  .stage-description {
-    font-size: var(--text-8);
+  .explode-progress-dots {
+    bottom: 1.5rem;
+    gap: 0.4rem;
   }
 }
 
-/* Performance optimizations */
+/* ===================================
+   ACCESSIBILITY
+   =================================== */
+
 @media (prefers-reduced-motion: reduce) {
-  .explode-section,
-  .explode-sticky-viewport,
-  .explode-canvas-container,
-  .stage-text-overlay {
-    will-change: auto;
+  .explode-text-overlay,
+  .explode-progress-dot {
+    transition: none !important;
   }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .explode-text-overlay h2,
+  .explode-text-overlay p {
+    text-shadow: none;
+  }
+  
+  .explode-progress-dot.active {
+    background: #fff;
+    box-shadow: 0 0 0 2px #000;
+  }
+}
+
+/* ===================================
+   CLEANUP
+   =================================== */
+
+/* Remove will-change after animations complete */
+.explode-section.animation-complete * {
+  will-change: auto !important;
 }

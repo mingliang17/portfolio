@@ -113,70 +113,69 @@ export const PROJECT_MH1 = {
         }
       ]
     },
-        explode: {
-      enabled: true,
-      title: 'Interactive Reconstruction',
-      modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
-      snapToTop: true,
-      fitInViewport: false,
-      modelAnimationSmoothing: 0.12, // Optimal value for smooth transitions (0.08-0.15 range)
-      checkpoints: [
-        { 
-          title: 'Initial State - Center',
-          description: 'Model fully assembled at center.',
-          cameraPos: [0, 5, 30],         // Camera centered
-          modelPos: [0, -1, 0],          // Model at CENTER
-          modelRot: [0, 0, 0],
-          modelScale: 0.06,
-          cameraLookAt: [0, -1, 0]       // Look at center
-        },
-        { 
-          title: 'Structural Scan - Left',
-          description: 'Analyzing component architecture.',
-          cameraPos: [0, 5, 30],         // Camera stays centered
-          modelPos: [-8, -1, 0],         // Model moves LEFT (negative X)
-          modelRot: [0, Math.PI / 6, 0], // Slight rotation
-          modelScale: 0.06,
-          cameraLookAt: [-8, -1, 0]      // Look at model's new position
-        },
-        { 
-          title: 'Deconstruction - Right',
-          description: 'Breaking down into mesh elements.',
-          cameraPos: [0, 5, 30],         // Camera stays centered
-          modelPos: [8, -1, 0],          // Model moves RIGHT (positive X)
-          modelRot: [0, -Math.PI / 6, 0],
-          modelScale: 0.06,
-          cameraLookAt: [8, -1, 0]       // Look at model's new position
-        },
-        { 
-          title: 'Scattered State - Left High',
-          description: 'All components separated.',
-          cameraPos: [0, 8, 30],         // Camera slightly higher
-          modelPos: [-6, 2, 0],          // Model moves LEFT and UP
-          modelRot: [0, Math.PI / 4, 0],
-          modelScale: 0.05,
-          cameraLookAt: [-6, 2, 0]
-        },
-        { 
-          title: 'Reassembly - Right Low',
-          description: 'Reconstructing piece by piece.',
-          cameraPos: [0, 5, 30],
-          modelPos: [6, -2, 0],          // Model moves RIGHT and DOWN
-          modelRot: [0, -Math.PI / 4, 0],
-          modelScale: 0.055,
-          cameraLookAt: [6, -2, 0]
-        },
-        { 
-          title: 'Complete - Center',
-          description: 'Model fully reconstructed.',
-          cameraPos: [0, 5, 30],
-          modelPos: [0, -1, 0],          // Model returns to CENTER
-          modelRot: [0, Math.PI * 2, 0], // Full rotation
-          modelScale: 0.06,
-          cameraLookAt: [0, -1, 0]
-        }
-      ]
+    explode: {
+  enabled: true,
+  title: 'Interactive Reconstruction',
+  modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+  snapToTop: true,
+  fitInViewport: true,
+  checkpoints: [
+    { 
+      title: 'Initial State',
+      description: 'Model fully assembled at center.',
+      cameraPos: [0, 5, 30],
+      modelPos: [0, -1, 0],
+      modelRot: [0, 0, 0],
+      modelScale: 0.06,
+      cameraLookAt: [0, -1, 0]
     },
+    { 
+      title: 'Structural Analysis',
+      description: 'Examining architectural components.',
+      cameraPos: [5, 5, 25],
+      modelPos: [-3, -1, 0],
+      modelRot: [0, Math.PI / 6, 0],
+      modelScale: 0.06,
+      cameraLookAt: [-3, -1, 0]
+    },
+    { 
+      title: 'Deconstruction Phase',
+      description: 'Breaking down into mesh elements.',
+      cameraPos: [-5, 5, 25],
+      modelPos: [3, -1, 0],
+      modelRot: [0, -Math.PI / 6, 0],
+      modelScale: 0.06,
+      cameraLookAt: [3, -1, 0]
+    },
+    { 
+      title: 'Scattered Components',
+      description: 'All elements separated and analyzed.',
+      cameraPos: [0, 8, 28],
+      modelPos: [-2, 1, 0],
+      modelRot: [0, Math.PI / 4, 0],
+      modelScale: 0.055,
+      cameraLookAt: [-2, 1, 0]
+    },
+    { 
+      title: 'Reassembly Process',
+      description: 'Reconstructing piece by piece.',
+      cameraPos: [0, 5, 28],
+      modelPos: [2, -2, 0],
+      modelRot: [0, -Math.PI / 4, 0],
+      modelScale: 0.055,
+      cameraLookAt: [2, -2, 0]
+    },
+    { 
+      title: 'Reconstruction Complete',
+      description: 'Model fully reconstructed and optimized.',
+      cameraPos: [0, 5, 30],
+      modelPos: [0, -1, 0],
+      modelRot: [0, Math.PI * 2, 0],
+      modelScale: 0.06,
+      cameraLookAt: [0, -1, 0]
+    }
+  ]
+},
     carousels: [
       { id: 'carousel1', enabled: true, title: 'Concept Phase', images: PROJECT_ASSETS.mh1.carousel1, snapToTop: true, fitInViewport: true },
       { id: 'carousel2', enabled: true, title: 'Detail Phase', images: PROJECT_ASSETS.mh1.carousel2, snapToTop: true, fitInViewport: true },
