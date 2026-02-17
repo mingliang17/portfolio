@@ -114,68 +114,93 @@ export const PROJECT_MH1 = {
       ]
     },
     explode: {
-  enabled: true,
-  title: 'Interactive Reconstruction',
-  modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
-  snapToTop: true,
-  fitInViewport: true,
-  checkpoints: [
-    { 
-      title: 'Initial State',
-      description: 'Model fully assembled at center.',
-      cameraPos: [0, 5, 30],
-      modelPos: [0, -1, 0],
-      modelRot: [0, 0, 0],
-      modelScale: 0.06,
-      cameraLookAt: [0, -1, 0]
+      enabled: true,
+      title: 'Interactive Reconstruction',
+      modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+      snapToTop: true,
+      fitInViewport: true,
+      // Explosion Configuration
+      explosionDistance: 5,      // Base distance each mesh travels downward
+      explosionIncrement: 2,     // Additional distance for each subsequent mesh (creates stacking effect)
+      checkpoints: [
+        { 
+          title: 'Administrative Building',
+          description: 'All components together at starting position.',
+          position: [4, 0, 0],           // [x, y, z] - Model position
+          rotation: [0, Math.PI/4, 0],   // [x, y, z] - Model rotation
+          scale: 0.25,                   // Model scale
+          cameraPosition: [0, 0, 30]     // [x, y, z] - Camera position
+        },
+        { 
+          title: 'Shift Right',
+          description: 'Moving right while staying assembled.',
+          position: [-8, 0, -5],         // Left position
+          rotation: [0, -Math.PI/2, 0],  // Rotation
+          scale: 0.25,
+          cameraPosition: [0,0,30]       // Camera moves right and up
+        },
+        { 
+          title: 'Full Explosion',
+          description: 'All components fully separated vertically downwards.',
+          position: [10, 5, -10],        // Right and down
+          rotation: [Math.PI/2, Math.PI/2, -Math.PI/4],
+          scale: 0.25,
+          cameraPosition: [10, 10, 40]   // Camera pulls back to see full explosion
+        }
+      ]
     },
-    { 
-      title: 'Structural Analysis',
-      description: 'Examining architectural components.',
-      cameraPos: [5, 5, 25],
-      modelPos: [-3, -1, 0],
-      modelRot: [0, Math.PI / 6, 0],
-      modelScale: 0.06,
-      cameraLookAt: [-3, -1, 0]
+    appear: {
+      enabled: true,
+      title: 'Assembly Sequence',
+      modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
+      snapToTop: true,
+      fitInViewport: true,
+      // Appearance Configuration (starts exploded, reassembles)
+      explosionDistance: 5,      // Base distance meshes start from (exploded state)
+      explosionIncrement: 2,     // Additional spacing between meshes
+      checkpoints: [
+        { 
+          title: 'Initial Fragments',
+          description: 'Individual components begin to materialize from the left.',
+          position: [-15, 0, 0],        // Start far left
+          rotation: [0, -Math.PI/4, 0],
+          scale: 0.25,
+          cameraPosition: [0, 0, 35]
+        },
+        { 
+          title: 'Foundation Forms',
+          description: 'Base structure taking shape, moving toward center.',
+          position: [-7, 0, 0],          // Moving right
+          rotation: [0, 0, 0],
+          scale: 0.25,
+          cameraPosition: [0, 3, 32]
+        },
+        { 
+          title: 'Core Integration',
+          description: 'Central components aligning at the center point.',
+          position: [0, 0, 0],           // Center position
+          rotation: [0, Math.PI/4, 0],
+          scale: 0.25,
+          cameraPosition: [0, 5, 30]
+        },
+        { 
+          title: 'Structural Assembly',
+          description: 'Major sections continuing rightward integration.',
+          position: [7, 0, 0],           // Moving right
+          rotation: [0, Math.PI/2, 0],
+          scale: 0.25,
+          cameraPosition: [0, 3, 32]
+        },
+        { 
+          title: 'Complete Structure',
+          description: 'Fully assembled design reaching final position.',
+          position: [15, 0, 0],          // End far right
+          rotation: [0, Math.PI * 0.75, 0],
+          scale: 0.25,
+          cameraPosition: [0, 0, 35]
+        }
+      ]
     },
-    { 
-      title: 'Deconstruction Phase',
-      description: 'Breaking down into mesh elements.',
-      cameraPos: [-5, 5, 25],
-      modelPos: [3, -1, 0],
-      modelRot: [0, -Math.PI / 6, 0],
-      modelScale: 0.06,
-      cameraLookAt: [3, -1, 0]
-    },
-    { 
-      title: 'Scattered Components',
-      description: 'All elements separated and analyzed.',
-      cameraPos: [0, 8, 28],
-      modelPos: [-2, 1, 0],
-      modelRot: [0, Math.PI / 4, 0],
-      modelScale: 0.055,
-      cameraLookAt: [-2, 1, 0]
-    },
-    { 
-      title: 'Reassembly Process',
-      description: 'Reconstructing piece by piece.',
-      cameraPos: [0, 5, 28],
-      modelPos: [2, -2, 0],
-      modelRot: [0, -Math.PI / 4, 0],
-      modelScale: 0.055,
-      cameraLookAt: [2, -2, 0]
-    },
-    { 
-      title: 'Reconstruction Complete',
-      description: 'Model fully reconstructed and optimized.',
-      cameraPos: [0, 5, 30],
-      modelPos: [0, -1, 0],
-      modelRot: [0, Math.PI * 2, 0],
-      modelScale: 0.06,
-      cameraLookAt: [0, -1, 0]
-    }
-  ]
-},
     carousels: [
       { id: 'carousel1', enabled: true, title: 'Concept Phase', images: PROJECT_ASSETS.mh1.carousel1, snapToTop: true, fitInViewport: true },
       { id: 'carousel2', enabled: true, title: 'Detail Phase', images: PROJECT_ASSETS.mh1.carousel2, snapToTop: true, fitInViewport: true },
@@ -205,6 +230,7 @@ export const PROJECT_MH2 = {
     model: { enabled: true, title: '3D Model', scale: 0.5, position: [0, -1, 0], snapToTop: true, fitInViewport: true },
     spin: { enabled: false },
     explode: { enabled: false, stages: [] },
+    appear: { enabled: false, stages: [] },
     carousels: [{ id: 'carousel1', enabled: true, title: 'Concept Phase', images: PROJECT_ASSETS.mh2.carousel1, snapToTop: true, fitInViewport: true }],
   },
   metadata: {
@@ -226,6 +252,7 @@ export const getProjectIds = () => Object.keys(ALL_PROJECTS);
 export const getModelConfig = (id) => getProjectById(id)?.sections?.model || null;
 export const getSpinConfig = (id) => getProjectById(id)?.sections?.spin || null;
 export const getExplodeConfig = (id) => getProjectById(id)?.sections?.explode || null;
+export const getAppearConfig = (id) => getProjectById(id)?.sections?.appear || null;
 
 export default { 
   projects: ALL_PROJECTS, 
@@ -233,5 +260,6 @@ export default {
   getProjectIds, 
   getModelConfig, 
   getSpinConfig, 
-  getExplodeConfig 
+  getExplodeConfig,
+  getAppearConfig
 };

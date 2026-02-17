@@ -12,6 +12,7 @@ import SpinSection from '@/sections/projects/SpinSection.jsx';
 import AnimeSection from '@/sections/projects/AnimeSection.jsx';
 import ExplodeSection from '@/sections/projects/ExplodeSection.jsx';
 import CarouselSection from '@/sections/projects/CarouselSection.jsx';
+import AppearSection from '@/sections/projects/AppearSection.jsx';
 import LongSectionWrapper from '@/components/project/LongSectionWrapper.jsx';
 
 // --- SUB-COMPONENT: CLEANER RENDER LOGIC ---
@@ -34,6 +35,9 @@ const SectionRenderer = React.forwardRef(({ section, index, isActive, progress, 
       
       case 'SpinSection':
         return <SpinSection {...config} isActive={isActive} scrollProgress={progress} enableDebug={false} />;
+
+      case 'AppearSection':
+        return <AppearSection {...config} isActive={isActive} scrollProgress={progress} />;
       
       case 'ExplodeSection':
         return <ExplodeSection {...config} isActive={isActive} scrollProgress={progress} />;
@@ -74,6 +78,7 @@ const ProjectPage = () => {
     if (s.anime?.enabled)   config.push({ id: 'anime', type: 'long', component: 'AnimeSection', config: s.anime, assets: {} });
     if (s.spin?.enabled)    config.push({ id: 'spin', type: 'long', component: 'SpinSection', config: s.spin, assets: {} });
     if (s.explode?.enabled) config.push({ id: 'explode', type: 'long', component: 'ExplodeSection', config: s.explode, assets: {} });
+    if (s.appear?.enabled)  config.push({ id: 'appear', type: 'long', component: 'AppearSection', config: s.appear, assets: {} });
     
     s.carousels?.forEach(c => {
       if (c.enabled) config.push({ id: c.id, type: 'normal', component: 'Carousel', config: c, assets: { images: c.images } });

@@ -1,8 +1,8 @@
-/* ========================================
-   EXPLODE SECTION STYLES
+/* ======================================== 
+   APPEAR SECTION STYLES 
    ======================================== */
 
-.explode-section {
+.appear-section {
   position: relative;
   background-color: #0f1011;
   width: 100%;
@@ -10,7 +10,7 @@
   isolation: isolate;
 }
 
-.explode-sticky-viewport {
+.appear-sticky-viewport {
   position: sticky;
   top: 0;
   height: 100vh;
@@ -22,20 +22,20 @@
   backface-visibility: hidden;
 }
 
-.explode-canvas-container {
+.appear-canvas-container {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-.explode-text-overlay {
+.appear-text-overlay {
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.explode-text-overlay h2 {
+.appear-text-overlay h2 {
   font-size: var(--text-16);
   margin: 0 0 1rem 0;
   font-weight: 900;
@@ -43,46 +43,46 @@
   letter-spacing: -0.02em;
 }
 
-.explode-text-overlay p {
+.appear-text-overlay p {
   font-size: var(--text-10);
   margin: 0;
   line-height: 1.5;
 }
 
-/* Performance */
-.explode-section,
-.explode-sticky-viewport,
-.explode-canvas-container,
-.explode-text-overlay {
+/* Performance Optimizations */
+.appear-section,
+.appear-sticky-viewport,
+.appear-canvas-container,
+.appear-text-overlay {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* Responsive */
+/* Responsive Styles */
 @media (max-width: 1024px) {
-  .explode-text-overlay {
+  .appear-text-overlay {
     max-width: 450px;
     padding: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .explode-text-overlay {
+  .appear-text-overlay {
     max-width: 400px;
     padding: 1.5rem;
   }
   
-  .explode-text-overlay h2 {
+  .appear-text-overlay h2 {
     font-size: clamp(1.8rem, 5vw, 3rem);
   }
   
-  .explode-text-overlay p {
+  .appear-text-overlay p {
     font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   }
 }
 
 @media (max-width: 480px) {
-  .explode-text-overlay {
+  .appear-text-overlay {
     left: 3% !important;
     right: 3% !important;
     max-width: 94%;
@@ -91,7 +91,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .explode-text-overlay {
+  .appear-text-overlay {
     transition: none !important;
   }
 }

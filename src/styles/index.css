@@ -32,6 +32,7 @@
 @import './projects/anime.css';
 @import './projects/hero.css';
 @import './projects/explode.css';
+@import './projects/appear.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';
