@@ -1,4 +1,4 @@
-/* src/styles/projects/carousel.css - CLEANED */
+/* src/styles/projects/carousel.css - WITH RING GLOW ANIMATION */
 
 /* Animations */
 @keyframes liquid-flow {
@@ -85,6 +85,8 @@
   transform-style: preserve-3d;
   cursor: pointer;
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible; /* CRITICAL: ring glow must not be clipped */
+  isolation: isolate;
 }
 
 .item-frame {
@@ -120,6 +122,36 @@
 
 .carousel-item[data-position="0"]:hover .item-image {
   transform: scale(1.05);
+}
+
+/* Hover Ring Glow - sits OUTSIDE the image, on the carousel-item border area */
+/* carousel-item has overflow: visible so this is not clipped */
+.hover-ring-glow {
+  position: absolute;
+  /* 2rem border outside the image wrapper (400px wide item) */
+  inset: -2rem;
+  border-radius: 28px;
+  pointer-events: none;
+  z-index: 2;
+  /* blur makes it bleed onto the border area, NOT the image center */
+  filter: blur(10px);
+  /* mask hides the inner area so only border region glows */
+  mask-image: radial-gradient(
+    ellipse calc(50% - 2rem) calc(50% - 2rem) at 50% 50%,
+    transparent 85%,
+    black 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse calc(50% - 2rem) calc(50% - 2rem) at 50% 50%,
+    transparent 85%,
+    black 100%
+  );
+  animation: ring-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.85; filter: blur(10px); }
+  50%       { opacity: 1;    filter: blur(14px); }
 }
 
 .item-label {

@@ -14,7 +14,7 @@ const RotatingModel = ({ config, rawProgress, modelAnimationSmoothing = 0.08 }) 
     if (!groupRef.current || checkpoints.length === 0) return;
 
     const total = checkpoints.length - 1;
-    const progressIdx = rawProgress * total; // Use raw progress for linear animation
+    const progressIdx = rawProgress * total;
     const lowerIdx = Math.floor(progressIdx);
     const upperIdx = Math.ceil(progressIdx);
     const ratio = progressIdx - lowerIdx;
@@ -58,13 +58,9 @@ const SpinSection = ({
   scrollProgress = 0,
   enableDebug = false,
   modelAnimationSmoothing = 0.08,
-  blurAmount = 8, // Maximum blur for inactive cards
+  blurAmount = 8,
   ...props 
 }) => {
-  /**
-   * Apply inertia curve to scroll progress FOR CARDS ONLY
-   * Model animation uses raw scrollProgress for linear movement
-   */
   const easedProgress = useMemo(() => {
     if (checkpoints.length === 0) return 0;
 
@@ -72,23 +68,20 @@ const SpinSection = ({
     const totalSegments = numCheckpoints - 1;
     if (totalSegments === 0) return 0;
     
-    const PAUSE_ZONE = 0.15; // 15% of the scroll distance around a checkpoint is "paused"
+    const PAUSE_ZONE = 0.15;
     const totalCheckpoints = Math.max(1, numCheckpoints);
-    const segmentSize = 1 / (totalCheckpoints - 1); // Size of one checkpoint step
+    const segmentSize = 1 / (totalCheckpoints - 1);
 
-    // Find which segment we are in or near
     for (let i = 0; i < numCheckpoints; i++) {
         const target = i * segmentSize;
         const low = target - PAUSE_ZONE * segmentSize;
         const high = target + PAUSE_ZONE * segmentSize;
 
         if (scrollProgress >= low && scrollProgress <= high) {
-            // We are inside the pause zone -> snap to target
             return target;
         }
     }
 
-    // If we are NOT in a pause zone, we need to interpolate between them
     for (let i = 0; i < numCheckpoints - 1; i++) {
         const startTarget = i * segmentSize;
         const endTarget = (i + 1) * segmentSize;
@@ -97,17 +90,15 @@ const SpinSection = ({
         const nextPauseStart = endTarget - PAUSE_ZONE * segmentSize;
 
         if (scrollProgress > pauseEnd && scrollProgress < nextPauseStart) {
-            // We are in the moving phase
             const range = nextPauseStart - pauseEnd;
             const progressInOut = (scrollProgress - pauseEnd) / range;
             return startTarget + progressInOut * (endTarget - startTarget);
         }
     }
     
-    return scrollProgress; // Should be covered by logic above, but fallback
+    return scrollProgress;
   }, [scrollProgress, checkpoints.length]);
 
-  // Debug effect
   useEffect(() => {
     if (enableDebug) {
       console.log('📊 SpinSection Progress:', {
@@ -118,11 +109,12 @@ const SpinSection = ({
     }
   }, [scrollProgress, easedProgress, isActive, enableDebug]);
 
-  // Determine active index for UI elements based on eased progress
   const activeIdx = Math.round(easedProgress * (checkpoints.length - 1));
   const isEven = activeIdx % 2 === 0;
 
-  // TrueFocus-style blur calculation
+  // Calculate background transition progress
+  const transitionProgress = easedProgress * (checkpoints.length - 1) - activeIdx;
+
   const getCardBlur = (index) => {
     const total = checkpoints.length - 1;
     if (total === 0) return 0;
@@ -130,15 +122,10 @@ const SpinSection = ({
     const target = index / total;
     const distance = Math.abs(easedProgress - target);
     
-    // Cards are sharp when active, blurred when inactive
     const blurRange = (1 / total) * 0.35;
-    
-    // Calculate blur: 0 when active, max blur when far away
     let blur = (distance / blurRange) * blurAmount;
     
-    // Keep first card sharp at start
     if (index === 0 && easedProgress <= 0.05) return 0;
-    // Keep last card sharp at end
     if (index === total && easedProgress >= 0.95) return 0;
 
     return Math.min(blurAmount, Math.max(0, blur));
@@ -146,7 +133,6 @@ const SpinSection = ({
 
   const getCardOpacity = (index) => {
     const blur = getCardBlur(index);
-    // Reduce opacity slightly as blur increases
     const minOpacity = 0.3;
     return minOpacity + (1 - minOpacity) * (1 - blur / blurAmount);
   };
@@ -154,7 +140,7 @@ const SpinSection = ({
   const getCardTransform = (index) => {
     const blur = getCardBlur(index);
     const opacity = getCardOpacity(index);
-    const isActive = blur < 0.1; // Consider active if blur is very low
+    const isActive = blur < 0.1;
     
     return {
       blur,
@@ -163,14 +149,94 @@ const SpinSection = ({
     };
   };
 
+  // Get background styles for current and next stage
+  const getCurrentBackground = () => {
+    const current = checkpoints[activeIdx];
+    if (!current || !current.background) return null;
+    
+    if (current.background.type === 'color') {
+      return {
+        background: current.background.value || '#000'
+      };
+    } else if (current.background.type === 'image') {
+      return {
+        backgroundImage: `url(${current.background.value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    } else if (current.background.type === 'gradient') {
+      return {
+        background: current.background.value || 'linear-gradient(to bottom, #000, #333)'
+      };
+    }
+    return null;
+  };
+
+  const getNextBackground = () => {
+    if (activeIdx >= checkpoints.length - 1) return null;
+    const next = checkpoints[activeIdx + 1];
+    if (!next || !next.background) return null;
+    
+    if (next.background.type === 'color') {
+      return {
+        background: next.background.value || '#000'
+      };
+    } else if (next.background.type === 'image') {
+      return {
+        backgroundImage: `url(${next.background.value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    } else if (next.background.type === 'gradient') {
+      return {
+        background: next.background.value || 'linear-gradient(to bottom, #000, #333)'
+      };
+    }
+    return null;
+  };
+
+  const currentBg = getCurrentBackground();
+  const nextBg = getNextBackground();
+
   return (
     <section 
       className="spin-section-container" 
       style={{ 
         height: `${checkpoints.length * 100}vh`,
-        backgroundColor: props.backgroundColor || '#000'
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
+      {/* Current Background Layer */}
+      <div 
+        className="spin-background-layer current"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          opacity: 1 - transitionProgress,
+          transition: 'opacity 0.5s ease',
+          ...(currentBg || { background: props.backgroundColor || '#000' })
+        }}
+      />
+
+      {/* Next Background Layer with 5-degree tilt */}
+      {nextBg && (
+        <div 
+          className="spin-background-layer next"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1,
+            opacity: transitionProgress,
+            transition: 'opacity 0.5s ease',
+            transformOrigin: 'top left',
+            transform: `rotate(-5deg) scale(1.2)`,
+            ...nextBg
+          }}
+        />
+      )}
+
       {/* Debug Overlay */}
       {enableDebug && (
         <div style={{
@@ -192,6 +258,7 @@ const SpinSection = ({
           <div>Total Cards: {checkpoints.length}</div>
           <div>Model Checkpoint: {(scrollProgress * (checkpoints.length - 1)).toFixed(2)}</div>
           <div>Is Active: {isActive ? 'YES' : 'NO'}</div>
+          <div>Transition: {(transitionProgress * 100).toFixed(1)}%</div>
         </div>
       )}
 
@@ -203,17 +270,16 @@ const SpinSection = ({
           top: 0, 
           height: '100vh', 
           opacity: isActive ? 1 : 0,
-          zIndex: 1
+          zIndex: 2
         }}
       >
-
         <Canvas shadows>
           <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
           <RotatingModel 
             config={{ ...props, checkpoints }} 
-            rawProgress={scrollProgress} // Pass raw progress for linear animation
+            rawProgress={scrollProgress}
             modelAnimationSmoothing={modelAnimationSmoothing}
           />
           <Environment preset="city" />
@@ -221,7 +287,7 @@ const SpinSection = ({
       </div>
 
       {/* Checkpoint Cards */}
-      <div className="spin-checkpoints-container">
+      <div className="spin-checkpoints-container" style={{ zIndex: 3 }}>
         {checkpoints.map((cp, i) => {
           const cardTransform = getCardTransform(i);
           

@@ -1,4 +1,6 @@
 // src/constants/projectsData.js
+// EXAMPLE: Updated with background configurations for SpinSection
+
 import { PROJECT_ASSETS } from '../assets/index.js';
 
 export const PROJECT_MH1 = {
@@ -57,7 +59,7 @@ export const PROJECT_MH1 = {
       ]
     },
     spin: {
-      enabled: false,
+      enabled: true,
       title: 'Design Evolution',
       componentName: 'Mh1Model',
       modelUrl: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
@@ -81,35 +83,56 @@ export const PROJECT_MH1 = {
           description: 'Initial design concepts focused on sustainability.',
           cameraPos: [0.5, 0, 5], 
           modelRot: [0.25, 0.75, 0],
-          modelPos: [0, 0, 0] 
+          modelPos: [0, 0, 0],
+          // NEW: Background configuration
+          background: {
+            type: 'gradient', // 'color', 'image', or 'gradient'
+            value: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+          }
         },
         { 
           title: 'Structural Analysis', 
           description: 'Ensuring maximum efficiency and integration.',
           cameraPos: [-1.5, 0, 6],
           modelRot: [Math.PI / 4, Math.PI, 0],
-          modelPos: [0, 0, 0]
+          modelPos: [0, 0, 0],
+          background: {
+            type: 'gradient',
+            value: 'linear-gradient(135deg, #0f3460 0%, #16213e 100%)'
+          }
         },
         { 
           title: 'Material Selection', 
           description: 'Eco-friendly materials chosen for durability.',
           cameraPos: [2, 0, 7], 
           modelRot: [0, Math.PI, 0],
-          modelPos: [0, 0, 0]
+          modelPos: [0, 0, 0],
+          background: {
+            type: 'gradient',
+            value: 'linear-gradient(135deg, #533483 0%, #0f3460 100%)'
+          }
         },
         { 
           title: 'Integration Design', 
           description: 'Optimizing workflow and research capabilities.',
           cameraPos: [0, -1, 5], 
           modelRot: [Math.PI / 2, 0, 0],
-          modelPos: [0, 0.5, 0]
+          modelPos: [0, 0.5, 0],
+          background: {
+            type: 'gradient',
+            value: 'linear-gradient(135deg, #7b2869 0%, #533483 100%)'
+          }
         },
         { 
           title: 'Final Implementation', 
           description: 'Complete realization of the vision.',
           cameraPos: [0, 0, 8], 
           modelRot: [0, Math.PI * 2, 0],
-          modelPos: [0, 0, 0]
+          modelPos: [0, 0, 0],
+          background: {
+            type: 'gradient',
+            value: 'linear-gradient(135deg, #1a1a2e 0%, #7b2869 100%)'
+          }
         }
       ]
     },
@@ -119,33 +142,32 @@ export const PROJECT_MH1 = {
       modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
       snapToTop: true,
       fitInViewport: true,
-      // Explosion Configuration
-      explosionDistance: 5,      // Base distance each mesh travels downward
-      explosionIncrement: 2,     // Additional distance for each subsequent mesh (creates stacking effect)
+      explosionDistance: 5,
+      explosionIncrement: 2,
       checkpoints: [
         { 
           title: 'Administrative Building',
           description: 'All components together at starting position.',
-          position: [4, 0, 0],           // [x, y, z] - Model position
-          rotation: [0, Math.PI/4, 0],   // [x, y, z] - Model rotation
-          scale: 0.25,                   // Model scale
-          cameraPosition: [0, 0, 30]     // [x, y, z] - Camera position
+          position: [4, 0, 0],
+          rotation: [0, Math.PI/4, 0],
+          scale: 0.25,
+          cameraPosition: [0, 0, 30]
         },
         { 
           title: 'Shift Right',
           description: 'Moving right while staying assembled.',
-          position: [-8, 0, -5],         // Left position
-          rotation: [0, -Math.PI/2, 0],  // Rotation
+          position: [-8, 0, -5],
+          rotation: [0, -Math.PI/2, 0],
           scale: 0.25,
-          cameraPosition: [0,0,30]       // Camera moves right and up
+          cameraPosition: [0,0,30]
         },
         { 
           title: 'Full Explosion',
           description: 'All components fully separated vertically downwards.',
-          position: [10, 5, -10],        // Right and down
+          position: [10, 5, -10],
           rotation: [Math.PI/2, Math.PI/2, -Math.PI/4],
           scale: 0.25,
-          cameraPosition: [10, 10, 40]   // Camera pulls back to see full explosion
+          cameraPosition: [10, 10, 40]
         }
       ]
     },
@@ -155,14 +177,13 @@ export const PROJECT_MH1 = {
       modelPath: 'assets/projects/mh1/models/gltf/mh1_2.gltf',
       snapToTop: true,
       fitInViewport: true,
-      // Appearance Configuration (starts exploded, reassembles)
-      explosionDistance: 5,      // Base distance meshes start from (exploded state)
-      explosionIncrement: 2,     // Additional spacing between meshes
+      explosionDistance: 5,
+      explosionIncrement: 2,
       checkpoints: [
         { 
           title: 'Initial Fragments',
           description: 'Individual components begin to materialize from the left.',
-          position: [-15, 0, 0],        // Start far left
+          position: [-15, 0, 0],
           rotation: [0, -Math.PI/4, 0],
           scale: 0.25,
           cameraPosition: [0, 0, 35]
@@ -170,7 +191,7 @@ export const PROJECT_MH1 = {
         { 
           title: 'Foundation Forms',
           description: 'Base structure taking shape, moving toward center.',
-          position: [-7, 0, 0],          // Moving right
+          position: [-7, 0, 0],
           rotation: [0, 0, 0],
           scale: 0.25,
           cameraPosition: [0, 3, 32]
@@ -178,7 +199,7 @@ export const PROJECT_MH1 = {
         { 
           title: 'Core Integration',
           description: 'Central components aligning at the center point.',
-          position: [0, 0, 0],           // Center position
+          position: [0, 0, 0],
           rotation: [0, Math.PI/4, 0],
           scale: 0.25,
           cameraPosition: [0, 5, 30]
@@ -186,7 +207,7 @@ export const PROJECT_MH1 = {
         { 
           title: 'Structural Assembly',
           description: 'Major sections continuing rightward integration.',
-          position: [7, 0, 0],           // Moving right
+          position: [7, 0, 0],
           rotation: [0, Math.PI/2, 0],
           scale: 0.25,
           cameraPosition: [0, 3, 32]
@@ -194,7 +215,7 @@ export const PROJECT_MH1 = {
         { 
           title: 'Complete Structure',
           description: 'Fully assembled design reaching final position.',
-          position: [15, 0, 0],          // End far right
+          position: [15, 0, 0],
           rotation: [0, Math.PI * 0.75, 0],
           scale: 0.25,
           cameraPosition: [0, 0, 35]

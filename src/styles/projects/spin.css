@@ -1,8 +1,27 @@
+/* src/styles/projects/spin.css - WITH BACKGROUND LAYERS */
+
 .spin-section-container {
   position: relative;
   width: 100%;
   background: #000;
   overflow: clip;
+}
+
+/* Background layers for stage transitions */
+.spin-background-layer {
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  transition: opacity 0.5s ease;
+}
+
+.spin-background-layer.current {
+  transform-origin: center center;
+}
+
+.spin-background-layer.next {
+  transform-origin: top left;
+  /* Tilted at 5 degrees counter-clockwise */
+  /* Scale added to fill gaps from rotation */
 }
 
 .spin-canvas-fixed-wrapper {
@@ -64,7 +83,6 @@
 }
 
 .checkpoint-card {
-  /* Auto-size to content */
   width: fit-content;
   max-width: 500px;
   min-width: 280px;
@@ -77,16 +95,14 @@
   -webkit-backface-visibility: hidden;
   pointer-events: auto;
   
-  /* Blur transition similar to TrueFocus */
   transition: filter 0.5s ease,
               opacity 0.5s ease;
 }
 
-/* Remove solid background, use only glow effect */
 .checkpoint-card::before {
   content: '';
   position: absolute;
-  inset: -40px; /* Extend beyond card for larger glow */
+  inset: -40px;
   background: radial-gradient(
     ellipse at center,
     rgba(255, 255, 255, 0.08) 0%,
@@ -100,7 +116,6 @@
   pointer-events: none;
 }
 
-/pm * Enhanced glow when active */
 .checkpoint-card.active::before {
   opacity: 0;
   background: radial-gradient(
@@ -174,7 +189,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px; /* Increased margin between number and title */
+  margin-bottom: 20px;
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   overflow: hidden;
@@ -271,12 +286,17 @@
   .checkpoint-description,
   .checkpoint-center-marker,
   .connector-line,
-  .connector-dot {
+  .connector-dot,
+  .spin-background-layer {
     transition: none !important;
     animation: none !important;
   }
   
   .checkpoint-card {
     filter: none !important;
+  }
+  
+  .spin-background-layer.next {
+    transform: none !important;
   }
 }

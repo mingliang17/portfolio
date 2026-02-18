@@ -1,304 +1,101 @@
-import projectsData from "./projectsData";
+// src/constants/index.js
 
-export const navLinks = [
-  {
-    id: 1,
-    name: 'Home',
-    href: '#home',
-  },
-  {
-    id: 2,
-    name: 'About',
-    href: '#about',
-  },
-  {
-    id: 3,
-    name: 'Work',
-    href: '#work',
-  },
-  {
-    id: 4,
-    name: 'Contact',
-    href: '/portfolio/ProjectOne',
-  },
+// ─── Placeholder images (using picsum with stable seeds) ─────────────────────
+const proj = (seed) => `https://picsum.photos/seed/prj${seed}/800/600`;
+const foto = (seed) => `https://picsum.photos/seed/fot${seed}/600/800`;
+
+// ─── 20 Placeholder Projects ─────────────────────────────────────────────────
+const ALL_PROJECTS = [
+  { id: 'proj-au-1', title: 'Sydney Cultural Hub',        country: 'Australia',      heroImage: proj(1),  link: '/projects/proj-au-1' },
+  { id: 'proj-au-2', title: 'Melbourne Civic Tower',      country: 'Australia',      heroImage: proj(2),  link: '/projects/proj-au-2' },
+  { id: 'proj-au-3', title: 'Brisbane River Precinct',    country: 'Australia',      heroImage: proj(3),  link: '/projects/proj-au-3' },
+  { id: 'proj-cn-1', title: 'Shanghai Finance Centre',    country: 'China',          heroImage: proj(4),  link: '/projects/proj-cn-1' },
+  { id: 'proj-cn-2', title: 'Beijing Olympic Village',    country: 'China',          heroImage: proj(5),  link: '/projects/proj-cn-2' },
+  { id: 'proj-cn-3', title: 'Shenzhen Tech Campus',       country: 'China',          heroImage: proj(6),  link: '/projects/proj-cn-3' },
+  { id: 'proj-us-1', title: 'New York Skybridge',         country: 'United States',  heroImage: proj(7),  link: '/projects/proj-us-1' },
+  { id: 'proj-us-2', title: 'LA Performing Arts Centre',  country: 'United States',  heroImage: proj(8),  link: '/projects/proj-us-2' },
+  { id: 'proj-us-3', title: 'Chicago Waterfront',         country: 'United States',  heroImage: proj(9),  link: '/projects/proj-us-3' },
+  { id: 'proj-gb-1', title: 'London Bridge Quarter',      country: 'United Kingdom', heroImage: proj(10), link: '/projects/proj-gb-1' },
+  { id: 'proj-gb-2', title: 'Manchester Arena Extension', country: 'United Kingdom', heroImage: proj(11), link: '/projects/proj-gb-2' },
+  { id: 'proj-jp-1', title: 'Tokyo Mixed-Use Tower',      country: 'Japan',          heroImage: proj(12), link: '/projects/proj-jp-1' },
+  { id: 'proj-jp-2', title: 'Osaka Cultural Park',        country: 'Japan',          heroImage: proj(13), link: '/projects/proj-jp-2' },
+  { id: 'proj-br-1', title: 'São Paulo Vertical Garden',  country: 'Brazil',         heroImage: proj(14), link: '/projects/proj-br-1' },
+  { id: 'proj-br-2', title: 'Rio Coastal Promenade',      country: 'Brazil',         heroImage: proj(15), link: '/projects/proj-br-2' },
+  { id: 'proj-de-1', title: 'Berlin Media Quarter',       country: 'Germany',        heroImage: proj(16), link: '/projects/proj-de-1' },
+  { id: 'proj-de-2', title: 'Munich Transport Hub',       country: 'Germany',        heroImage: proj(17), link: '/projects/proj-de-2' },
+  { id: 'proj-za-1', title: 'Cape Town Harbour',          country: 'South Africa',   heroImage: proj(18), link: '/projects/proj-za-1' },
+  { id: 'proj-za-2', title: 'Johannesburg Skyline',       country: 'South Africa',   heroImage: proj(19), link: '/projects/proj-za-2' },
+  { id: 'proj-za-3', title: 'Durban Waterfront',          country: 'South Africa',   heroImage: proj(20), link: '/projects/proj-za-3' },
 ];
 
-export const clientReviews = [
-  {
-    id: 1,
-    name: 'Emily Johnson',
-    position: 'Marketing Director at GreenLeaf',
-    img: 'assets/review1.png',
-    review:
-      'Working with Adrian was a fantastic experience. He transformed our outdated website into a modern, user-friendly platform. His attention to detail and commitment to quality are unmatched. Highly recommend him for any web dev projects.',
-  },
-  {
-    id: 2,
-    name: 'Mark Rogers',
-    position: 'Founder of TechGear Shop',
-    img: 'assets/review2.png',
-    review:
-      'Adrian’s expertise in web development is truly impressive. He delivered a robust and scalable solution for our e-commerce site, and our online sales have significantly increased since the launch. He’s a true professional! Fantastic work.',
-  },
-  {
-    id: 3,
-    name: 'John Dohsas',
-    position: 'Project Manager at UrbanTech ',
-    img: 'assets/review3.png',
-    review:
-      'I can’t say enough good things about Adrian. He was able to take our complex project requirements and turn them into a seamless, functional website. His problem-solving abilities are outstanding.',
-  },
-  {
-    id: 4,
-    name: 'Ether Smith',
-    position: 'CEO of BrightStar Enterprises',
-    img: 'assets/review4.png',
-    review:
-      'Adrian was a pleasure to work with. He understood our requirements perfectly and delivered a website that exceeded our expectations. His skills in both frontend backend dev are top-notch.',
-  },
+// ─── 20 Placeholder Fotos ────────────────────────────────────────────────────
+const ALL_FOTOS = [
+  { id: 'foto-au-1', title: 'Sydney Opera House',   country: 'Australia',      heroImage: foto(1),  link: '/fotos/foto-au-1', date: 'Mar 2023', caption: 'Golden hour at the harbour' },
+  { id: 'foto-au-2', title: 'Great Barrier Reef',   country: 'Australia',      heroImage: foto(2),  link: '/fotos/foto-au-2', date: 'Jun 2023', caption: 'Underwater wonder' },
+  { id: 'foto-cn-1', title: 'Shanghai Bund',         country: 'China',          heroImage: foto(3),  link: '/fotos/foto-cn-1', date: 'Aug 2023', caption: 'Skyline at night' },
+  { id: 'foto-cn-2', title: 'Great Wall',            country: 'China',          heroImage: foto(4),  link: '/fotos/foto-cn-2', date: 'Oct 2022', caption: 'Autumn at Mutianyu' },
+  { id: 'foto-cn-3', title: 'Li River Karst',        country: 'China',          heroImage: foto(5),  link: '/fotos/foto-cn-3', date: 'Apr 2023', caption: 'Mist over the peaks' },
+  { id: 'foto-us-1', title: 'Manhattan Skyline',     country: 'United States',  heroImage: foto(6),  link: '/fotos/foto-us-1', date: 'Dec 2022', caption: 'Christmas in New York' },
+  { id: 'foto-us-2', title: 'Grand Canyon Rim',      country: 'United States',  heroImage: foto(7),  link: '/fotos/foto-us-2', date: 'Jul 2023', caption: 'Sunrise over the abyss' },
+  { id: 'foto-us-3', title: 'Yosemite Valley',       country: 'United States',  heroImage: foto(8),  link: '/fotos/foto-us-3', date: 'May 2023', caption: 'Valley floor at dawn' },
+  { id: 'foto-gb-1', title: 'London at Dusk',        country: 'United Kingdom', heroImage: foto(9),  link: '/fotos/foto-gb-1', date: 'May 2023', caption: 'Thames at twilight' },
+  { id: 'foto-gb-2', title: 'Scottish Highlands',    country: 'United Kingdom', heroImage: foto(10), link: '/fotos/foto-gb-2', date: 'Sep 2022', caption: 'Misty glens' },
+  { id: 'foto-jp-1', title: 'Mount Fuji Winter',     country: 'Japan',          heroImage: foto(11), link: '/fotos/foto-jp-1', date: 'Nov 2022', caption: 'First snow of winter' },
+  { id: 'foto-jp-2', title: 'Kyoto Cherry Blossoms', country: 'Japan',          heroImage: foto(12), link: '/fotos/foto-jp-2', date: 'Apr 2023', caption: 'Sakura season' },
+  { id: 'foto-jp-3', title: 'Shibuya Crossing',      country: 'Japan',          heroImage: foto(13), link: '/fotos/foto-jp-3', date: 'Feb 2023', caption: 'Urban choreography' },
+  { id: 'foto-br-1', title: 'Amazon Canopy',         country: 'Brazil',         heroImage: foto(14), link: '/fotos/foto-br-1', date: 'Jan 2023', caption: 'Above the jungle' },
+  { id: 'foto-br-2', title: 'Iguazu Falls',          country: 'Brazil',         heroImage: foto(15), link: '/fotos/foto-br-2', date: 'Mar 2023', caption: 'Power of water' },
+  { id: 'foto-de-1', title: 'Neuschwanstein Castle', country: 'Germany',        heroImage: foto(16), link: '/fotos/foto-de-1', date: 'Dec 2022', caption: 'Winter fairy tale' },
+  { id: 'foto-de-2', title: 'Berlin Brutalism',      country: 'Germany',        heroImage: foto(17), link: '/fotos/foto-de-2', date: 'Oct 2022', caption: 'Raw concrete' },
+  { id: 'foto-za-1', title: 'Cape of Good Hope',     country: 'South Africa',   heroImage: foto(18), link: '/fotos/foto-za-1', date: 'Feb 2023', caption: 'Two oceans meet' },
+  { id: 'foto-za-2', title: 'Kruger Sunrise',        country: 'South Africa',   heroImage: foto(19), link: '/fotos/foto-za-2', date: 'Aug 2022', caption: 'Safari dawn' },
+  { id: 'foto-za-3', title: 'Table Mountain Clouds', country: 'South Africa',   heroImage: foto(20), link: '/fotos/foto-za-3', date: 'Sep 2022', caption: 'Tablecloth mist' },
 ];
 
-export const myProjects = [
-  {
-    title: 'Podcastr - AI Podcast Platform',
-    desc: 'Podcastr is a revolutionary Software-as-a-Service platform that transforms the way podcasts are created. With advanced AI-powered features like text-to-multiple-voices functionality, it allows creators to generate diverse voiceovers from a single text input.',
-    subdesc:
-      'Built as a unique Software-as-a-Service app with Next.js 14, Tailwind CSS, TypeScript, Framer Motion and Convex, Podcastr is designed for optimal performance and scalability.',
-    href: 'https://www.youtube.com/watch?v=zfAb95tJvZQ',
-    texture: '/textures/project/project1.mp4',
-    logo: '/assets/project-logo1.png',
-    logoStyle: {
-      backgroundColor: '#2A1816',
-      border: '0.2px solid #36201D',
-      boxShadow: '0px 0px 60px 0px #AA3C304D',
-    },
-    spotlight: '/assets/spotlight1.png',
-    tags: [
-      {
-        id: 1,
-        name: 'React.js',
-        path: '/assets/react.svg',
-      },
-      {
-        id: 2,
-        name: 'TailwindCSS',
-        path: 'assets/tailwindcss.png',
-      },
-      {
-        id: 3,
-        name: 'TypeScript',
-        path: '/assets/typescript.png',
-      },
-      {
-        id: 4,
-        name: 'Framer Motion',
-        path: '/assets/framer.png',
-      },
-    ],
-  },
-  {
-    title: 'LiveDoc - Real-Time Google Docs Clone',
-    desc: 'LiveDoc is a powerful collaborative app that elevates the capabilities of real-time document editing. As an enhanced version of Google Docs, It supports millions of collaborators simultaneously, ensuring that every change is captured instantly and accurately.',
-    subdesc:
-      'With LiveDoc, users can experience the future of collaboration, where multiple contributors work together in real time without any lag, by using Next.js and Liveblocks newest features.',
-    href: 'https://www.youtube.com/watch?v=y5vE8y_f_OM',
-    texture: '/textures/project/project2.mp4',
-    logo: '/assets/project-logo2.png',
-    logoStyle: {
-      backgroundColor: '#13202F',
-      border: '0.2px solid #17293E',
-      boxShadow: '0px 0px 60px 0px #2F6DB54D',
-    },
-    spotlight: '/assets/spotlight2.png',
-    tags: [
-      {
-        id: 1,
-        name: 'React.js',
-        path: '/assets/react.svg',
-      },
-      {
-        id: 2,
-        name: 'TailwindCSS',
-        path: 'assets/tailwindcss.png',
-      },
-      {
-        id: 3,
-        name: 'TypeScript',
-        path: '/assets/typescript.png',
-      },
-      {
-        id: 4,
-        name: 'Framer Motion',
-        path: '/assets/framer.png',
-      },
-    ],
-  },
-  {
-    title: 'CarePulse - Health Management System',
-    desc: 'An innovative healthcare platform designed to streamline essential medical processes. It simplifies patient registration, appointment scheduling, and medical record management, providing a seamless experience for both healthcare providers and patients.',
-    subdesc:
-      'With a focus on efficiency, CarePulse integrantes complex forms and SMS notifications, by using Next.js, Appwrite, Twillio and Sentry that enhance operational workflows.',
-    href: 'https://www.youtube.com/watch?v=lEflo_sc82g',
-    texture: '/textures/project/project3.mp4',
-    logo: '/assets/project-logo3.png',
-    logoStyle: {
-      backgroundColor: '#60f5a1',
-      background:
-        'linear-gradient(0deg, #60F5A150, #60F5A150), linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(208, 213, 221, 0.8) 100%)',
-      border: '0.2px solid rgba(208, 213, 221, 1)',
-      boxShadow: '0px 0px 60px 0px rgba(35, 131, 96, 0.3)',
-    },
-    spotlight: '/assets/spotlight3.png',
-    tags: [
-      {
-        id: 1,
-        name: 'React.js',
-        path: '/assets/react.svg',
-      },
-      {
-        id: 2,
-        name: 'TailwindCSS',
-        path: 'assets/tailwindcss.png',
-      },
-      {
-        id: 3,
-        name: 'TypeScript',
-        path: '/assets/typescript.png',
-      },
-      {
-        id: 4,
-        name: 'Framer Motion',
-        path: '/assets/framer.png',
-      },
-    ],
-  },
-  {
-    title: 'Horizon - Online Banking Platform',
-    desc: 'Horizon is a comprehensive online banking platform that offers users a centralized finance management dashboard. It allows users to connect multiple bank accounts, monitor real-time transactions, and seamlessly transfer money to other users.',
-    subdesc:
-      'Built with Next.js 14 Appwrite, Dwolla and Plaid, Horizon ensures a smooth and secure banking experience, tailored to meet the needs of modern consumers.',
-    href: 'https://www.youtube.com/watch?v=PuOVqP_cjkE',
-    texture: '/textures/project/project4.mp4',
-    logo: '/assets/project-logo4.png',
-    logoStyle: {
-      backgroundColor: '#0E1F38',
-      border: '0.2px solid #0E2D58',
-      boxShadow: '0px 0px 60px 0px #2F67B64D',
-    },
-    spotlight: '/assets/spotlight4.png',
-    tags: [
-      {
-        id: 1,
-        name: 'React.js',
-        path: '/assets/react.svg',
-      },
-      {
-        id: 2,
-        name: 'TailwindCSS',
-        path: 'assets/tailwindcss.png',
-      },
-      {
-        id: 3,
-        name: 'TypeScript',
-        path: '/assets/typescript.png',
-      },
-      {
-        id: 4,
-        name: 'Framer Motion',
-        path: '/assets/framer.png',
-      },
-    ],
-  },
-  {
-    title: 'Imaginify - AI Photo Manipulation App',
-    desc: 'Imaginify is a groundbreaking Software-as-a-Service application that empowers users to create stunning photo manipulations using AI technology. With features like AI-driven image editing, a payments system, and a credits-based model.',
-    subdesc:
-      'Built with Next.js 14, Cloudinary AI, Clerk, and Stripe, Imaginify combines cutting-edge technology with a user-centric approach. It can be turned into a side income or even a full-fledged business.',
-    href: 'https://www.youtube.com/watch?v=Ahwoks_dawU',
-    texture: '/textures/project/project5.mp4',
-    logo: '/assets/project-logo5.png',
-    logoStyle: {
-      backgroundColor: '#1C1A43',
-      border: '0.2px solid #252262',
-      boxShadow: '0px 0px 60px 0px #635BFF4D',
-    },
-    spotlight: '/assets/spotlight5.png',
-    tags: [
-      {
-        id: 1,
-        name: 'React.js',
-        path: '/assets/react.svg',
-      },
-      {
-        id: 2,
-        name: 'TailwindCSS',
-        path: 'assets/tailwindcss.png',
-      },
-      {
-        id: 3,
-        name: 'TypeScript',
-        path: '/assets/typescript.png',
-      },
-      {
-        id: 4,
-        name: 'Framer Motion',
-        path: '/assets/framer.png',
-      },
-    ],
-  },
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const projectsFor = (country) => ALL_PROJECTS.filter(p => p.country === country);
+const fotosFor    = (country) => ALL_FOTOS.filter(f => f.country === country);
+
+// ─── Globe: country-based structure ─────────────────────────────────────────
+export const globeProjects = [
+  { country: 'Australia',      iso: 'au', lat: -25.27, lon: 133.78, projects: projectsFor('Australia'),      fotos: fotosFor('Australia') },
+  { country: 'China',          iso: 'cn', lat:  35.86, lon: 104.20, projects: projectsFor('China'),          fotos: fotosFor('China') },
+  { country: 'United States',  iso: 'us', lat:  37.09, lon: -95.71, projects: projectsFor('United States'),  fotos: fotosFor('United States') },
+  { country: 'United Kingdom', iso: 'gb', lat:  55.38, lon:  -3.44, projects: projectsFor('United Kingdom'), fotos: fotosFor('United Kingdom') },
+  { country: 'Japan',          iso: 'jp', lat:  36.20, lon: 138.25, projects: projectsFor('Japan'),          fotos: fotosFor('Japan') },
+  { country: 'Brazil',         iso: 'br', lat: -14.24, lon: -51.93, projects: projectsFor('Brazil'),         fotos: fotosFor('Brazil') },
+  { country: 'Germany',        iso: 'de', lat:  51.17, lon:  10.45, projects: projectsFor('Germany'),        fotos: fotosFor('Germany') },
+  { country: 'South Africa',   iso: 'za', lat: -30.56, lon:  22.94, projects: projectsFor('South Africa'),   fotos: fotosFor('South Africa') },
 ];
 
-export const calculateSizes = (isSmall, isMobile, isTablet) => {
-  return {
-    deskScale: isSmall ? 0.07 : isMobile ? 0.08 : 0.09,
-    deskPosition: isMobile ? [0.5, -4.5, 0] : [0.25, -5.5, 0],
-    cubePosition: isSmall ? [4, -5, 0] : isMobile ? [5, -5, 0] : isTablet ? [5, -5, 0] : [9, -5.5, 0],
-    reactLogoPosition: isSmall ? [3, 4, 0] : isMobile ? [5, 4, 0] : isTablet ? [5, 4, 0] : [12, 3, 0],
-    ringPosition: isSmall ? [-5, 7, 0] : isMobile ? [-10, 10, 0] : isTablet ? [-12, 10, 0] : [-24, 10, 0],
-    targetPosition: isSmall ? [-5, -10, -10] : isMobile ? [-9, -10, -10] : isTablet ? [-11, -7, -10] : [-13, -13, -10],
-  };
+// ─── Sorted accessors (selected country first) ────────────────────────────────
+export const getSortedProjects = (selectedCountry) => {
+  const same  = ALL_PROJECTS.filter(p => p.country === selectedCountry).sort((a,b) => a.title.localeCompare(b.title));
+  const other = ALL_PROJECTS.filter(p => p.country !== selectedCountry).sort((a,b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
+  return [...same, ...other];
 };
 
-export const workExperiences = [
-  {
-    id: 1,
-    name: 'Framer',
-    pos: 'Lead Web Developer',
-    duration: '2022 - Present',
-    title: "Framer serves as my go-to tool for creating interactive prototypes. I use it to bring designs to  life, allowing stakeholders to experience the user flow and interactions before development.",
-    icon: '/assets/framer.svg',
-    animation: 'idle',
-  },
-  {
-    id: 2,
-    name: 'Figma',
-    pos: 'Web Developer',
-    duration: '2020 - 2022',
-    title: "Figma is my collaborative design platform of choice. I utilize it to work seamlessly with team members and clients, facilitating real-time feedback and design iterations. Its cloud-based.",
-    icon: '/assets/figma.svg',
-    animation: 'dancing',
-  },
-  {
-    id: 3,
-    name: 'Notion',
-    pos: 'Junior Web Developer',
-    duration: '2019 - 2020',
-    title: "Notion helps me keep my projects organized. I use it for project management, task tracking, and as a central hub for documentation, ensuring that everything from design notes to.",
-    icon: '/assets/notion.svg',
-    animation: 'thankful',
-  },
+export const getSortedFotos = (selectedCountry) => {
+  const same  = ALL_FOTOS.filter(f => f.country === selectedCountry).sort((a,b) => a.title.localeCompare(b.title));
+  const other = ALL_FOTOS.filter(f => f.country !== selectedCountry).sort((a,b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
+  return [...same, ...other];
+};
+
+export const getFotoById     = (id) => ALL_FOTOS.find(f => f.id === id) || null;
+export const getProjectById  = (id) => ALL_PROJECTS.find(p => p.id === id) || null;
+export const allProjects     = ALL_PROJECTS;
+export const allFotos        = ALL_FOTOS;
+
+// ─── Other existing exports ────────────────────────────────────────────────
+export const navLinks = [
+  { id: 1, name: 'Home',    href: '#home'    },
+  { id: 2, name: 'About',   href: '#about'   },
+  { id: 3, name: 'Work',    href: '#work'    },
+  { id: 4, name: 'Contact', href: '/portfolio/ProjectOne' },
 ];
 
-
-export const globeProjects = [{
-      title: 'meinhardt1',
-      id: 'mh1',
-      description: 'description for mh1',
-      lat: 38.4237,  // Izmir
-      lon: 27.1428,
-      link: 'projects/mh1'
-    },
-   
-    ]
-
-
+export const workExperiences = [
+  { id: 1, name: 'Framer', pos: 'Lead Web Developer',   duration: '2022 - Present', title: 'Framer serves as my go-to tool.', icon: '/assets/framer.svg', animation: 'idle' },
+  { id: 2, name: 'Figma',  pos: 'Web Developer',         duration: '2020 - 2022',   title: 'Figma is my collaborative platform.', icon: '/assets/figma.svg', animation: 'dancing' },
+  { id: 3, name: 'Notion', pos: 'Junior Web Developer',  duration: '2019 - 2020',   title: 'Notion helps organise my projects.', icon: '/assets/notion.svg', animation: 'thankful' },
+];
