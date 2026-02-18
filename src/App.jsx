@@ -5,8 +5,8 @@ import { useNavbarHeight } from './hooks/index.js';
 import Navbar from './components/common/Navbar.jsx';
 import Contact from './sections/Contact.jsx';
 import ProjectPage from './pages/templates/ProjectPage.jsx';
-// In your App.jsx or router configuration, add:
 import TestModelSimple from '@/testing/TestModelSimple.jsx';
+import FotoPage from './pages/templates/FotoPage.jsx';
 
 const Home = lazy(() => import('./pages/Home.jsx'));
 // const Earth = lazy(() => import('./pages/projects/Earth.jsx'));
@@ -17,13 +17,14 @@ const App = () => {
 
   return (
     <main className="w-full relative bg-gray-400">
-      <Router basename="portfolio">
+      <Router basename="/portfolio">
         <Navbar ref={navRef} />
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/projects/:project_id" element={<ProjectPage />} />
+            <Route path="/fotos/:fotoId" element={<FotoPage />} />
             <Route path="/test" element={<TestModelSimple />} />
             <Route path="*" element={<Contact />} />
 

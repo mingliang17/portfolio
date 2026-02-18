@@ -4,7 +4,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import gsap from 'gsap';
-import { getFotoById } from '../constants/index.js';
+import { getFotoById } from '../../constants/index.js';
 
 // ── Polaroid display component ──────────────────────────────────────────────
 const FotoPolaroid = ({ foto }) => {
