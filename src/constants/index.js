@@ -6,9 +6,9 @@ const foto = (seed) => `https://picsum.photos/seed/fot${seed}/600/800`;
 
 // ─── 20 Placeholder Projects ─────────────────────────────────────────────────
 const ALL_PROJECTS = [
-  { id: 'proj-au-1', title: 'Sydney Cultural Hub',        country: 'Australia',      heroImage: proj(1),  link: '/projects/proj-au-1' },
-  { id: 'proj-au-2', title: 'Melbourne Civic Tower',      country: 'Australia',      heroImage: proj(2),  link: '/projects/proj-au-2' },
-  { id: 'proj-au-3', title: 'Brisbane River Precinct',    country: 'Australia',      heroImage: proj(3),  link: '/projects/proj-au-3' },
+  { id: 'proj-au-1', title: 'Sydney Cultural Hub',        country: 'Australia',      heroImage: proj(1),  link: '/projects/proj-au-1', pinColor: '#FF6B6B' },
+  { id: 'proj-au-2', title: 'Melbourne Civic Tower',      country: 'Australia',      heroImage: proj(2),  link: '/projects/proj-au-2', pinColor: '#4ECDC4' },
+  { id: 'proj-au-3', title: 'Brisbane River Precinct',    country: 'Australia',      heroImage: proj(3),  link: '/projects/proj-au-3', pinColor: '#FFE66D' },
   { id: 'proj-cn-1', title: 'Shanghai Finance Centre',    country: 'China',          heroImage: proj(4),  link: '/projects/proj-cn-1' },
   { id: 'proj-cn-2', title: 'Beijing Olympic Village',    country: 'China',          heroImage: proj(5),  link: '/projects/proj-cn-2' },
   { id: 'proj-cn-3', title: 'Shenzhen Tech Campus',       country: 'China',          heroImage: proj(6),  link: '/projects/proj-cn-3' },
@@ -30,9 +30,9 @@ const ALL_PROJECTS = [
 
 // ─── 20 Placeholder Fotos ────────────────────────────────────────────────────
 const ALL_FOTOS = [
-  { id: 'foto-au-1', title: 'Sydney Opera House',   country: 'Australia',      heroImage: foto(1),  link: '/fotos/foto-au-1', date: 'Mar 2023', caption: 'Golden hour at the harbour' },
-  { id: 'foto-au-2', title: 'Great Barrier Reef',   country: 'Australia',      heroImage: foto(2),  link: '/fotos/foto-au-2', date: 'Jun 2023', caption: 'Underwater wonder' },
-  { id: 'foto-cn-1', title: 'Shanghai Bund',         country: 'China',          heroImage: foto(3),  link: '/fotos/foto-cn-1', date: 'Aug 2023', caption: 'Skyline at night' },
+  { id: 'foto-au-1', title: 'Sydney Opera House',   country: 'Australia',      heroImage: foto(1),  link: '/fotos/foto-au-1', date: 'Mar 2023', caption: 'Golden hour at the harbour', pinColor: '#FF6B6B' },
+  { id: 'foto-au-2', title: 'Great Barrier Reef',   country: 'Australia',      heroImage: foto(2),  link: '/fotos/foto-au-2', date: 'Jun 2023', caption: 'Underwater wonder', pinColor: '#4ECDC4' },
+  { id: 'foto-cn-1', title: 'Shanghai Bund',         country: 'China',          heroImage: foto(3),  link: '/fotos/foto-cn-1', date: 'Aug 2023', caption: 'Skyline at night', pinColor: '#FFE66D' },
   { id: 'foto-cn-2', title: 'Great Wall',            country: 'China',          heroImage: foto(4),  link: '/fotos/foto-cn-2', date: 'Oct 2022', caption: 'Autumn at Mutianyu' },
   { id: 'foto-cn-3', title: 'Li River Karst',        country: 'China',          heroImage: foto(5),  link: '/fotos/foto-cn-3', date: 'Apr 2023', caption: 'Mist over the peaks' },
   { id: 'foto-us-1', title: 'Manhattan Skyline',     country: 'United States',  heroImage: foto(6),  link: '/fotos/foto-us-1', date: 'Dec 2022', caption: 'Christmas in New York' },
@@ -69,14 +69,24 @@ export const globeProjects = [
 ];
 
 // ─── Sorted accessors (selected country first) ────────────────────────────────
-export const getSortedProjects = (selectedCountry) => {
-  const same  = ALL_PROJECTS.filter(p => p.country === selectedCountry).sort((a,b) => a.title.localeCompare(b.title));
+export const getSortedProjects = (selectedCountry, selectedItemId = null) => {
+  const same  = ALL_PROJECTS.filter(p => p.country === selectedCountry);
+  if (selectedItemId) {
+    same.sort((a,b) => (a.id === selectedItemId ? -1 : b.id === selectedItemId ? 1 : a.title.localeCompare(b.title)));
+  } else {
+    same.sort((a,b) => a.title.localeCompare(b.title));
+  }
   const other = ALL_PROJECTS.filter(p => p.country !== selectedCountry).sort((a,b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
   return [...same, ...other];
 };
 
-export const getSortedFotos = (selectedCountry) => {
-  const same  = ALL_FOTOS.filter(f => f.country === selectedCountry).sort((a,b) => a.title.localeCompare(b.title));
+export const getSortedFotos = (selectedCountry, selectedItemId = null) => {
+  const same  = ALL_FOTOS.filter(f => f.country === selectedCountry);
+  if (selectedItemId) {
+    same.sort((a,b) => (a.id === selectedItemId ? -1 : b.id === selectedItemId ? 1 : a.title.localeCompare(b.title)));
+  } else {
+    same.sort((a,b) => a.title.localeCompare(b.title));
+  }
   const other = ALL_FOTOS.filter(f => f.country !== selectedCountry).sort((a,b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
   return [...same, ...other];
 };

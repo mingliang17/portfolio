@@ -21,14 +21,14 @@ const PolaroidCard = ({ item, index, isHighlighted, isVisible, side }) => {
     if (!isVisible || !cardRef.current) return;
     // Pop/bounce in with stagger based on index
     gsap.fromTo(cardRef.current,
-      { opacity: 0, y: 60, scale: 0.75, rotation: rot + (side === 'left' ? -8 : 8) },
-      { opacity: 1, y: 0, scale: 1, rotation: rot,
+      { opacity: 0, y: 60, scale: 0.75, rotation: rot + (side === 'left' ? -8 : 8), x: xOff },
+      { opacity: 1, y: 0, scale: 1, rotation: rot, x: xOff,
         duration: 0.65,
         delay: 0.05 + index * 0.06,
         ease: 'back.out(1.6)',
         clearProps: 'scale' }
     );
-  }, [isVisible]);
+  }, [isVisible, rot, xOff, index, side]);
 
   const handleMouseEnter = () => {
     if (!cardRef.current) return;
@@ -71,6 +71,7 @@ const PolaroidCard = ({ item, index, isHighlighted, isVisible, side }) => {
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
+      <div className="hp-polaroid-pin" style={{ backgroundColor: item.pinColor || '#eb4034' }} />
       <div className="hp-polaroid-img">
         <img src={item.heroImage} alt={item.title} loading="lazy" />
         {isHighlighted && <div className="hp-polaroid-glow-border" />}
@@ -83,7 +84,7 @@ const PolaroidCard = ({ item, index, isHighlighted, isVisible, side }) => {
   );
 };
 
-const PolaroidColumn = ({ items, selectedCountry, visible, side }) => {
+const PolaroidColumn = ({ items, selectedCountry, selectedItem, visible, side }) => {
   const colRef = useRef(null);
 
   return (
@@ -93,12 +94,63 @@ const PolaroidColumn = ({ items, selectedCountry, visible, side }) => {
           key={item.id}
           item={item}
           index={i}
-          isHighlighted={selectedCountry && item.country === selectedCountry}
+          isHighlighted={selectedItem === item.id || (!selectedItem && selectedCountry && item.country === selectedCountry)}
           isVisible={visible}
           side={side}
         />
       ))}
     </div>
+  );
+};
+
+const ScrollablePolaroidArea = ({ items, selectedCountry, selectedItem, visible, side, emptyText }) => {
+  const scrollRef = useRef(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    setCanScrollUp(scrollTop > 2);
+    setCanScrollDown(scrollTop + clientHeight < scrollHeight - 2);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const timeout = setTimeout(checkScroll, 300);
+    return () => clearTimeout(timeout);
+  }, [items, visible, checkScroll]);
+
+  return (
+    <>
+      <div className="hp-scroll-indicator top" style={{ opacity: visible && canScrollUp ? 1 : 0 }}>▲</div>
+      <div 
+        ref={scrollRef} 
+        className="hp-col-scroll"
+        onScroll={checkScroll}
+        onWheel={(e) => { 
+          if (scrollRef.current) scrollRef.current.scrollTop += e.deltaY; 
+          checkScroll();
+        }}
+      >
+        {visible && (
+          <PolaroidColumn
+            items={items}
+            selectedCountry={selectedCountry}
+            selectedItem={selectedItem}
+            visible={visible}
+            side={side}
+          />
+        )}
+        {!visible && (
+          <div className="hp-col-empty">
+            <span>{emptyText}</span>
+          </div>
+        )}
+      </div>
+      <div className="hp-scroll-indicator bottom" style={{ opacity: visible && canScrollDown ? 1 : 0 }}>▼</div>
+    </>
   );
 };
 
@@ -169,28 +221,37 @@ const CameraIntro = ({ onComplete }) => {
 // ── Home Page ─────────────────────────────────────────────────────────────────
 const Home = () => {
   const [introComplete, setIntroComplete] = useState(false);
-  const [isDayMode, setIsDayMode] = useState(true);
+  const [globeTheme, setGlobeTheme] = useState('neutral');
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [columnsVisible, setColumnsVisible] = useState(false);
   const [sortedProjects, setSortedProjects] = useState([]);
   const [sortedFotos, setSortedFotos] = useState([]);
-  const leftColRef = useRef(null);
-  const rightColRef = useRef(null);
 
   const handleIntroComplete = useCallback(() => {
     setIntroComplete(true);
   }, []);
 
-  const handleCountrySelect = useCallback((country) => {
-    const isFirstSelect = !columnsVisible;
-    setSelectedCountry(country.country);
+  const handleItemSelect = useCallback((item) => {
+    setSelectedItem(item.id);
+    setSelectedCountry(item.country);
+    
+    setSortedProjects(getSortedProjects(item.country, item.id));
+    setSortedFotos(getSortedFotos(item.country, item.id));
 
-    // Sort: selected country first, then alphabetically
+    if (!columnsVisible) {
+      setColumnsVisible(true);
+    }
+  }, [columnsVisible]);
+
+  const handleCountrySelect = useCallback((country) => {
+    setSelectedCountry(country.country);
+    setSelectedItem(null);
+    
     setSortedProjects(getSortedProjects(country.country));
     setSortedFotos(getSortedFotos(country.country));
 
-    if (isFirstSelect) {
-      // Animate columns in for the first time
+    if (!columnsVisible) {
       setColumnsVisible(true);
     }
   }, [columnsVisible]);
@@ -216,21 +277,14 @@ const Home = () => {
         {/* LEFT 20% — Projects column */}
         <div className="hp-col hp-col-left">
           <div className="hp-col-label">Projects</div>
-          <div ref={leftColRef} className="hp-col-scroll">
-            {columnsVisible && (
-              <PolaroidColumn
-                items={sortedProjects}
-                selectedCountry={selectedCountry}
-                visible={columnsVisible}
-                side="left"
-              />
-            )}
-            {!columnsVisible && (
-              <div className="hp-col-empty">
-                <span>Select a country<br/>to explore</span>
-              </div>
-            )}
-          </div>
+          <ScrollablePolaroidArea
+            items={sortedProjects}
+            selectedCountry={selectedCountry}
+            selectedItem={selectedItem}
+            visible={columnsVisible}
+            side="left"
+            emptyText={<>Select a country<br/>to explore</>}
+          />
         </div>
 
         {/* CENTER 60% — Earth Globe */}
@@ -243,9 +297,12 @@ const Home = () => {
               <Earth
                 countries={globeProjects}
                 stars={starNavigationPoints}
-                isDayMode={isDayMode}
-                onDayNightToggle={() => setIsDayMode(d => !d)}
+                globeTheme={globeTheme}
+                onThemeChange={setGlobeTheme}
+                onItemSelect={handleItemSelect}
                 onCountrySelect={handleCountrySelect}
+                selectedCountry={selectedCountry}
+                selectedItem={selectedItem}
                 onCountryHover={handleCountryHover}
                 showPins={true}
                 showStars={true}
@@ -272,21 +329,14 @@ const Home = () => {
         {/* RIGHT 20% — Fotos column */}
         <div className="hp-col hp-col-right">
           <div className="hp-col-label">Snaps</div>
-          <div ref={rightColRef} className="hp-col-scroll">
-            {columnsVisible && (
-              <PolaroidColumn
-                items={sortedFotos}
-                selectedCountry={selectedCountry}
-                visible={columnsVisible}
-                side="right"
-              />
-            )}
-            {!columnsVisible && (
-              <div className="hp-col-empty">
-                <span>Select a country<br/>to explore</span>
-              </div>
-            )}
-          </div>
+          <ScrollablePolaroidArea
+            items={sortedFotos}
+            selectedCountry={selectedCountry}
+            selectedItem={selectedItem}
+            visible={columnsVisible}
+            side="right"
+            emptyText={<>Select a country<br/>to explore</>}
+          />
         </div>
       </div>
     </main>

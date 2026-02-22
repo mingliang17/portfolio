@@ -27,7 +27,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 0.5rem;
+  padding: 0 0.5rem;
   position: relative;
   z-index: 10;
 }
@@ -40,9 +40,10 @@
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.25);
-  padding: 0 1rem 0.75rem;
+  padding: 1.5rem 1rem 0.75rem;
   text-align: center;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .hp-col-scroll {
@@ -68,6 +69,20 @@
   font-family: 'Courier New', monospace;
   letter-spacing: 0.1em;
   line-height: 1.8;
+}
+
+.hp-scroll-indicator {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 8px 0;
+  animation: bounce-y 2s infinite;
+  pointer-events: none;
+  z-index: 20;
+}
+@keyframes bounce-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 /* ── Center globe (60%) ── */
@@ -115,7 +130,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 10vh;
 }
 
 .hp-polaroid {
@@ -136,6 +152,30 @@
   box-shadow:
     0 16px 48px rgba(0,0,0,0.6),
     0 4px 12px rgba(0,0,0,0.3);
+}
+
+.hp-polaroid-pin {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 
+    inset -2px -2px 4px rgba(0,0,0,0.4),
+    2px 2px 4px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+.hp-polaroid-pin::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 3px;
+  height: 3px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
 }
 
 .hp-polaroid-img {
@@ -346,8 +386,8 @@
   font-size: 0.58rem;
 }
 
-/* Day/Night Toggle — bottom center */
-.earth-daynight-toggle {
+/* Theme Toggle — bottom center */
+.earth-theme-toggle {
   position: absolute;
   bottom: 2.5rem;
   left: 50%;
@@ -356,49 +396,41 @@
   pointer-events: auto;
 }
 
-.daynight-toggle-btn {
+.theme-toggle-container {
   display: flex;
   align-items: center;
-  gap: 8px;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 999px;
-  padding: 6px 16px 6px 6px;
-  cursor: pointer;
-  transition: background 0.3s ease, border-color 0.3s ease;
-  color: #fff;
+  padding: 4px;
 }
-.daynight-toggle-btn:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.28);
-}
-.daynight-track {
-  width: 36px; height: 20px;
-  background: rgba(255,255,255,0.12);
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
   border-radius: 999px;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  position: relative;
-}
-.daynight-day  .daynight-track { background: rgba(255,200,50,0.2); justify-content: flex-start; }
-.daynight-night .daynight-track { background: rgba(80,120,200,0.2); justify-content: flex-end; }
-.daynight-thumb {
-  width: 16px; height: 16px;
-  font-size: 12px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.5);
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   transition: all 0.3s ease;
 }
-.daynight-label {
-  font-family: 'Courier New', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
+
+.theme-btn:hover {
+  color: rgba(255,255,255,0.8);
+}
+
+.theme-btn.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* ════════════════════════════════════════════

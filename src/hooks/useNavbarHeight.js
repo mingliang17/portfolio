@@ -1,39 +1,25 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 
 export const useNavbarHeight = (navRef, updateDelay = 100) => {
   useEffect(() => {
     const updateNavbarHeight = () => {
       const navbar = navRef.current;
-      if (!navbar) {
-        console.warn('⚠️ Navbar ref not available yet');
-        return;
-      }
+      if (!navbar) return;
       
-      // Force the navbar to be visible for measurement
-      const originalStyle = navbar.style.cssText;
-      navbar.style.opacity = '1';
-      navbar.style.transform = 'translateY(0)';
-      navbar.style.pointerEvents = 'auto';
-      
+      // Get the actual height
       const navHeight = navbar.offsetHeight || 0;
       document.documentElement.style.setProperty('--nav-height', `${navHeight}px`);
-      console.log('📏 Navbar height calculated:', navHeight + 'px');
-      
-      // Restore original styles
-      navbar.style.cssText = originalStyle;
+      console.log('📏 Navbar height updated:', navHeight + 'px');
     };
 
-    // Calculate multiple times to ensure accuracy
+    // Initial calculation
     updateNavbarHeight();
+
+    // Re-run after a delay to catch layout shifts/fonts loading
     const timer1 = setTimeout(updateNavbarHeight, updateDelay);
     const timer2 = setTimeout(updateNavbarHeight, updateDelay * 5);
 
-    // Recalculate on window resize
-    const handleResize = () => {
-      console.log('🔄 Window resized, recalculating navbar height');
-      updateNavbarHeight();
-    };
-    
+    const handleResize = () => updateNavbarHeight();
     window.addEventListener('resize', handleResize);
 
     return () => {
