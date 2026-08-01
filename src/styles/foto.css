@@ -1,0 +1,188 @@
+/* ════════════════════════════════════════════
+   FOTO PAGE — Polaroid snap detail view
+   ════════════════════════════════════════════ */
+
+.foto-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+/* Blurred background from the snap image */
+.foto-page-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) saturate(0.6) brightness(0.35);
+  transform: scale(1.08);
+  z-index: 0;
+}
+.foto-page-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+  z-index: 1;
+}
+
+/* Layout */
+.foto-page-layout {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+/* ── Sidebar meta ── */
+.foto-meta {
+  width: 280px;
+  flex-shrink: 0;
+  padding: 4rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+}
+
+.foto-meta-heading {
+  font-family: 'Courier New', monospace;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.foto-meta-divider {
+  width: 40px;
+  height: 2px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 99px;
+}
+
+.foto-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.foto-meta-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+.foto-meta-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.5;
+}
+
+.foto-back-btn {
+  margin-top: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.foto-back-btn:hover { color: rgba(255,255,255,0.8); }
+
+/* ── Main area ── */
+.foto-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+/* ── Polaroid ── */
+.foto-polaroid {
+  background: #f5f0e8;
+  padding: 12px 12px 60px 12px;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.65),
+    0 8px 20px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 80vw);
+  user-select: none;
+}
+
+.foto-polaroid-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #111;
+  position: relative;
+}
+.foto-polaroid-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+.foto-polaroid:hover .foto-polaroid-img img {
+  transform: scale(1.04);
+}
+.foto-polaroid-img-overlay {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+.foto-polaroid-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 14px;
+  min-height: 50px;
+  gap: 4px;
+}
+.foto-caption-text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #2a2a2a;
+  text-align: center;
+  line-height: 1.4;
+}
+.foto-date {
+  font-size: 0.65rem !important;
+  color: #999 !important;
+  letter-spacing: 0.08em;
+}
+
+/* ── Not found ── */
+.foto-not-found {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-family: 'Courier New', monospace;
+}
+.foto-not-found a {
+  display: block;
+  margin-top: 1rem;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .foto-meta { display: none; }
+  .foto-main { padding: 2rem 1rem; }
+}

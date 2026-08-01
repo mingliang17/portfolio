@@ -1,0 +1,172 @@
+/* ========================================
+   ANIME SECTION STYLES
+   ======================================== */
+
+/* Container - must be visible */
+.anime-section,
+.anime-section-container {
+  position: relative;
+  background-color: #0f1011;
+  width: 100%;
+  /* CRITICAL: overflow MUST be visible */
+  overflow: visible !important;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* Sticky viewport */
+.anime-sticky-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  /* OK to have overflow hidden here */
+  overflow: hidden;
+  z-index: 10;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Canvas container */
+.anime-canvas-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* UI overlay */
+.anime-ui-overlay {
+  position: relative;
+  z-index: 10;
+  color: white;
+  text-align: center;
+  pointer-events: none;
+  max-width: 90%;
+  padding: 2rem;
+}
+
+/* Checkpoint title */
+.checkpoint-title {
+  font-size: var(--text-16);
+  margin: 0;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+  line-height: 1.2;
+}
+
+/* Checkpoint description */
+.checkpoint-description {
+  font-size: var(--text-10);
+  color: #00ffcc;
+  margin-top: 1rem;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+/* Progress bar */
+.anime-progress-bar {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(300px, 80%);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.anime-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00ffcc, #00ff88);
+  transition: width 0.05s linear;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* Checkpoint indicators */
+.checkpoint-indicators {
+  position: absolute;
+  bottom: 4rem;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.checkpoint-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.checkpoint-dot.active {
+  width: 28px;
+  background: #00ffcc;
+  box-shadow: 0 0 12px #00ffcc;
+}
+
+/* Section markers (debug) */
+.section-marker {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  z-index: 9999;
+}
+
+.section-marker.top {
+  top: 10px;
+}
+
+.section-marker.bottom {
+  bottom: 10px;
+}
+
+/* Hidden indicator (debug) */
+.hidden-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  opacity: 0.5;
+  color: red;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+  /* Removed explicit clamp overrides */
+
+@media (max-width: 480px) {
+  .anime-ui-overlay {
+    padding: 1rem;
+  }
+
+  /* Removed explicit clamp overrides */
+}
+
+/* ===================================
+   PERFORMANCE
+   =================================== */
+
+.anime-section,
+.anime-sticky-viewport {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Remove will-change after animation */
+.animation-complete {
+  will-change: auto !important;
+}

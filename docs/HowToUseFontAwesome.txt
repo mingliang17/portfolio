@@ -1,0 +1,31 @@
+🟠 Option 2: Using Font Awesome in React (Vite + Tailwind)
+
+This way, you can import only the icons you need (instead of the full CDN).
+
+Step 1 – Install packages
+
+In VS Code terminal, run:
+
+npm install @fortawesome/fontawesome-free
+
+Step 2 – Import CSS in your main.jsx (or index.js)
+import '@fortawesome/fontawesome-free/css/all.min.css'
+
+Step 3 – Use icons in your JSX
+function App() {
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Font Awesome in React</h1>
+      <i className="fa-solid fa-star text-yellow-500 text-3xl"></i>
+      <i className="fa-brands fa-github text-3xl ml-4"></i>
+    </div>
+  )
+}
+
+export default App
+
+Step 4 – Run your dev server
+npm run dev
+
+
+You’ll see the icons appear 🎉

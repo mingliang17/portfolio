@@ -1,0 +1,404 @@
+/* src/styles/projects/carousel.css - WITH RING GLOW ANIMATION */
+
+/* Animations */
+@keyframes liquid-flow {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.05) rotate(180deg);
+    border-radius: 70% 30% 50% 50% / 30% 70% 50% 70%;
+  }
+}
+
+@keyframes liquid-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes liquid-float-long {
+  0%, 100% { transform: translateY(60px); }
+  50% { transform: translateY(0px); }
+}
+
+@keyframes liquid-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Container */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.carousel-header {
+  width: 100%;
+  text-align: center;
+  padding: 1rem 0;
+  z-index: 20;
+}
+
+.carousel-title {
+  font-size: var(--text-14);
+  font-weight: 300;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(200,220,255,0.9) 50%, rgba(255,255,255,0.9) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: liquid-shimmer 3s ease-in-out infinite;
+}
+
+.carousel {
+  position: relative;
+  width: 80%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  overflow: visible;
+}
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* Items */
+.carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 300px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible; /* CRITICAL: ring glow must not be clipped */
+  isolation: isolate;
+}
+
+.item-frame {
+  position: absolute;
+  inset: -20px;
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(100, 149, 237, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 0 60px rgba(100, 149, 237, 0.2);
+  z-index: -1;
+}
+
+.carousel-item[data-position="0"] .item-frame {
+  box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.1), 0 0 100px rgba(100, 149, 237, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.item-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.carousel-item[data-position="0"]:hover .item-image {
+  transform: scale(1.05);
+}
+
+/* Hover Ring Glow - sits OUTSIDE the image, on the carousel-item border area */
+/* carousel-item has overflow: visible so this is not clipped */
+.hover-ring-glow {
+  position: absolute;
+  /* 2rem border outside the image wrapper (400px wide item) */
+  inset: -2rem;
+  border-radius: 28px;
+  pointer-events: none;
+  z-index: 2;
+  /* blur makes it bleed onto the border area, NOT the image center */
+  filter: blur(10px);
+  /* mask hides the inner area so only border region glows */
+  mask-image: radial-gradient(
+    ellipse calc(50% - 2rem) calc(50% - 2rem) at 50% 50%,
+    transparent 85%,
+    black 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse calc(50% - 2rem) calc(50% - 2rem) at 50% 50%,
+    transparent 85%,
+    black 100%
+  );
+  animation: ring-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.85; filter: blur(10px); }
+  50%       { opacity: 1;    filter: blur(14px); }
+}
+
+.item-label {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: liquid-float 3s ease-in-out infinite;
+  color: white;
+  font-size: var(--text-8);
+  white-space: nowrap;
+}
+
+/* Controls */
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 15;
+  pointer-events: auto;
+}
+
+.carousel-prev { left: 2rem; }
+.carousel-next { right: 2rem; }
+
+.carousel-prev img,
+.carousel-next img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.8;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-prev:hover img,
+.carousel-next:hover img {
+  opacity: 1;
+}
+
+.carousel-prev:disabled,
+.carousel-next:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: translateY(-50%);
+}
+
+/* Bottom Panel */
+.bottom-panel {
+  padding: 2.5rem;
+  width: 90%;
+  height: 20vh;
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05), 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.bottom-panel > * {
+  flex: 1;
+  text-align: center;
+}
+
+.description-panel,
+.information-panel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-4);
+  line-height: 1.6;
+  border-radius: 40px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.indicators {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator:hover {
+  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.indicator.active {
+  background: rgba(100, 149, 237, 0.8);
+  border-color: rgba(100, 149, 237, 1);
+  box-shadow: 0 0 10px rgba(100, 149, 237, 0.5);
+}
+
+/* Zoom Overlay */
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.zoom-glass {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(30px);
+  background: linear-gradient(135deg, rgba(100, 149, 237, 0.15) 0%, rgba(138, 43, 226, 0.15) 100%);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.zoom-image-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  overflow: visible;
+  z-index: 2;
+  cursor: default;
+  box-shadow: 0 0 100px rgba(100, 149, 237, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  max-width: none;
+  max-height: none;
+}
+
+.zoom-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 20px;
+}
+
+.zoom-close-btn {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: var(--text-12);
+}
+
+.zoom-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Magnifier */
+.magnify-lens {
+  position: absolute;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px rgba(100, 149, 237, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.3);
+  background-repeat: no-repeat;
+  z-index: 100;
+  cursor: none;
+  overflow: hidden;
+}
+
+.zoom-hint {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: var(--text-4);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  animation: liquid-float-long 8s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .carousel-title { font-size: 2.5rem; }
+  .carousel-item { width: 300px; height: 400px; }
+  .carousel-prev, .carousel-next { width: 50px; height: 50px; }
+  .bottom-panel { padding: 1.5rem; margin: 0 1rem; }
+  .description-panel, .information-panel { font-size: 1rem; }
+  .zoom-close-btn { top: -15px; right: -15px; width: 40px; height: 40px; }
+  .zoom-hint { top: -45px; font-size: 0.8rem; padding: 6px 12px; }
+}

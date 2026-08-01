@@ -1,0 +1,22 @@
+/* src/styles/project.css - CLEANED */
+
+.project-background-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.project-background-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.project-error {
+  color: white;
+  padding: 2rem;
+}
