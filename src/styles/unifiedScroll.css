@@ -1,76 +1,48 @@
 /* src/styles/unifiedScroll.css */
-/* CRITICAL FIX: Proper overflow handling for long sections */
+/* Real document scroll + GSAP ScrollTrigger pinning (see useUnifiedScroll.js).
+   No more position:fixed hijacking or display:none section swapping —
+   the browser handles the actual scrolling now. */
 
 /* ===================================
    MAIN CONTAINER
    =================================== */
 
 .unified-project-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  position: relative;
+  width: 100%;
   background: #000;
-  perspective: 2000px;
-  perspective-origin: 50% 50%;
 }
 
 .unified-content-container {
   position: relative;
   width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
 }
 
 /* ===================================
-   SECTIONS - CRITICAL OVERFLOW FIX
+   SECTIONS
    =================================== */
 
 .unified-section {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity, filter;
+  /* Normal sections are one screen tall; "long"/checkpoint sections get
+     extra height set inline via --section-screens (see useUnifiedScroll.js),
+     which is how much the user scrolls through while it's pinned. */
+  height: calc(var(--section-screens, 1) * 100vh);
+  will-change: transform, opacity;
 
   /* Glass panel aesthetic */
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(0px);
-
-  /* Initial hidden state */
-  display: none;
-  opacity: 0;
-
-  /* CRITICAL: overflow visible for sticky children */
-  overflow: visible !important;
 }
 
-/* Long sections MUST have visible overflow for sticky to work */
-.unified-section[data-section-type="long"] {
-  /* CRITICAL: Do NOT set overflow hidden or auto */
-  overflow: visible !important;
-  /* Allow content to extend */
-  position: relative;
+/* Hero section special styling */
+.unified-section.section-hero {
+  background: transparent;
 }
 
-/* Preserve sticky behavior within sections */
-.unified-section[data-section-type="long"] > * {
-  position: relative;
-}
-
-/* Long section wrapper - preserves sticky behavior */
-.long-section-wrapper {
-  position: relative;
-  width: 100%;
-  height: auto;
-  min-height: 100vh;
-  /* CRITICAL: overflow visible for sticky children */
-  overflow: visible !important;
+/* Active section indicator */
+.unified-section.active {
+  z-index: 100 !important;
 }
 
 /* Ensure sticky elements work correctly */

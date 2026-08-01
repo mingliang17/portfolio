@@ -8,7 +8,7 @@ import tailwindcss from "file:///C:/Users/Mingliang/dev/portfolio/node_modules/@
 import path from "path";
 var __vite_injected_original_dirname = "C:\\Users\\Mingliang\\dev\\portfolio";
 var vite_config_default = defineConfig({
-  base: "/portfolio/",
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__vite_injected_original_dirname, "src")

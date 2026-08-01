@@ -1,7 +1,7 @@
 // src/constants/index.js
 
-const createProjectLink = (id) => `/portfolio/projects/${id}`;
-const createFotoLink = (id) => `/portfolio/fotos/${id}`;
+const createProjectLink = (id) => `/projects/${id}`;
+const createFotoLink = (id) => `/fotos/${id}`;
 
 // ─── Placeholder images (using picsum with stable seeds) ─────────────────────
 const proj = (seed) => `https://picsum.photos/seed/prj${seed}/800/600`;
