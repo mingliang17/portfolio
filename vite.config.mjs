@@ -80,12 +80,7 @@ export default defineConfig({
           // Vendor chunks
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
-          
-          // Component chunks
-          'components': [
-            './src/components/3d/Developer.jsx',
-          ],
-          
+
           // Section chunks (lazy loaded)
           'sections': [
             './src/sections/projects/CarouselSection.jsx',
