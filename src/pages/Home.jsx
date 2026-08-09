@@ -3,191 +3,9 @@ import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import Earth from '../components/home/Earth.jsx';
+import StripCarousel from '../components/home/StripCarousel.jsx';
 import { globeProjects, getSortedProjects, getSortedFotos } from '../constants/index.js';
 import gsap from 'gsap';
-
-// ── Deterministic stagger tables — fixed per-index, never change ──────────────
-// These define the resting position of each card (applied BEFORE the fly-in).
-// Cards always land at these positions → never a straight column.
-const X_OFFSETS = [-16, 11, -7, 18, -10, 8, -20, 13, -5, 17, -12, 9, -18, 6, -14, 12, -8, 15, -17, 7];
-const ROTATIONS = [-3.5, 2.6, -2.1, 3.8, -2.8, 1.9, -4.3, 3.0, -1.5, 4.1, -2.3, 2.0, -3.7, 2.8, -1.7, 3.4, -3.0, 1.6, -4.0, 2.5];
-const Y_OFFSETS = [0, -10, 14, -6, 18, -14, 5, -20, 11, -4, 22, -11, 7, -17, 4, -22, 13, -7, 20, -10];
-
-// ── PolaroidCard ──────────────────────────────────────────────────────────────
-const PolaroidCard = ({ item, index, isSelected, isHighlighted, side }) => {
-  const cardRef = useRef(null);
-
-  const xOff = X_OFFSETS[index % X_OFFSETS.length];
-  const rot  = ROTATIONS[index % ROTATIONS.length];
-  const yOff = Y_OFFSETS[index % Y_OFFSETS.length];
-
-  useEffect(() => {
-    if (!cardRef.current) return;
-
-    // 1. Immediately SET the card to its final resting (staggered) position,
-    //    but invisible and slightly scaled down.
-    //    This means even before the animation plays the layout is staggered.
-    gsap.set(cardRef.current, {
-      x:       xOff,
-      y:       yOff,
-      rotation: rot,
-      scale:   0.75,
-      opacity: 0,
-    });
-
-    // 2. Animate IN from above (y shifted up by 60px) to the already-staggered position.
-    gsap.to(cardRef.current, {
-      y:       yOff,          // land exactly at stagger position
-      scale:   1,
-      opacity: 1,
-      duration: 0.65,
-      delay:    0.05 + index * 0.06,
-      ease:    'back.out(1.4)',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount only
-
-  const handleMouseEnter = () => {
-    if (!cardRef.current) return;
-    gsap.killTweensOf(cardRef.current);
-    gsap.to(cardRef.current, {
-      y: yOff - 13,
-      scale: 1.08,
-      rotation: rot * 0.12,
-      duration: 0.22,
-      ease: 'back.out(2.5)',
-    });
-  };
-
-  const handleMouseLeave = () => {
-    if (!cardRef.current) return;
-    gsap.to(cardRef.current, {
-      y: yOff,
-      scale: 1,
-      rotation: rot,
-      duration: 0.45,
-      ease: 'elastic.out(1, 0.55)',
-    });
-  };
-
-  const handleClick = () => {
-    if (!cardRef.current) return;
-    gsap.to(cardRef.current, {
-      keyframes: [
-        { scale: 0.88,  duration: 0.08, ease: 'power2.in'   },
-        { scale: 1.14,  duration: 0.14, ease: 'back.out(3)' },
-        { scale: 1,     duration: 0.22, ease: 'elastic.out(1, 0.4)' },
-      ],
-      onComplete: () => { if (item.link) window.location.href = item.link; },
-    });
-  };
-
-  const glowClass =
-    isSelected    ? 'hp-polaroid-selected' :
-    isHighlighted ? 'hp-polaroid-glow'     : '';
-
-  return (
-    <div
-      ref={cardRef}
-      className={`hp-polaroid ${glowClass}`}
-      style={{
-        // Do NOT set transform here — GSAP owns the transform entirely.
-        // Setting opacity:0 is safe; GSAP will override after gsap.set().
-        opacity: 0,
-        flexShrink: 0,
-        marginBottom: '-20px',
-        cursor: 'pointer',
-        willChange: 'transform, opacity',
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
-    >
-      <div
-        className="hp-polaroid-pin"
-        style={{ backgroundColor: item.pinColor || '#eb4034' }}
-      />
-      <div className="hp-polaroid-img">
-        <img src={item.heroImage} alt={item.title} loading="lazy" />
-        {isSelected    && <div className="hp-polaroid-selected-border" />}
-        {isHighlighted && !isSelected && <div className="hp-polaroid-glow-border" />}
-      </div>
-      <div className="hp-polaroid-caption">
-        <span className="hp-polaroid-title">{item.title}</span>
-        <span className="hp-polaroid-country">{item.country}</span>
-      </div>
-    </div>
-  );
-};
-
-// ── PolaroidColumn ────────────────────────────────────────────────────────────
-// key forces remount (fresh stagger animation) when country changes
-const PolaroidColumn = React.memo(({ items, selectedCountry, selectedItem, side }) => (
-  <div className="hp-polaroid-col">
-    {items.map((item, i) => (
-      <PolaroidCard
-        key={item.id}
-        item={item}
-        index={i}
-        isSelected={selectedItem === item.id}
-        isHighlighted={selectedItem !== item.id && selectedCountry === item.country}
-        side={side}
-      />
-    ))}
-  </div>
-));
-PolaroidColumn.displayName = 'PolaroidColumn';
-
-// ── ScrollablePolaroidArea ────────────────────────────────────────────────────
-const ScrollablePolaroidArea = ({
-  items, selectedCountry, selectedItem, visible, side, emptyText,
-}) => {
-  const scrollRef = useRef(null);
-  const [canUp,   setCanUp]   = useState(false);
-  const [canDown, setCanDown] = useState(false);
-
-  const check = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    setCanUp(scrollTop > 2);
-    setCanDown(scrollTop + clientHeight < scrollHeight - 2);
-  }, []);
-
-  useEffect(() => {
-    check();
-    const t = setTimeout(check, 400);
-    return () => clearTimeout(t);
-  }, [items, visible, check]);
-
-  return (
-    // This fragment is a flex child of hp-col — it MUST flex-fill the column.
-    // We wrap in a div that takes all remaining height.
-    <div className="hp-col-scroll-wrapper">
-      <div className="hp-scroll-arrow hp-scroll-arrow-top" style={{ opacity: visible && canUp ? 1 : 0 }}>▲</div>
-
-      <div
-        ref={scrollRef}
-        className="hp-col-scroll"
-        onScroll={check}
-        onWheel={e => { scrollRef.current && (scrollRef.current.scrollTop += e.deltaY); check(); }}
-      >
-        {visible ? (
-          <PolaroidColumn
-            key={`${side}-${selectedCountry || 'none'}`}
-            items={items}
-            selectedCountry={selectedCountry}
-            selectedItem={selectedItem}
-            side={side}
-          />
-        ) : (
-          <div className="hp-col-empty"><span>{emptyText}</span></div>
-        )}
-      </div>
-
-      <div className="hp-scroll-arrow hp-scroll-arrow-bottom" style={{ opacity: visible && canDown ? 1 : 0 }}>▼</div>
-    </div>
-  );
-};
 
 // ── Camera Intro ──────────────────────────────────────────────────────────────
 const CameraIntro = ({ onComplete }) => {
@@ -333,35 +151,16 @@ const Home = () => {
         )}
       </div>
 
-      {/* ── Polaroid overlay — sits on top of globe, full 100vw × 100vh ── */}
+      {/* ── 4-strip 3D carousel — sits on top of globe, full 100vw × 100vh ── */}
       <div className={`hp-overlay-layout ${columnsVisible ? 'hp-overlay-visible' : ''}`}>
-
-        {/* LEFT column */}
-        <div className="hp-col hp-col-left">
-          <ScrollablePolaroidArea
-            items={sortedProjects}
+        {columnsVisible && (
+          <StripCarousel
+            projects={sortedProjects}
+            fotos={sortedFotos}
             selectedCountry={selectedCountry}
             selectedItem={selectedItem}
-            visible={columnsVisible}
-            side="left"
-            emptyText={<>Select a<br />country</>}
           />
-        </div>
-
-        {/* Centre gap: pointer-events none so globe interactions work */}
-        <div className="hp-col-spacer" />
-
-        {/* RIGHT column */}
-        <div className="hp-col hp-col-right">
-          <ScrollablePolaroidArea
-            items={sortedFotos}
-            selectedCountry={selectedCountry}
-            selectedItem={selectedItem}
-            visible={columnsVisible}
-            side="right"
-            emptyText={<>Select a<br />country</>}
-          />
-        </div>
+        )}
       </div>
     </main>
   );
