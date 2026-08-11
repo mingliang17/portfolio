@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { TextureLoader, ShaderMaterial, Vector2, Vector3, Quaternion } from 'three';
 import * as solar from 'solar-calculator';
 import { Html } from '@react-three/drei';
@@ -121,6 +121,16 @@ const Earth = forwardRef(({
   const timeRef         = useRef(+new Date());
   const [globeRotation] = useState(new Vector2(0, 0));
 
+  // ── Click-to-centre rotation (point 6) ───────────────────────────────────
+  // When a country pin is clicked we compute the quaternion that would spin
+  // the whole globe group (pins are its children, so they move with it) so
+  // that pin's direction lines up with the camera — i.e. dead centre of the
+  // screen — then ease toward it every frame in useFrame below, instead of
+  // snapping instantly.
+  const { camera } = useThree();
+  const targetQuatRef  = useRef(null);
+  const ROTATE_EASE_SPEED = 4; // higher = snappier settle
+
   useImperativeHandle(ref, () => ({
     getGlobe:     () => globeRef.current,
     getGlobeMesh: () => globeMeshRef.current,
@@ -164,6 +174,18 @@ const Earth = forwardRef(({
     }
     if (globeRef.current && autoRotate) globeRef.current.rotation.y += animationSpeed;
     if (starsRef.current)               starsRef.current.rotation.y  += animationSpeed * 0.4;
+
+    // Smoothly rotate the globe so a just-clicked country's pin settles at
+    // the centre of the screen. Setting `.quaternion` keeps `.rotation` in
+    // sync automatically (three.js links the two), so the day/night shader
+    // uniform below still reads a sensible value while this eases in.
+    if (targetQuatRef.current && globeRef.current) {
+      globeRef.current.quaternion.slerp(targetQuatRef.current, Math.min(1, delta * ROTATE_EASE_SPEED));
+      if (globeRef.current.quaternion.angleTo(targetQuatRef.current) < 0.001) {
+        targetQuatRef.current = null;
+      }
+    }
+
     if (globeRef.current) {
       globeRotation.set(
         (globeRef.current.rotation.y * 180 / Math.PI) % 360,
@@ -262,6 +284,11 @@ const Earth = forwardRef(({
                 }}
                 onClick={e => {
                   e.stopPropagation();
+                  // Rotate the globe so `dir` (this pin's direction) lines
+                  // up with wherever the camera currently is, bringing the
+                  // pin to the centre of the screen — see the useFrame slerp above.
+                  const camDir = camera.position.clone().normalize();
+                  targetQuatRef.current = new Quaternion().setFromUnitVectors(dir.clone().normalize(), camDir);
                   onCountrySelect?.(country);
                 }}
               >
