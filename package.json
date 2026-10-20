@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "analyze": "vite build --mode analyze",
     "predeploy": "vite build --base=/portfolio/",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test": "node --test \"src/scroll/**/*.test.mjs\""
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

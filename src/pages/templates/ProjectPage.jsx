@@ -1,10 +1,18 @@
 // src/pages/templates/ProjectPage.jsx
-import React, { useEffect, useMemo } from 'react';
+//
+// A project is an ordered list of sections. Each is either:
+//   kind: 'page' — one resting screen (hero, map, carousel, ...)
+//   kind: 'long' — scrolled through continuously; receives `progress` 0..1
+// <ScrollStage> turns that list into one coherent scroll experience.
+// To add a section: write a component, add one entry below. Nothing else.
+//
+// Debug: append ?scrolldebug to the URL for a live HUD.
+
+import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { getProjectById } from '@/constants/projectsData.js';
-import { useUnifiedScroll } from '@/hooks/useUnifiedScroll.js';
+import { ScrollStage, SectionNav } from '@/scroll/index.js';
 
-// Section Components
 import HeroSection from '@/sections/projects/HeroSection.jsx';
 import MapSection from '@/sections/projects/MapSection.jsx';
 import ModelSection from '@/sections/projects/ModelSection.jsx';
@@ -13,135 +21,101 @@ import AnimeSection from '@/sections/projects/AnimeSection.jsx';
 import ExplodeSection from '@/sections/projects/ExplodeSection.jsx';
 import CarouselSection from '@/sections/projects/CarouselSection.jsx';
 import AppearSection from '@/sections/projects/AppearSection.jsx';
-import LongSectionWrapper from '@/components/project/LongSectionWrapper.jsx';
 
-// --- SUB-COMPONENT: CLEANER RENDER LOGIC ---
-const SectionRenderer = React.forwardRef(({ section, index, isActive, progress, projectMetadata }, ref) => {
-  const { component, config, assets, type, id } = section;
-  
-  const content = (() => {
-    switch (component) {
-      case 'HeroSection':
-        return <HeroSection imagePath={assets.hero} title={config.title} subtitle={config.subtitle} isActive={isActive} />;
-      
-      case 'MapSection':
-        return <MapSection mapImages={assets.mapImages} logos={assets.logos} description={projectMetadata} visible={isActive} startAnimation={isActive} key={`map-${isActive}`} />;
-      
-      case 'ModelSection':
-        return <ModelSection {...config} isActive={isActive} scrollProgress={progress} />;
-      
-      case 'AnimeSection':
-        return <AnimeSection {...config} isActive={isActive} scrollProgress={progress} />;
-      
-      case 'SpinSection':
-        return <SpinSection {...config} isActive={isActive} scrollProgress={progress} enableDebug={false} />;
+// How many screens of scrolling each segment between two checkpoints gets.
+const SCREENS_PER_SEGMENT = 1.25;
+const lengthFor = (config) =>
+  config.length ?? Math.max(2, ((config.checkpoints?.length ?? 2) - 1) * SCREENS_PER_SEGMENT);
 
-      case 'AppearSection':
-        return <AppearSection {...config} isActive={isActive} scrollProgress={progress} />;
-      
-      case 'ExplodeSection':
-        return <ExplodeSection {...config} isActive={isActive} scrollProgress={progress} />;
-      
-      case 'Carousel':
-        return <CarouselSection carouselData={assets.images} title={config.title} autoPlay={false} showControls showIndicators />;
-      
-      default: return null;
-    }
-  })();
+/**
+ * Turn project data into ScrollStage sections.
+ * `sc` (passed to each render) = { isActive, isNear, isVisible, progress, progressRef }
+ */
+function buildSections(project) {
+  const { sections: s, assets: a, metadata } = project;
+  const out = [];
 
-  const sectionProps = {
-    ref,
-    className: `unified-section section-${id}`,
-    'data-section-index': index,
-    'data-section-type': type
-  };
+  if (s.hero?.enabled) {
+    out.push({
+      id: 'hero', label: s.hero.title ?? 'Intro', kind: 'page',
+      render: (sc) => <HeroSection imagePath={a.hero} title={s.hero.title} subtitle={s.hero.subtitle} isActive={sc.isActive} />,
+    });
+  }
 
-  return (
-    <section {...sectionProps}>
-      {type === 'long' ? <LongSectionWrapper sectionId={id}>{content}</LongSectionWrapper> : content}
-    </section>
-  );
-});
+  if (s.map?.enabled) {
+    out.push({
+      id: 'map', label: s.map.title ?? 'Map', kind: 'page',
+      render: (sc) => (
+        <MapSection mapImages={a.map} logos={a.logos} description={metadata} visible={sc.isNear} startAnimation={sc.isActive} />
+      ),
+    });
+  }
+
+  if (s.model?.enabled) {
+    out.push({
+      id: 'model', label: s.model.title ?? 'Model', kind: 'page',
+      render: (sc) => <ModelSection {...s.model} isVisible={sc.isVisible} scrollProgress={sc.progress} />,
+    });
+  }
+
+  // Long sections. `checkpoints` makes the stage gently pull scrolling toward each
+  // checkpoint ('proximity'); omit it for continuous animations like `anime`.
+  if (s.anime?.enabled) {
+    out.push({
+      id: 'anime', label: s.anime.title ?? 'Anime', kind: 'long', length: lengthFor(s.anime),
+      render: (sc) => <AnimeSection {...s.anime} isVisible={sc.isVisible} scrollProgress={sc.progress} />,
+    });
+  }
+
+  if (s.spin?.enabled) {
+    out.push({
+      id: 'spin', label: s.spin.title ?? 'Spin', kind: 'long', length: lengthFor(s.spin),
+      checkpoints: s.spin.checkpoints?.length, snap: s.spin.snap,
+      render: (sc) => <SpinSection {...s.spin} isVisible={sc.isVisible} scrollProgress={sc.progress} enableDebug={false} />,
+    });
+  }
+
+  if (s.explode?.enabled) {
+    out.push({
+      id: 'explode', label: s.explode.title ?? 'Explode', kind: 'long', length: lengthFor(s.explode),
+      checkpoints: s.explode.checkpoints?.length, snap: s.explode.snap,
+      render: (sc) => <ExplodeSection {...s.explode} isVisible={sc.isVisible} scrollProgress={sc.progress} />,
+    });
+  }
+
+  if (s.appear?.enabled) {
+    out.push({
+      id: 'appear', label: s.appear.title ?? 'Appear', kind: 'long', length: lengthFor(s.appear),
+      checkpoints: s.appear.checkpoints?.length, snap: s.appear.snap,
+      render: (sc) => <AppearSection {...s.appear} isVisible={sc.isVisible} scrollProgress={sc.progress} />,
+    });
+  }
+
+  s.carousels?.forEach((c) => {
+    if (!c.enabled) return;
+    out.push({
+      id: c.id, label: c.title ?? c.id, kind: 'page',
+      render: (sc) => (
+        <CarouselSection carouselData={c.images} title={c.title} autoPlay={false} showControls showIndicators isActive={sc.isActive} />
+      ),
+    });
+  });
+
+  return out;
+}
 
 const ProjectPage = () => {
   const { project_id } = useParams();
   const project = getProjectById(project_id);
-
-  const sectionsConfig = useMemo(() => {
-    if (!project) return [];
-    const { sections: s, assets: a } = project;
-    const config = [];
-
-    if (s.hero?.enabled)    config.push({ id: 'hero', type: 'hero', component: 'HeroSection', config: s.hero, assets: { hero: a.hero } });
-    if (s.map?.enabled)     config.push({ id: 'map', type: 'normal', component: 'MapSection', config: s.map, assets: { mapImages: a.map, logos: a.logos } });
-    if (s.model?.enabled)   config.push({ id: 'model', type: 'normal', component: 'ModelSection', config: s.model, assets: {} });
-    if (s.anime?.enabled)   config.push({ id: 'anime', type: 'long', component: 'AnimeSection', config: s.anime, assets: {} });
-    if (s.spin?.enabled)    config.push({ id: 'spin', type: 'long', component: 'SpinSection', config: s.spin, assets: {} });
-    if (s.explode?.enabled) config.push({ id: 'explode', type: 'long', component: 'ExplodeSection', config: s.explode, assets: {} });
-    if (s.appear?.enabled)  config.push({ id: 'appear', type: 'long', component: 'AppearSection', config: s.appear, assets: {} });
-    
-    s.carousels?.forEach(c => {
-      if (c.enabled) config.push({ id: c.id, type: 'normal', component: 'Carousel', config: c, assets: { images: c.images } });
-    });
-
-    return config;
-  }, [project]);
-
-  const {
-    containerRef, sectionRefs, currentSectionIndex, isTransitioning,
-    transitionDirection, internalScrollProgress, goToSection, totalSections
-  } = useUnifiedScroll(sectionsConfig, {
-    transitionDuration: 1.2, easingFunction: 'power3.inOut', rotationDegrees: 15
-  });
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
+  const sections = useMemo(() => (project ? buildSections(project) : []), [project]);
+  const debug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('scrolldebug');
 
   if (!project) return <div className="project-error"><h1>Project not found</h1></div>;
 
   return (
-    <div className="unified-project-container" ref={containerRef}>
-      {/* Nav Dots */}
-      <div className="unified-nav-dots">
-        {sectionsConfig.map((s, idx) => (
-          <button key={s.id} className={`unified-nav-dot ${idx === currentSectionIndex ? 'active' : ''}`} 
-                  onClick={() => !isTransitioning && goToSection(idx)}>
-            <span className="dot-label">{s.id}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="unified-content-container">
-        {sectionsConfig.map((section, index) => {
-          // Simplified progress logic
-          const progress = index < currentSectionIndex ? 0.999 : index > currentSectionIndex ? 0 : Math.min(internalScrollProgress, 0.999);
-          
-          return (
-            <SectionRenderer 
-              key={section.id}
-              ref={el => (sectionRefs.current[index] = el)}
-              section={section}
-              index={index}
-              isActive={index === currentSectionIndex}
-              progress={progress}
-              projectMetadata={project.metadata}
-            />
-          );
-        })}
-      </div>
-
-      {/* Transition Arrow */}
-      {isTransitioning && (
-        <div className="transition-indicator">
-          <div className={`transition-arrow ${transitionDirection}`}>
-            {transitionDirection === 'down' ? '↓' : '↑'}
-          </div>
-        </div>
-      )}
-    </div>
+    <ScrollStage key={project.id} sections={sections} syncHash debug={debug}>
+      <SectionNav />
+    </ScrollStage>
   );
 };
 

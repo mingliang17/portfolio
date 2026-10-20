@@ -59,7 +59,7 @@ const ZoomModal = ({ image, onClose, magnifySize, zoomFactor }) => {
 };
 
 // --- Main Component ---
-const CarouselSection = ({ carouselData = [], title = 'Gallery', showControls = true, showIndicators = true }) => {
+const CarouselSection = ({ carouselData = [], title = 'Gallery', showControls = true, showIndicators = true, isActive = true }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -127,17 +127,21 @@ const CarouselSection = ({ carouselData = [], title = 'Gallery', showControls = 
     setHoverProgress(prev => ({ ...prev, [index]: 0 }));
   };
 
+  // Keyboard: only the ACTIVE carousel listens. Every section is mounted inside the
+  // stage at once, so without this guard each carousel moved on every arrow press.
   useEffect(() => {
+    if (!isActive) return undefined;
     const handleKey = (e) => {
       if (zoomedImage) { if (e.key === 'Escape') setZoomedImage(null); }
       else { if (e.key === 'ArrowLeft') move(-1); if (e.key === 'ArrowRight') move(1); }
     };
     window.addEventListener('keydown', handleKey);
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-      Object.values(hoverTimersRef.current).forEach(t => cancelAnimationFrame(t));
-    };
-  }, [zoomedImage, move]);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isActive, zoomedImage, move]);
+
+  useEffect(() => () => {
+    Object.values(hoverTimersRef.current).forEach(t => cancelAnimationFrame(t));
+  }, []);
 
   if (total === 0) return null;
   const current = data[currentIndex];

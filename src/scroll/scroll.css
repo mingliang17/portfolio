@@ -1,0 +1,166 @@
+/* src/scroll/scroll.css
+   The ONLY stylesheet that knows about the stage. It replaces the three
+   conflicting `.unified-section` definitions that used to live in core.css,
+   misc.css and unifiedScroll.css.
+
+   Rules of the road (details in docs/ScrollArchitecture.md):
+   - Sections never set their own height, `position: sticky` or `position: fixed`.
+     They fill their layer (100% × 100%) and react to `progress`.
+   - Nothing between <html> and .scroll-track may use `overflow` other than
+     `visible`/`clip`, or sticky silently stops working. */
+
+/* The track is as tall as the whole experience; the engine sets its height. */
+.scroll-track {
+  position: relative;
+  width: 100%;
+}
+
+/* The stage stays pinned to the viewport while the track scrolls past it. */
+.scroll-stage {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh; /* fallback */
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+/* One layer per section, stacked. The engine drives opacity/transform/filter. */
+.scroll-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  contain: layout paint;
+  backface-visibility: hidden;
+}
+
+/* Only the ACTIVE section animates. The engine marks every other layer `inert`, so any
+   infinite CSS animation (shimmers, pulses, floats) in hidden sections stops costing frames. */
+.scroll-layer[inert],
+.scroll-layer[inert] *,
+.scroll-layer[inert] *::before,
+.scroll-layer[inert] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Overscroll bounce/chaining would fight the snapping. */
+html:has(.scroll-track) {
+  overscroll-behavior-y: none;
+}
+
+/* A section that failed to render (see SceneBoundary) */
+.scene-error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--text-4, 1rem);
+}
+
+/* Shown only while a section is still loading its assets */
+.scene-loading {
+  position: absolute;
+  inset: 0;
+  background: #050505;
+}
+
+/* ===== Section navigation dots ===== */
+.scroll-nav {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scroll-nav-dot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.scroll-nav-dot:hover,
+.scroll-nav-dot:focus-visible {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.2);
+}
+
+.scroll-nav-dot:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 3px;
+}
+
+.scroll-nav-dot.active {
+  background: rgba(245, 158, 11, 0.8);
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+  transform: scale(1.3);
+}
+
+.scroll-nav-label {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: var(--text-2);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.scroll-nav-dot:hover .scroll-nav-label,
+.scroll-nav-dot:focus-visible .scroll-nav-label {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .scroll-nav { right: 1rem; gap: 0.75rem; }
+  .scroll-nav-dot { width: 10px; height: 10px; }
+  .scroll-nav-label { display: none; }
+}
+
+@media (max-width: 480px) {
+  .scroll-nav { right: 0.5rem; gap: 0.5rem; }
+  .scroll-nav-dot { width: 8px; height: 8px; border-width: 1px; }
+}
+
+/* ===== Debug HUD (<ScrollStage debug />) ===== */
+.scroll-debug {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 20;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #7CFFB2;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-nav-dot { transition: none; }
+}

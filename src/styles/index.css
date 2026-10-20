@@ -21,7 +21,7 @@
 
 /* === UTILITIES === */
 @import './utils.css';
-@import './unifiedScroll.css';
+@import '../scroll/scroll.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';

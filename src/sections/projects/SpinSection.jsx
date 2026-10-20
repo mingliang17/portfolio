@@ -54,7 +54,7 @@ const RotatingModel = ({ config, rawProgress, modelAnimationSmoothing = 0.08 }) 
 
 const SpinSection = ({ 
   checkpoints = [], 
-  isActive = false, 
+  isVisible = true,
   scrollProgress = 0,
   enableDebug = false,
   modelAnimationSmoothing = 0.08,
@@ -104,10 +104,10 @@ const SpinSection = ({
       console.log('📊 SpinSection Progress:', {
         raw: scrollProgress.toFixed(3),
         eased: easedProgress.toFixed(3),
-        active: isActive
+        visible: isVisible
       });
     }
-  }, [scrollProgress, easedProgress, isActive, enableDebug]);
+  }, [scrollProgress, easedProgress, isVisible, enableDebug]);
 
   const activeIdx = Math.round(easedProgress * (checkpoints.length - 1));
   const isEven = activeIdx % 2 === 0;
@@ -202,7 +202,7 @@ const SpinSection = ({
     <section 
       className="spin-section-container" 
       style={{ 
-        height: `${checkpoints.length * 100}vh`,
+        height: '100%',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -211,7 +211,7 @@ const SpinSection = ({
       <div 
         className="spin-background-layer current"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           inset: 0,
           zIndex: 0,
           opacity: 1 - transitionProgress,
@@ -225,7 +225,7 @@ const SpinSection = ({
         <div 
           className="spin-background-layer next"
           style={{
-            position: 'fixed',
+            position: 'absolute',
             inset: 0,
             zIndex: 1,
             opacity: transitionProgress,
@@ -240,7 +240,7 @@ const SpinSection = ({
       {/* Debug Overlay */}
       {enableDebug && (
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
           top: '10px',
           right: '10px',
           background: 'rgba(0,0,0,0.8)',
@@ -257,23 +257,21 @@ const SpinSection = ({
           <div>Active Card: {activeIdx}</div>
           <div>Total Cards: {checkpoints.length}</div>
           <div>Model Checkpoint: {(scrollProgress * (checkpoints.length - 1)).toFixed(2)}</div>
-          <div>Is Active: {isActive ? 'YES' : 'NO'}</div>
+          <div>Visible: {isVisible ? 'YES' : 'NO'}</div>
           <div>Transition: {(transitionProgress * 100).toFixed(1)}%</div>
         </div>
       )}
 
-      {/* Fixed 3D Canvas */}
+      {/* 3D Canvas — fills the layer; paused whenever the section is off screen */}
       <div 
-        className={`spin-canvas-fixed-wrapper ${isActive ? 'active' : ''}`} 
+        className="spin-canvas-fixed-wrapper" 
         style={{ 
-          position: 'sticky', 
-          top: 0, 
-          height: '100vh', 
-          opacity: isActive ? 1 : 0,
+          position: 'absolute', 
+          inset: 0,
           zIndex: 2
         }}
       >
-        <Canvas shadows>
+        <Canvas shadows frameloop={isVisible ? 'always' : 'never'}>
           <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
@@ -287,7 +285,17 @@ const SpinSection = ({
       </div>
 
       {/* Checkpoint Cards */}
-      <div className="spin-checkpoints-container" style={{ zIndex: 3 }}>
+      {/* Cards: a column N screens tall, translated by progress (previously it relied on
+          native document scroll, which the old wheel-hijack made impossible). */}
+      <div
+        className="spin-checkpoints-container"
+        style={{
+          zIndex: 3,
+          height: `${checkpoints.length * 100}%`,
+          transform: `translate3d(0, ${-(scrollProgress * (checkpoints.length - 1) * 100) / Math.max(checkpoints.length, 1)}%, 0)`,
+          willChange: 'transform'
+        }}
+      >
         {checkpoints.map((cp, i) => {
           const cardTransform = getCardTransform(i);
           
@@ -295,6 +303,7 @@ const SpinSection = ({
             <div 
               key={i} 
               className="checkpoint-wrapper" 
+              style={{ height: `${100 / checkpoints.length}%` }}
             >
               <div 
                 className={`checkpoint-card ${

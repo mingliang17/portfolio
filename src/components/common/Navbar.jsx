@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { navLinks } from '../../constants/index.js';
 import { ICONS } from '../../assets/icons.js';
+import { useScrollLock } from '../../scroll/index.js';
 
 const Navbar = forwardRef((props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +16,9 @@ const Navbar = forwardRef((props, ref) => {
   const leftLinks = navLinks.slice(0, midPoint);
   const rightLinks = navLinks.slice(midPoint);
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : 'auto';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, [isOpen]);
+  // Ref-counted lock: closing the menu can no longer re-enable scrolling that
+  // something else (e.g. a modal) still wants locked.
+  useScrollLock(isOpen);
 
   useEffect(() => {
     const handleEscape = (e) => { if (e.key === 'Escape') setIsOpen(false); };

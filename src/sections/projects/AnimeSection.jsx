@@ -108,33 +108,33 @@ const ReconstructingModel = ({ modelPath, scrollProgress = 0 }) => {
   return <group ref={groupRef} scale={0.06} position={[0, -1, 0]} />;
 };
 
-const AnimeSection = ({ modelPath, checkpoints = [], isActive, scrollProgress }) => {
+// Fills its stage layer. Height/sticky/pinning are owned by <ScrollStage>, so this
+// component only maps `scrollProgress` (0..1) to what is drawn.
+const AnimeSection = ({ modelPath, checkpoints = [], isVisible = true, scrollProgress = 0 }) => {
   const activeIdx = Math.min(
     Math.floor(scrollProgress * checkpoints.length),
     checkpoints.length - 1
   );
 
   return (
-    <section style={{ height: `${checkpoints.length * 120}vh`, backgroundColor: '#050505', position: 'relative' }}>
-      <div style={{
-        position: 'sticky', top: 0, height: '100vh', width: '100%',
-        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: isActive ? 1 : 0, transition: 'opacity 0.8s ease'
-      }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <Canvas camera={{ position: [0, 5, 30], fov: 45 }}>
-            <ambientLight intensity={0.5} />
-            <ReconstructingModel modelPath={modelPath} scrollProgress={scrollProgress} />
-            <Environment preset="city" />
-          </Canvas>
-        </div>
-
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', pointerEvents: 'none', color: 'white' }}>
-          <h2 style={{ fontSize: 'clamp(2rem, 6vw, 5rem)', fontWeight: 900 }}>{checkpoints[activeIdx]?.title}</h2>
-          <p style={{ color: '#00ffcc' }}>{checkpoints[activeIdx]?.description}</p>
-        </div>
+    <div style={{
+      position: 'relative', width: '100%', height: '100%', backgroundColor: '#050505',
+      overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <div style={{ position: 'absolute', inset: 0 }}>
+        {/* Pause the render loop whenever this section is off screen. */}
+        <Canvas frameloop={isVisible ? 'always' : 'never'} camera={{ position: [0, 5, 30], fov: 45 }}>
+          <ambientLight intensity={0.5} />
+          <ReconstructingModel modelPath={modelPath} scrollProgress={scrollProgress} />
+          <Environment preset="city" />
+        </Canvas>
       </div>
-    </section>
+
+      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', pointerEvents: 'none', color: 'white' }}>
+        <h2 style={{ fontSize: 'clamp(2rem, 6vw, 5rem)', fontWeight: 900 }}>{checkpoints[activeIdx]?.title}</h2>
+        <p style={{ color: '#00ffcc' }}>{checkpoints[activeIdx]?.description}</p>
+      </div>
+    </div>
   );
 };
 

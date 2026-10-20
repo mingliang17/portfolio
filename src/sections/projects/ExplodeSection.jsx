@@ -208,7 +208,7 @@ const ExplodingModel = ({
 const ExplodeSection = ({ 
   modelPath, 
   checkpoints = [], 
-  isActive, 
+  isVisible = true, 
   scrollProgress,
   explosionDistance = 5,      // Control base downward distance
   explosionIncrement = 2       // Control spacing between meshes
@@ -216,24 +216,22 @@ const ExplodeSection = ({
   const progressIdx = scrollProgress * Math.max(checkpoints.length - 1, 0);
   
   // Style objects (Static/Memoized to reduce inline object creation)
+  // Fills its <ScrollStage> layer; the stage owns height, pinning and scrolling.
   const sectionStyle = {
-    height: `${Math.max(checkpoints.length, 1) * 120}vh`, 
-    backgroundColor: '#050505', 
+    height: '100%',
+    backgroundColor: '#050505',
     position: 'relative',
-    overflow: 'visible'
+    overflow: 'hidden'
   };
 
   const stickyStyle = {
-    position: 'sticky', 
-    top: 0, 
-    height: '100vh', 
+    position: 'relative',
+    height: '100%',
     width: '100%',
-    overflow: 'hidden', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    opacity: isActive ? 1 : 0, 
-    transition: 'opacity 0.8s ease'
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   };
 
   const canvasContainerStyle = { position: 'absolute', inset: 0 };
@@ -245,6 +243,7 @@ const ExplodeSection = ({
         {/* 3D CANVAS */}
         <div className="explode-canvas-container" style={canvasContainerStyle}>
           <Canvas 
+            frameloop={isVisible ? 'always' : 'never'}
             camera={{ position: [0, 0, 30], fov: 45, near: 0.1, far: 1000 }}
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             dpr={[1, 2]}

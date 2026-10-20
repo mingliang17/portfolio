@@ -58,7 +58,7 @@ const ModelSection = ({
   enableShadows = true,
   
   // Controlled props
-  isActive = false,
+  isVisible = true,
   scrollProgress = 0
 }) => {
   const [loaded, setLoaded] = useState(false);
@@ -76,7 +76,7 @@ const ModelSection = ({
       <div className="model-canvas-sticky">
         <Canvas
           shadows={enableShadows}
-          frameloop="always"
+          frameloop={isVisible ? 'always' : 'never'}
         >
           <ScrollingCamera 
             basePosition={cameraPosition} 

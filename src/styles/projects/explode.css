@@ -2,24 +2,22 @@
    EXPLODE SECTION STYLES
    ======================================== */
 
+/* Fills its <ScrollStage> layer. The stage owns height, pinning and scroll. */
 .explode-section {
   position: relative;
   background-color: #0f1011;
   width: 100%;
-  overflow: visible !important;
+  height: 100%;
+  overflow: hidden;
   isolation: isolate;
 }
 
 .explode-sticky-viewport {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: relative;
+  height: 100%;
   width: 100%;
   overflow: hidden;
   z-index: 10;
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .explode-canvas-container {
@@ -50,11 +48,7 @@
 }
 
 /* Performance */
-.explode-section,
-.explode-sticky-viewport,
-.explode-canvas-container,
 .explode-text-overlay {
-  transform: translateZ(0);
   backface-visibility: hidden;
 }
 

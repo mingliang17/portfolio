@@ -4,18 +4,13 @@
 .model-section-wrapper {
   position: relative;
   width: 100%;
-  /* Dynamic height - calculated by content */
-  min-height: 250vh;
-  height: auto;
+  height: 100%; /* fills its <ScrollStage> layer */
   background: transparent;
 }
 
 .model-canvas-sticky {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
+  position: absolute;
+  inset: 0;
   z-index: 1;
 }
 
@@ -24,7 +19,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,7 +30,7 @@
 
 /* Scroll indicator */
 .model-scroll-indicator {
-  position: fixed;
+  position: absolute;
   right: 3rem;
   top: 50%;
   transform: translateY(-50%);
@@ -55,9 +50,6 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .model-section-wrapper {
-    min-height: 200vh;
-  }
   
   .model-scroll-indicator {
     right: 1.5rem;
@@ -66,9 +58,6 @@
 }
 
 @media (max-width: 768px) {
-  .model-section-wrapper {
-    min-height: 150vh;
-  }
   
   .model-scroll-indicator {
     display: none;

@@ -8,12 +8,11 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* NOTE: no `scroll-behavior: smooth` here. It makes every programmatic scroll
+     (snapping, goTo, clamping) animate on top of our own tweens and fight them.
+     <ScrollStage> manages scrolling itself. */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Allow vertical overflow for sticky - CRITICAL */
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 body {
@@ -22,14 +21,9 @@ body {
   font-family: var(--font-primary);
   color: var(--color-white-800);
   background: var(--bg-primary);
-  /* CRITICAL: overflow visible for sticky to work */
-  overflow-x: hidden;
-  overflow-y: visible;
-}
-
-/* When project pages are active, override body scroll */
-body.unified-scroll-active {
-  overflow: hidden;
+  /* `clip` (not `hidden`): `overflow-x: hidden` would turn <body> into a scroll
+     container, which silently breaks `position: sticky` for everything inside it. */
+  overflow-x: clip;
 }
 
 /* Hide scrollbar but keep functionality */
