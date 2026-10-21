@@ -1,0 +1,33 @@
+# Apache / LiteSpeed rules for the static export (`npm run build:static`).
+# Upload this file together with the rest of ./out. Pages need NO rewrite rules because the build
+# uses `trailingSlash: true` (projects/mh1/index.html): /projects/mh1 → /projects/mh1/ is Apache's
+# normal directory handling.
+#
+# Hosting under a sub-folder (e.g. https://example.com/portfolio/)? Change the ErrorDocument
+# path below to /portfolio/404.html and build with NEXT_PUBLIC_BASE_PATH=/portfolio.
+
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+# 3D / media types some servers don't know
+<IfModule mod_mime.c>
+  AddType model/gltf-binary .glb
+  AddType model/gltf+json .gltf
+  AddType application/octet-stream .fbx .hdr
+</IfModule>
+
+# Compress text formats (the .glb/.gltf models are large; gltf is JSON and compresses well)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml model/gltf+json
+</IfModule>
+
+# Big immutable media: cache hard. (HTML is deliberately NOT cached long, so deploys show up.)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(glb|gltf|fbx|hdr|jpg|jpeg|png|webp|svg|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>

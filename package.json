@@ -4,12 +4,12 @@
   "private": true,
   "homepage": "https://mingliang17.github.io/Portfolio",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "analyze": "vite build --mode analyze",
-    "predeploy": "vite build --base=/portfolio/",
-    "deploy": "gh-pages -d dist",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "start:server": "node server.js",
+    "build:static": "node scripts/build-static.mjs",
+    "serve:static": "node scripts/serve-static.mjs",
     "test": "node --test \"src/scroll/**/*.test.mjs\""
   },
   "dependencies": {
@@ -19,16 +19,18 @@
     "@react-pdf/renderer": "^4.3.1",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "animejs": "^4.3.5",
     "clsx": "^2.1.1",
     "d3-geo": "^3.1.1",
     "gsap": "^3.12.5",
     "motion": "^12.23.26",
+    "next": "^16.4.2",
+    "postcss": "^8.5.31",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-globe.gl": "^2.25.0",
     "react-responsive": "^9.0.2",
-    "react-router-dom": "^6.22.0",
     "solar-calculator": "^0.3.0",
     "three": "^0.181.1",
     "three-stdlib": "^2.36.0",
@@ -36,20 +38,14 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "@vitejs/plugin-react": "^4.7.0",
-    "gh-pages": "^6.3.0",
-    "rollup-plugin-visualizer": "^6.0.5",
     "sharp": "^0.34.5",
-    "svgo": "^4.0.0",
-    "tailwindcss": "^4.1.18",
-    "terser": "^5.44.1",
-    "vite": "^7.1.12",
-    "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-image-optimizer": "^2.0.3"
+    "tailwindcss": "^4.1.18"
   },
   "overrides": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

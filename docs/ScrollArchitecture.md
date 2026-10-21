@@ -62,7 +62,7 @@ long section, one gesture may flow across the boundary. Both are intentional.
 
 1. Write a component that fills its parent and takes `scrollProgress` / `isVisible` / `isActive`.
    **Do not** set its own height, `position: sticky` or `position: fixed` (see rules below).
-2. Add one entry in `buildSections()` in `src/pages/templates/ProjectPage.jsx`:
+2. Add one entry in `buildSections()` in `src/views/templates/ProjectPage.jsx`:
 
 ```jsx
 out.push({

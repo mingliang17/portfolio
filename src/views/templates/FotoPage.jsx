@@ -2,7 +2,7 @@
 // Reusable foto/snap page — architecture mirrors ProjectPage
 // Shows a large polaroid, metadata, and optional caption.
 import React, { useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import Link from 'next/link';
 import gsap from 'gsap';
 import { getFotoById } from '../../constants/index.js';
 
@@ -85,16 +85,14 @@ const FotoMeta = ({ foto }) => {
           <span className="foto-meta-value">{f.value}</span>
         </div>
       ))}
-      <a href="/" className="foto-back-btn">← Back to Globe</a>
+      <Link href="/" className="foto-back-btn">← Back to Globe</Link>
     </aside>
   );
 };
 
 // ── Page component ──────────────────────────────────────────────────────────
-const FotoPage = ({ fotoId: propFotoId = null }) => {
-  const { fotoId: paramFotoId } = useParams() || {};
-  const id   = propFotoId || paramFotoId;
-  const foto = getFotoById(id);
+const FotoPage = ({ fotoId = null }) => {
+  const foto = getFotoById(fotoId);
 
   const bgRef = useRef(null);
   useEffect(() => {
@@ -120,7 +118,7 @@ const FotoPage = ({ fotoId: propFotoId = null }) => {
           ) : (
             <div className="foto-not-found">
               <p>Snap not found.</p>
-              <a href="/">← Return home</a>
+              <Link href="/">← Return home</Link>
             </div>
           )}
         </main>

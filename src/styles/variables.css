@@ -131,7 +131,9 @@
   --z-background: 0;
   --z-content: 1;
   --z-overlay: 10;
-  --z-navigation: -20;
+  /* Was -20, which put the navbar BEHIND all positioned content: invisible and unclickable on
+     scrolled pages (/contact) and on every project page. Positive = always reachable. */
+  --z-navigation: 50;
   --z-modal: 100;
 
   /* ===================================

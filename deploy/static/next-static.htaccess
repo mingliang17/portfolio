@@ -1,0 +1,4 @@
+# Files in _next/static are content-hashed (a new build = new filenames), so they can be cached forever.
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

@@ -39,6 +39,7 @@
 // clothesline the polaroids are pegged to.
 
 import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
+import { withBase } from '@/utils/assetPath.js';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3 } from 'three';
@@ -335,7 +336,7 @@ const StripCarousel = ({ projects = [], fotos = [], selectedCountry, selectedIte
   const stripItems = { V1: projectsA, V2: projectsB, H1: fotosC, H2: fotosD };
 
   const handleSelect = (item) => {
-    if (item?.link) window.location.href = item.link;
+    if (item?.link) window.location.href = withBase(item.link);
   };
 
   return (

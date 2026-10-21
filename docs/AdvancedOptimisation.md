@@ -1,3 +1,5 @@
+> **Note:** written when this project used Vite. It now runs on Next.js (see `README.md` and `docs/Deployment.md`). Steps that mention `vite.config`, `main.jsx` or `import.meta.env` no longer apply as written.
+
 Advanced Performance Optimizations Explained
 Let me break down each of these advanced techniques:
 

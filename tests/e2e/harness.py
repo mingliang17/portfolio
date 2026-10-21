@@ -5,6 +5,8 @@ import os
 BASE = os.environ.get("BASE_URL", "http://127.0.0.1:5199")
 # Minimal valid Radiance .hdr (4x2 grey). drei's <Environment preset> fetches an HDR from a CDN;
 # stubbing it keeps the tests offline and stops a CDN hiccup from failing scroll tests.
+# 1x1 PNG stand-in for https://picsum.photos placeholder images (the sandbox/CI has no internet)
+PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000" "1f15c4890000000d49444154789c6360606060000000050001a5f645400000000049454e44ae426082")
 HDR = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 2 +X 4\n" + bytes([128, 128, 128, 129]) * 8
 URL = BASE + "/projects/mh1?scrolldebug"
 ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
@@ -24,6 +26,7 @@ def launch(p, models=False, **ctx):
     hdr = HDR
     page.route("**/*.hdr", lambda r: r.fulfill(status=200, body=hdr, headers={"content-type":"application/octet-stream","access-control-allow-origin":"*"}))
     page.route("**/fonts.cdnfonts.com/**", lambda r: r.abort())
+    page.route("**/picsum.photos/**", lambda r: r.fulfill(status=200, body=PNG, headers={"content-type":"image/png","access-control-allow-origin":"*"}))
     if not models:  # cheap mode for scroll-logic tests: don't load/render heavy 3D models
         page.route("**/*.glb", lambda r: r.abort())
         page.route("**/*.gltf", lambda r: r.abort())

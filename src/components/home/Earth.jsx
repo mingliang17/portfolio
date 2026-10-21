@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { withBase } from '@/utils/assetPath.js';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { TextureLoader, ShaderMaterial, Vector2, Vector3, Quaternion } from 'three';
 import * as solar from 'solar-calculator';
@@ -361,7 +362,7 @@ const Earth = forwardRef(({
               <mesh
                 onPointerOver={e => { e.stopPropagation(); setHoveredStar(idx); }}
                 onPointerOut={e  => { e.stopPropagation(); setHoveredStar(null); }}
-                onClick={e => { e.stopPropagation(); if (star.link) window.location.href = star.link; }}
+                onClick={e => { e.stopPropagation(); if (star.link) window.location.href = withBase(star.link); }}
               >
                 <sphereGeometry args={[0.28, 6, 6]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />

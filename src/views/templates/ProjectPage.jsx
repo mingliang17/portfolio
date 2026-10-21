@@ -9,7 +9,6 @@
 // Debug: append ?scrolldebug to the URL for a live HUD.
 
 import React, { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 import { getProjectById } from '@/constants/projectsData.js';
 import { ScrollStage, SectionNav } from '@/scroll/index.js';
 
@@ -104,9 +103,8 @@ function buildSections(project) {
   return out;
 }
 
-const ProjectPage = () => {
-  const { project_id } = useParams();
-  const project = getProjectById(project_id);
+const ProjectPage = ({ projectId }) => {
+  const project = getProjectById(projectId);
   const sections = useMemo(() => (project ? buildSections(project) : []), [project]);
   const debug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('scrolldebug');
 

@@ -33,3 +33,8 @@ dist.zip
 dist.zip.tmp
 node_modules/
 .DS_Store
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
