@@ -233,7 +233,7 @@ const AppearSection = ({
   // Fills its <ScrollStage> layer; the stage owns height, pinning and scrolling.
   const sectionStyle = {
     height: '100%',
-    backgroundColor: '#050505',
+    backgroundColor: 'transparent',
     position: 'relative',
     overflow: 'hidden'
   };

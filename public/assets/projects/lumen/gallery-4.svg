@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-label="lumen · gallery 4">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35491c"/><stop offset="1" stop-color="#0c260f"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#g)"/>
+<g stroke="#bbe28c" stroke-opacity="0.28" stroke-width="1"><ellipse cx="320.0" cy="330.0" rx="56.00000000000001" ry="30.0" fill="none" transform="rotate(-18 320.0 330.0)"/><ellipse cx="320.0" cy="330.0" rx="112.00000000000001" ry="60.0" fill="none" transform="rotate(-18 320.0 330.0)"/><ellipse cx="320.0" cy="330.0" rx="168.00000000000003" ry="90.0" fill="none" transform="rotate(-18 320.0 330.0)"/><ellipse cx="320.0" cy="330.0" rx="224.00000000000003" ry="120.0" fill="none" transform="rotate(-18 320.0 330.0)"/><ellipse cx="320.0" cy="330.0" rx="280.0" ry="150.0" fill="none" transform="rotate(-18 320.0 330.0)"/><ellipse cx="320.0" cy="330.0" rx="336.00000000000006" ry="180.0" fill="none" transform="rotate(-18 320.0 330.0)"/></g>
+<rect x="32" y="36" width="736" height="528" fill="none" stroke="#bbe28c" stroke-opacity="0.35" stroke-dasharray="11 11"/>
+<text x="56" text-anchor="start" y="540" fill="#bbe28c" font-family="Helvetica,Arial,sans-serif" font-size="23" letter-spacing="3">PLACEHOLDER — LUMEN · GALLERY 4</text>
+<text x="56" text-anchor="start" y="570" fill="#bbe28c" fill-opacity="0.6" font-family="Helvetica,Arial,sans-serif" font-size="16">800×600</text>
+</svg>

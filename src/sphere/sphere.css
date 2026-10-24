@@ -1,0 +1,20 @@
+/* src/sphere/sphere.css
+   The sphere background lives in a fixed layer BEHIND the page (see _app.jsx). For it to show,
+   the full-screen sections that used to paint their own opaque black must be transparent. */
+
+.sphere-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #0b0b0d;
+}
+
+.sphere-bg-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Soft falloff towards the edges so the patch reads as a lit part of a sphere, not a flat grid. */
+  -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 35%, rgba(0, 0, 0, 0.35) 100%);
+  mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 35%, rgba(0, 0, 0, 0.35) 100%);
+}

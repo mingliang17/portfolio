@@ -5,7 +5,9 @@
 const BASE = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, '');
 
 export function assetPath(path) {
-  if (/^(https?:)?\/\//.test(path)) return path; // already absolute
+  if (!path) return path;
+  if (/^(https?:)?\/\//.test(path) || path.startsWith('data:')) return path; // already absolute
+  if (BASE && (path === BASE || path.startsWith(`${BASE}/`))) return path; // already prefixed: safe to call twice
   return `${BASE}/${path}`.replace(/\/{2,}/g, '/');
 }
 

@@ -6,7 +6,7 @@
 .anime-section,
 .anime-section-container {
   position: relative;
-  background-color: #0f1011;
+  background-color: transparent;
   width: 100%;
   /* CRITICAL: overflow MUST be visible */
   overflow: visible !important;

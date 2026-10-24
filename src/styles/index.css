@@ -22,6 +22,7 @@
 /* === UTILITIES === */
 @import './utils.css';
 @import '../scroll/scroll.css';
+@import '../sphere/sphere.css';
 
 /* === ANIMATIONS === */
 @import './animations.css';
@@ -37,6 +38,7 @@
 @import './projects/hero.css';
 @import './projects/explode.css';
 @import './projects/appear.css';
+@import './projects/blocks.css';
 
 /* === TAILWINDCSS === */
 @import 'tailwindcss';

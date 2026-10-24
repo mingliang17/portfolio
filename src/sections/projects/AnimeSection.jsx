@@ -118,7 +118,7 @@ const AnimeSection = ({ modelPath, checkpoints = [], isVisible = true, scrollPro
 
   return (
     <div style={{
-      position: 'relative', width: '100%', height: '100%', backgroundColor: '#050505',
+      position: 'relative', width: '100%', height: '100%', backgroundColor: 'transparent',
       overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center'
     }}>
       <div style={{ position: 'absolute', inset: 0 }}>

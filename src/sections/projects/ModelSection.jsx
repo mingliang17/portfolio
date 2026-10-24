@@ -52,7 +52,7 @@ const ModelSection = ({
   modelRotation = [0, 0, 0],
 
   environment = 'city',
-  backgroundColor = '#000',
+  backgroundColor = 'transparent', // 'transparent' lets the sphere background show through
 
   showControls = true,
   enableShadows = true,
@@ -103,7 +103,7 @@ const ModelSection = ({
           />
 
           <Environment preset={environment} />
-          <color attach="background" args={[backgroundColor]} />
+          {backgroundColor && backgroundColor !== 'transparent' && <color attach="background" args={[backgroundColor]} />}
         </Canvas>
 
         {/* Scroll progress indicator */}

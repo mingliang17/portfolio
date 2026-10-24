@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import PageLoading from '@/components/common/PageLoading.jsx';
 import { getProjectById, getProjectIds } from '@/constants/projectsData.js';
+import { projectTitle } from '@/projects/normalize.js';
 
 // The scroll stage drives WebGL canvases and reads window size: client-only.
 const ProjectPage = dynamic(() => import('@/views/templates/ProjectPage.jsx'), {
@@ -21,7 +22,7 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const project = getProjectById(params.project_id);
   if (!project) return { notFound: true };
-  const title = project.sections?.hero?.title || `Project ${params.project_id.toUpperCase()}`;
+  const title = projectTitle(project);
   return { props: { projectId: params.project_id, title } };
 }
 

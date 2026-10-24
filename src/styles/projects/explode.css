@@ -5,7 +5,7 @@
 /* Fills its <ScrollStage> layer. The stage owns height, pinning and scroll. */
 .explode-section {
   position: relative;
-  background-color: #0f1011;
+  background-color: transparent;
   width: 100%;
   height: 100%;
   overflow: hidden;

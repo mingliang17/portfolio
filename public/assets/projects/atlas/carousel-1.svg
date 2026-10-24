@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="atlas · render 1">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c3249"/><stop offset="1" stop-color="#110c26"/></linearGradient></defs>
+<rect width="1200" height="800" fill="url(#g)"/>
+<g stroke="#8cb6e2" stroke-opacity="0.28" stroke-width="1"><ellipse cx="480.0" cy="440.00000000000006" rx="84.00000000000001" ry="40.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/><ellipse cx="480.0" cy="440.00000000000006" rx="168.00000000000003" ry="80.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/><ellipse cx="480.0" cy="440.00000000000006" rx="252.00000000000003" ry="120.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/><ellipse cx="480.0" cy="440.00000000000006" rx="336.00000000000006" ry="160.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/><ellipse cx="480.0" cy="440.00000000000006" rx="420.00000000000006" ry="200.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/><ellipse cx="480.0" cy="440.00000000000006" rx="504.00000000000006" ry="240.0" fill="none" transform="rotate(-18 480.0 440.00000000000006)"/></g>
+<rect x="48" y="48" width="1104" height="704" fill="none" stroke="#8cb6e2" stroke-opacity="0.35" stroke-dasharray="17 17"/>
+<text x="84" text-anchor="start" y="720" fill="#8cb6e2" font-family="Helvetica,Arial,sans-serif" font-size="35" letter-spacing="3">PLACEHOLDER — ATLAS · RENDER 1</text>
+<text x="84" text-anchor="start" y="766" fill="#8cb6e2" fill-opacity="0.6" font-family="Helvetica,Arial,sans-serif" font-size="24">1200×800</text>
+</svg>

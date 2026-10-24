@@ -8,7 +8,7 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 40%, #0d1a2e 0%, #050b14 100%);
+  background: transparent; /* the sphere background (src/sphere) sits behind the globe */
 }
 
 /* ════════════════════════════════════════════════

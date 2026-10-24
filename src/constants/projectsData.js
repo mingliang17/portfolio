@@ -2,9 +2,14 @@
 // EXAMPLE: Updated with background configurations for SpinSection
 
 import { PROJECT_ASSETS } from '../assets/index.js';
+import { findSection } from '../projects/normalize.js';
+import { PROJECT_ATLAS, PROJECT_LUMEN } from './showcaseProjects.js';
 
 export const PROJECT_MH1 = {
   id: 'mh1',
+  title: 'Project MH1',
+  tag: 'Research',
+  summary: 'Redefining agriculture through genetic innovation: an interactive 3D reconstruction.',
   assets: {
     hero: PROJECT_ASSETS.mh1.hero,
     map: PROJECT_ASSETS.mh1.map,
@@ -30,7 +35,7 @@ export const PROJECT_MH1 = {
       cameraPosition: [0, 2, 6],
       cameraFov: 50,
       environment: 'city',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'transparent',
       debug: true,
       enableShadows: true,
       snapToTop: false,
@@ -239,6 +244,9 @@ export const PROJECT_MH1 = {
 
 export const PROJECT_MH2 = {
   id: 'mh2',
+  title: 'Project MH2',
+  tag: 'Prototype',
+  summary: 'Spatial analysis and a 3D model of an infrastructure study.',
   assets: {
     hero: PROJECT_ASSETS.mh2.hero,
     map: PROJECT_ASSETS.mh2.map,
@@ -263,17 +271,20 @@ export const PROJECT_MH2 = {
   },
 };
 
-export const ALL_PROJECTS = { 
-  [PROJECT_MH1.id]: PROJECT_MH1, 
-  [PROJECT_MH2.id]: PROJECT_MH2 
+// Add a project here and it gets a page at /projects/<id> (and a card on /projects).
+export const ALL_PROJECTS = {
+  [PROJECT_MH1.id]: PROJECT_MH1,
+  [PROJECT_MH2.id]: PROJECT_MH2,
+  [PROJECT_ATLAS.id]: PROJECT_ATLAS,
+  [PROJECT_LUMEN.id]: PROJECT_LUMEN,
 };
 
 export const getProjectById = (id) => ALL_PROJECTS[id] || null;
 export const getProjectIds = () => Object.keys(ALL_PROJECTS);
-export const getModelConfig = (id) => getProjectById(id)?.sections?.model || null;
-export const getSpinConfig = (id) => getProjectById(id)?.sections?.spin || null;
-export const getExplodeConfig = (id) => getProjectById(id)?.sections?.explode || null;
-export const getAppearConfig = (id) => getProjectById(id)?.sections?.appear || null;
+export const getModelConfig = (id) => findSection(getProjectById(id), 'model');
+export const getSpinConfig = (id) => findSection(getProjectById(id), 'spin');
+export const getExplodeConfig = (id) => findSection(getProjectById(id), 'explode');
+export const getAppearConfig = (id) => findSection(getProjectById(id), 'appear');
 
 export default { 
   projects: ALL_PROJECTS, 

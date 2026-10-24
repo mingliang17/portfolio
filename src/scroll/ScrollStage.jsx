@@ -10,6 +10,7 @@
 // Sections are declarative:
 //   { id: 'hero',  kind: 'page', render: (scene) => <Hero {...scene} /> }
 //   { id: 'spin',  kind: 'long', length: 5, checkpoints: 5, render: (scene) => <Spin {...scene} /> }
+// Optional per-section fields: `sphere` (background pattern name), `transition`, `transitionStyle`, `keepMounted`.
 //
 // `scene` = { id, index, kind, isActive, isNear, isVisible, progress, progressRef }
 
@@ -200,6 +201,7 @@ export default function ScrollStage({
               ref={(el) => (layerRefs.current[i] = el)}
               className={`scroll-layer scroll-layer--${section.kind || 'page'} section-${section.id}`}
               data-section={section.id}
+              data-sphere={section.sphere || undefined} // sphere background pattern for this section (src/sphere)
               data-kind={section.kind || 'page'}
               style={{ visibility: i === initialIndex ? 'visible' : 'hidden' }}
               role="region"

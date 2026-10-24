@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="lumen · hero">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#49311c"/><stop offset="1" stop-color="#22260c"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#g)"/>
+<g stroke="#e2b48c" stroke-opacity="0.28" stroke-width="2"><ellipse cx="640.0" cy="550.0" rx="112.00000000000001" ry="50.0" fill="none" transform="rotate(-18 640.0 550.0)"/><ellipse cx="640.0" cy="550.0" rx="224.00000000000003" ry="100.0" fill="none" transform="rotate(-18 640.0 550.0)"/><ellipse cx="640.0" cy="550.0" rx="336.00000000000006" ry="150.0" fill="none" transform="rotate(-18 640.0 550.0)"/><ellipse cx="640.0" cy="550.0" rx="448.00000000000006" ry="200.0" fill="none" transform="rotate(-18 640.0 550.0)"/><ellipse cx="640.0" cy="550.0" rx="560.0" ry="250.0" fill="none" transform="rotate(-18 640.0 550.0)"/><ellipse cx="640.0" cy="550.0" rx="672.0000000000001" ry="300.0" fill="none" transform="rotate(-18 640.0 550.0)"/></g>
+<rect x="64" y="60" width="1472" height="880" fill="none" stroke="#e2b48c" stroke-opacity="0.35" stroke-dasharray="23 23"/>
+<text x="800" text-anchor="middle" y="900" fill="#e2b48c" font-family="Helvetica,Arial,sans-serif" font-size="47" letter-spacing="3">PLACEHOLDER — LUMEN · HERO</text>
+<text x="800" text-anchor="middle" y="961" fill="#e2b48c" fill-opacity="0.6" font-family="Helvetica,Arial,sans-serif" font-size="32">1600×1000 · hero / polaroid</text>
+</svg>

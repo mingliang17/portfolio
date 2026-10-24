@@ -8,6 +8,9 @@ import { globeProjects, getSortedProjects, getSortedFotos } from '../constants/i
 import gsap from 'gsap';
 
 // ── Camera Intro ──────────────────────────────────────────────────────────────
+// SHELVED: set SHOW_CAMERA_INTRO to true to bring the viewfinder intro back. Nothing else needs to change.
+const SHOW_CAMERA_INTRO = false;
+
 const CameraIntro = ({ onComplete }) => {
   const ref = useRef(null);
 
@@ -78,7 +81,7 @@ const CameraIntro = ({ onComplete }) => {
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 const Home = () => {
-  const [introComplete,   setIntroComplete]   = useState(false);
+  const [introComplete,   setIntroComplete]   = useState(!SHOW_CAMERA_INTRO);
   const [globeTheme,      setGlobeTheme]      = useState('neutral');
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedItem,    setSelectedItem]    = useState(null);
@@ -112,7 +115,7 @@ const Home = () => {
   return (
     <main className="hp-main">
       {/* Viewfinder intro */}
-      {!introComplete && <CameraIntro onComplete={() => setIntroComplete(true)} />}
+      {SHOW_CAMERA_INTRO && !introComplete && <CameraIntro onComplete={() => setIntroComplete(true)} />}
 
       {/* Globe — always full-screen, z-index 1 */}
       <div className={`hp-globe-layer ${introComplete ? 'hp-globe-visible' : ''}`}>

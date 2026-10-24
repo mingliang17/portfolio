@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background: transparent; /* sphere background shows around the polaroid */
   isolation: isolate;
 }
 

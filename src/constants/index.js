@@ -103,7 +103,7 @@ export const allFotos = ALL_FOTOS;
 export const navLinks = [
   { id: 1, name: 'Home', href: '/' },
   { id: 2, name: 'About', href: '/#about' }, // TODO: no About page/section exists yet
-  { id: 3, name: 'Work', href: '/projects/mh1' },
+  { id: 3, name: 'Work', href: '/projects' },
   { id: 4, name: 'Contact', href: '/contact' },
 ];
 

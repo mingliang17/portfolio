@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800" role="img" aria-label="atlas · the brief">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c4249"/><stop offset="1" stop-color="#0c1126"/></linearGradient></defs>
+<rect width="1000" height="800" fill="url(#g)"/>
+<g stroke="#8cd4e2" stroke-opacity="0.28" stroke-width="1"><circle cx="620.0" cy="360.0" r="60.0" fill="none"/><circle cx="620.0" cy="360.0" r="120.0" fill="none"/><circle cx="620.0" cy="360.0" r="180.0" fill="none"/><circle cx="620.0" cy="360.0" r="240.0" fill="none"/><circle cx="620.0" cy="360.0" r="300.0" fill="none"/><circle cx="620.0" cy="360.0" r="360.0" fill="none"/><circle cx="620.0" cy="360.0" r="420.0" fill="none"/><circle cx="620.0" cy="360.0" r="480.0" fill="none"/></g>
+<rect x="40" y="48" width="920" height="704" fill="none" stroke="#8cd4e2" stroke-opacity="0.35" stroke-dasharray="14 14"/>
+<text x="70" text-anchor="start" y="720" fill="#8cd4e2" font-family="Helvetica,Arial,sans-serif" font-size="29" letter-spacing="3">PLACEHOLDER — ATLAS · THE BRIEF</text>
+<text x="70" text-anchor="start" y="758" fill="#8cd4e2" fill-opacity="0.6" font-family="Helvetica,Arial,sans-serif" font-size="20">1000×800</text>
+</svg>
