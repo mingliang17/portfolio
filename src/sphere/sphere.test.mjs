@@ -142,7 +142,7 @@ test('resolvePattern: override beats id, id beats route, unknown names fall back
   assert.equal(resolvePattern('/projects/[project_id]', 'hero', 'hex'), 'hex');
   assert.equal(resolvePattern('/projects/[project_id]', 'x', 'not-a-pattern'), 'geodesic');
   assert.equal(resolvePattern('/projects/[project_id]', 'carousel7'), 'dust');
-  assert.equal(resolvePattern('/', undefined), 'latlong');
+  assert.equal(resolvePattern('/', undefined), 'dust');
   assert.equal(resolvePattern('/projects', undefined), 'hex');
   assert.equal(resolvePattern('/somewhere-else', undefined), 'geodesic');
   for (const id of [...Object.values(SECTION_PATTERNS), ...Object.values(TYPE_PATTERNS)]) assert.ok(PATTERN_NAMES.includes(id), id);

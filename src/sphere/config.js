@@ -42,8 +42,8 @@ export const CAROUSEL_PATTERN = 'dust';
 
 /** Next.js route patterns (router.pathname) used when no section is active. */
 export const ROUTE_PATTERNS = {
-  '/': 'latlong',
-  '/home': 'latlong',
+  '/': 'dust', // the home page has a globe of its own: keep what is behind it quiet
+  '/home': 'dust',
   '/contact': 'scan',
   '/fotos/[fotoId]': 'dust',
   '/projects': 'hex',

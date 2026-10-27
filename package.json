@@ -10,7 +10,7 @@
     "start:server": "node server.js",
     "build:static": "node scripts/build-static.mjs",
     "serve:static": "node scripts/serve-static.mjs",
-    "test": "node --test \"src/scroll/**/*.test.mjs\" \"src/sphere/**/*.test.mjs\" \"src/projects/**/*.test.mjs\""
+    "test": "node --test \"src/scroll/**/*.test.mjs\" \"src/sphere/**/*.test.mjs\" \"src/projects/**/*.test.mjs\" \"src/globe/**/*.test.mjs\" \"src/utils/**/*.test.mjs\""
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

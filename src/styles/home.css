@@ -34,8 +34,7 @@
 .hp-country-badge {
   position: absolute;
   top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 1.5rem; /* top-left: the navbar owns the top centre */
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.12);
@@ -46,9 +45,54 @@
   animation: badge-in 0.4s ease both;
 }
 @keyframes badge-in {
-  from { opacity:0; transform:translateX(-50%) translateY(-8px); }
-  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
 }
+.hp-country-badge--interactive {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  z-index: 30;
+}
+.hp-country-badge-count {
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+.hp-country-badge-close {
+  background: rgba(255,255,255,0.1);
+  border: 0;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.hp-country-badge-close:hover { background: rgba(255,255,255,0.25); }
+
+/* Phones: the navbar fills the top, so the badge drops below it and drops the counts. */
+@media (max-width: 600px) {
+  .hp-country-badge { top: 4.5rem; left: 1rem; }
+  .hp-country-badge-count { display: none; }
+}
+
+/* Hover tooltip: position is written by Home.jsx on every pointer move. */
+.hp-hover-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.hp-hover-tip--on { opacity: 1; }
+
 .hp-country-badge-name {
   font-family: 'Courier New', monospace;
   font-size: 0.7rem;
@@ -80,7 +124,9 @@
   width:  100% !important;
   height: 100% !important;
   display: block;
-  pointer-events: auto;
+  /* The canvas never takes the pointer: the globe underneath stays draggable. It reads pointer events from
+     <main> instead (Home.jsx passes eventSource), and flags hovers on cards in globe/uiState.js. */
+  pointer-events: none;
 }
 
 /* ════════════════════════════════════════════════

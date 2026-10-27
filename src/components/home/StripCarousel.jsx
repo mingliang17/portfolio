@@ -1,74 +1,52 @@
 // src/components/home/StripCarousel.jsx
 //
-// 4 independent polaroid strips, each mapped onto its OWN small QUARTER-
-// sphere (not a full sphere, not a hemisphere):
+// The polaroid frame. Four strips of polaroids form a slightly displaced rectangle around the globe that is
+// mapped onto a sphere, so seen from the front it reads as an oval with some buffer on every side:
 //
-//   - 2 "vertical"   strips (meridian arcs) — cards roll top-to-bottom.
-//   - 2 "horizontal" strips (parallel arcs) — cards roll left-to-right.
+//        ┌── H1 (top, → clockwise) ──┐
+//   V1 ↑ │                           │ ↓ V2          pinwheel: each strip owns one corner and stops one card
+//        └── H2 (bottom, ←) ─────────┘               short of the next, so the four interlock
 //
-// ── PINWHEEL GRID CENTRES (point 6) ─────────────────────────────────────────
-// Each strip's little sphere is centred on the shared 5×5 grid (1–25, row 1
-// = top, col 1 = left, centre = row 3/col 3 = item 13) — see GRID_CELL /
-// gridToWorld below — so the 4 strips sit in a pinwheel around the shared
-// origin instead of straight up/down/left/right:
+// All of the geometry is solved from the viewport in src/utils/stripFrame.js: the polaroids run along a rounded
+// rectangle that leaves ~10% of the screen empty outside them on every side, whatever the aspect ratio, and the
+// cards scale with the screen. Each card sits on a sphere behind its ring position, tangent to it (eased towards
+// flat by CURVATURE so photos stay readable), upright, and gets dimmer and narrower as it curves away.
 //
-//                 [H1 — between 8 & 9]
-//   [V1 — between 7 & 12]      [V2 — between 14 & 19]
-//                 [H2 — between 17 & 18]
+// BEHAVIOUR (unchanged from before)
+//   - hover over or near a strip to scrub through it (no drag, no loop; clamped at both ends)
+//   - a clothesline threads through every visible card's pin
+//   - click a card to open it
+// NEW
+//   - cards fly in from outside the frame, staggered along each strip, whenever `visible` turns on
+//   - with fewer cards than the strip has room for, they are spread out and centred, so the frame always reads
+//   - a card whose photo fails to load shows a plain card instead of taking the canvas down
 //
-// ── QUARTER SPHERE, NOT A LOOP (points 2 & 4) ───────────────────────────────
-// Every strip has a fixed START and END — it does NOT loop or auto-spin.
-// t=0 is the end nearer the shared centre: the card there sits perfectly
-// FLAT (identity tangent rotation, dead facing the camera). t=QUARTER_RAD
-// (90°) is the far end: the card there is tangent to the sphere a full
-// quarter-turn away, so it reads as fully curved/foreshortened. Cards in
-// between interpolate smoothly from flat → curved.
-//
-// ── HOVER TO SCROLL (point 1) ───────────────────────────────────────────────
-// There's no more click-and-drag. Each strip watches the mouse's position
-// every frame (via the R3F raycaster, intersected with the world z=0 plane).
-// Hovering anywhere near a strip's little sphere shifts a smoothly-eased
-// "scroll window" that decides which items currently occupy the strip's
-// fixed set of slots — like scrubbing a filmstrip. Scrolling is clamped at
-// both ends (no wraparound — matches the fixed start/end from point 4).
-//
-// ── CLOTHESLINE (point 5) ───────────────────────────────────────────────────
-// Each strip also renders a thin line threaded through every currently-
-// visible card's pin, gently sagging between consecutive pins with a small
-// deterministic (seeded, so it never flickers) random wobble — like a real
-// clothesline the polaroids are pegged to.
-
+// The canvas ignores the pointer itself (so the globe underneath stays draggable); it listens to the page
+// through `eventSource` instead, and tells the globe when the pointer is over a card (uiState.cardHover).
 import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
 import { withBase } from '@/utils/assetPath.js';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
-import { Vector3, CatmullRomCurve3 } from 'three';
-import { meridianPoint, parallelPoint, tangentQuaternion } from '../../utils/sphereStrips.js';
+import { Vector3, Matrix4, Quaternion, CatmullRomCurve3 } from 'three';
+import { solveFrame, stripLayout, ringAt, hitSphere, cardBasis, slotDistance, CURVATURE, FRAME_CAMERA, CARD_ASPECT } from '@/utils/stripFrame.js';
+import { uiState } from '@/globe/uiState.js';
 
-// ── Tunable constants ──────────────────────────────────────────────────────
-const SPHERE_RADIUS  = 1.15;  // radius of each strip's own little quarter-sphere
-const GRID_CELL       = 1.4;   // world-space size of one cell of the shared 5×5 grid
-const QUARTER_DEG     = 90;    // ← EDIT ME: the strip is mapped across a quarter of a sphere
-const QUARTER_RAD     = (QUARTER_DEG * Math.PI) / 180;
-const ANGLE_STEP_DEG  = 12;    // ← EDIT ME: degrees between adjacent cards (smaller = closer together)
-const ANGLE_STEP_RAD  = (ANGLE_STEP_DEG * Math.PI) / 180;
-const MIN_OPACITY     = 0.45;  // opacity floor at the far/curved end of the arc
-const HOVER_RADIUS    = GRID_CELL * 0.75; // how close the mouse must get to "hover near" a strip
-const SCROLL_EASE     = 0.12;  // 0–1 — higher = snappier scroll easing
+const SCROLL_EASE = 0.12; // 0–1, higher = snappier scrubbing
+const BAND = 0.2; // how close (NDC) the pointer must be to a strip's line to scrub it
 
-const IMG_SIZE   = 0.20;
-const BORDER     = 0.02;
-const CAPTION_H  = 0.06;
-const BACKING_W  = IMG_SIZE + BORDER * 2;
-const BACKING_H  = IMG_SIZE + BORDER + CAPTION_H;
-const IMAGE_Y    = (CAPTION_H - BORDER) / 2;
-const PIN_Y      = BACKING_H / 2 - BORDER / 2;
+// A polaroid in card units: height 1, width CARD_ASPECT. Everything is scaled by the strip's card scale.
+const BACKING_W = CARD_ASPECT;
+const BACKING_H = 1;
+const BORDER = 0.0714;
+const IMG = 0.714;
+const CAPTION_H = 0.214;
+const IMAGE_Y = (CAPTION_H - BORDER) / 2;
+const PIN_Y = BACKING_H / 2 - BORDER / 2;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const ease = (t) => 1 - Math.pow(1 - clamp01(t), 3);
 
-// Deterministic pseudo-random in [-1, 1] from a string seed — used for the
-// clothesline's "marginally random" wobble so it stays stable frame-to-frame
-// instead of jittering.
+// Deterministic pseudo-random in [-1, 1] from a string: a stable wobble for the clothesline.
 const seededRand = (seed) => {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
@@ -76,231 +54,202 @@ const seededRand = (seed) => {
   return (x - Math.floor(x)) * 2 - 1;
 };
 
-// Convert a (row, col) position on the shared 1–25 grid (row 1 = top,
-// col 1 = left, grid centre = row 3 / col 3 = item 13) into a world-space
-// offset from the shared origin. Half-steps (e.g. row 3.5) land exactly
-// between two grid cells, e.g. gridToWorld(2, 3.5) = "between 8 and 9".
-const gridToWorld = (row, col) => new Vector3(
-  (col - 3) * GRID_CELL,
-  (3 - row) * GRID_CELL, // row grows downward on the grid; +Y is "up" in world space
-  0,
+const _m = new Matrix4();
+const _qFull = new Quaternion();
+const _qId = new Quaternion();
+const _x = new Vector3();
+const _y = new Vector3();
+const _z = new Vector3();
+const _ndc = [0, 0];
+const _hit = { p: [0, 0, 0], n: [0, 0, 1], depth: 0 };
+
+// ── One polaroid ──────────────────────────────────────────────────────────────────────────────
+const CardBody = ({ item, texture, tint, groupRef, backingRef, imageRef, pinRef, hovered, setHovered, onSelect }) => (
+  <group
+    ref={groupRef}
+    visible={false}
+    onPointerOver={(e) => { e.stopPropagation(); uiState.cardHover = true; setHovered(true); }}
+    onPointerOut={(e) => { e.stopPropagation(); uiState.cardHover = false; setHovered(false); }}
+    onClick={(e) => { e.stopPropagation(); onSelect?.(item); }}
+  >
+    <mesh>
+      <planeGeometry args={[BACKING_W, BACKING_H]} />
+      <meshBasicMaterial ref={backingRef} color="#f5f0e8" transparent opacity={0} toneMapped={false} />
+    </mesh>
+    <mesh position={[0, IMAGE_Y, 0.004]}>
+      <planeGeometry args={[IMG, IMG]} />
+      <meshBasicMaterial ref={imageRef} map={texture ?? null} color={texture ? tint : '#9aa3ad'} transparent opacity={0} toneMapped={false} />
+    </mesh>
+    <mesh position={[0, PIN_Y, 0.008]}>
+      <circleGeometry args={[0.03, 20]} />
+      <meshBasicMaterial ref={pinRef} color={item.pinColor || '#eb4034'} transparent opacity={0} toneMapped={false} />
+    </mesh>
+    {hovered && (
+      <Html center position={[0, 0.72, 0]} zIndexRange={[60, 0]} style={{ pointerEvents: 'none' }}>
+        <div className="strip-card-tooltip">{item.title}</div>
+      </Html>
+    )}
+  </group>
 );
 
-// 2 meridians (vertical) + 2 parallels (horizontal), each on its own little
-// quarter-sphere, centred on the shared 5×5 grid in a pinwheel arrangement.
-// `poleSign` picks which of the two possible sweep directions (north/south
-// for meridians, east/west for parallels) the arc curls toward — chosen so
-// each strip's curved far end continues the pinwheel outward, away from the
-// shared centre (see the header comment for the layout).
-const STRIP_DEFS = [
-  // was dead-centre above the origin — now between grid cells 8 & 9
-  { id: 'H1', label: '8\u21949',   type: 'parallel', center: gridToWorld(2,   3.5), poleSign:  1 },
-  // was dead-centre left of the origin — now between grid cells 7 & 12
-  { id: 'V1', label: '7\u219412',  type: 'meridian', center: gridToWorld(2.5, 2),   poleSign:  1 },
-  // was dead-centre below the origin — now between grid cells 17 & 18
-  { id: 'H2', label: '17\u219418', type: 'parallel', center: gridToWorld(4,   2.5), poleSign: -1 },
-  // was dead-centre right of the origin — now between grid cells 14 & 19
-  { id: 'V2', label: '14\u219419', type: 'meridian', center: gridToWorld(3.5, 4),   poleSign: -1 },
-];
+class CardBoundary extends React.Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? this.props.fallback : this.props.children; }
+}
 
-// ── One polaroid card: cream backing + photo + pin, tangent to its strip's
-//    quarter-sphere. Position/rotation/opacity/visibility are all driven by
-//    `scrollRef` (shared, eased scroll-window position owned by the parent
-//    Strip) so every card in a strip reads from one continuously-updated
-//    value instead of each managing its own drag state.
-const StripCard = ({ item, index, def, scrollRef, pinPositionsRef, isSelected, isSameCountry, onSelect }) => {
-  const groupRef   = useRef();
+const Textured = ({ src, children }) => children(useTexture(src));
+
+/**
+ * Position, orientation, fade and fly-in of one card, every frame.
+ * `slot` is fractional while the strip scrolls, so cards glide along the arc.
+ */
+const StripCard = ({ item, index, strip, frame, itemCount, scrollRef, revealRef, pinPositionsRef, isSelected, isSameCountry, onSelect }) => {
+  const groupRef = useRef();
   const backingRef = useRef();
-  const imageRef   = useRef();
-  const pinRef     = useRef();
+  const imageRef = useRef();
+  const pinRef = useRef();
   const [hovered, setHovered] = useState(false);
+  const tint = isSelected ? '#bcd8ff' : isSameCountry ? '#c8f5d9' : '#ffffff';
 
-  const texture = useTexture(item.heroImage);
+  useEffect(() => () => { if (hovered) uiState.cardHover = false; }, [hovered]);
 
   useFrame(() => {
-    if (!groupRef.current) return;
-
-    // Continuous (fractional) slot position — as scrollRef eases, cards
-    // glide smoothly along the arc rather than snapping between slots.
-    const localSlot = index - scrollRef.current;
-    const t = localSlot * ANGLE_STEP_RAD;
-
-    // Fixed start (t=0) and end (t=QUARTER_RAD) — no looping. Anything
-    // outside that window is simply hidden rather than wrapped around.
-    if (t < -0.001 || t > QUARTER_RAD + 0.001) {
-      groupRef.current.visible = false;
+    const g = groupRef.current;
+    if (!g) return;
+    const d = slotDistance(strip, index - scrollRef.current, itemCount); // pixels along the ring
+    const along = d - strip.from; // 0 at the strip's first slot, strip.span at its last
+    const half = strip.pitch * 0.5;
+    if (revealRef.current < 0.001 || along < -half || along > strip.span + half) {
+      g.visible = false;
       if (pinPositionsRef.current) pinPositionsRef.current[index] = null;
       return;
     }
 
-    const effectiveT = t * def.poleSign;
-    const { position, normal } = def.type === 'meridian'
-      ? meridianPoint(SPHERE_RADIUS, 0, effectiveT)
-      : parallelPoint(SPHERE_RADIUS, 0, effectiveT);
-    const worldPos = position.add(def.center);
+    // Fly in from outside the frame, staggered along the strip.
+    const r = ease(revealRef.current * 1.7 - clamp01(along / Math.max(strip.span, 1e-6)) * 0.7);
+    const edge = clamp01(1 - Math.max(-along, along - strip.span) / half); // fade out over half a pitch at either end
 
-    groupRef.current.visible = true;
-    groupRef.current.position.copy(worldPos);
-    // At t=0 `normal` is exactly (0,0,1), so this is the identity rotation —
-    // literally flat. As t grows toward QUARTER_RAD the card tilts up to a
-    // full quarter-turn, reading as increasingly curved.
-    groupRef.current.quaternion.copy(tangentQuaternion(normal));
+    // Ring position on screen → the point of the sphere behind it, and which way the sphere faces there.
+    const ndc = ringAt(frame, d, _ndc);
+    const hit = hitSphere(frame, ndc[0], ndc[1], _hit);
+    const lift = 1 + (1 - r) * 0.45;
+    g.visible = r > 0.002 && edge > 0.002;
+    g.position.set(hit.p[0] * lift, hit.p[1] * lift, hit.p[2] * lift);
 
-    // Flat (t=0) → fully opaque. Curved far end (t=QUARTER_RAD) → floor opacity.
-    const opacity = 1 - (t / QUARTER_RAD) * (1 - MIN_OPACITY);
+    const b = cardBasis(hit.n);
+    _m.makeBasis(_x.set(...b.x), _y.set(...b.y), _z.set(...b.z));
+    _qFull.setFromRotationMatrix(_m);
+    g.quaternion.copy(_qId.identity()).slerp(_qFull, CURVATURE);
+
+    // Size: the card is as tall on screen as the frame metrics say, wherever it sits (a card turned away is
+    // compensated in height, not in width, so it narrows like a surface curving away).
+    const up = Math.max(0.4, Math.abs(_y.set(0, 1, 0).applyQuaternion(g.quaternion).y));
+    const worldPerPx = (2 * hit.depth * frame.tanH) / frame.H;
+    g.scale.setScalar(((frame.metrics.cardH * worldPerPx) / up) * (0.6 + 0.4 * r) * (hovered ? 1.12 : 1));
+
+    // Cards that curve further from the viewer are dimmer.
+    const facing = clamp01((hit.n[2] - 0.15) / 0.75);
+    const opacity = (0.5 + 0.5 * facing) * r * edge;
     if (backingRef.current) backingRef.current.opacity = opacity;
-    if (imageRef.current)   imageRef.current.opacity   = opacity;
-    if (pinRef.current)     pinRef.current.opacity      = opacity;
+    if (imageRef.current) imageRef.current.opacity = opacity;
+    if (pinRef.current) pinRef.current.opacity = opacity;
 
-    // Publish this card's current pin position (world-space) so the strip's
-    // clothesline can thread through it.
     if (pinPositionsRef.current) {
-      const pinWorld = new Vector3(0, PIN_Y, 0.008)
-        .applyQuaternion(groupRef.current.quaternion)
-        .add(groupRef.current.position);
-      pinPositionsRef.current[index] = pinWorld;
+      pinPositionsRef.current[index] = new Vector3(0, PIN_Y, 0.008).multiplyScalar(g.scale.x).applyQuaternion(g.quaternion).add(g.position);
     }
   });
 
-  const tint = isSelected ? '#bcd8ff' : isSameCountry ? '#c8f5d9' : '#ffffff';
-
+  const body = (texture) => (
+    <CardBody
+      item={item} texture={texture} tint={tint} groupRef={groupRef} backingRef={backingRef} imageRef={imageRef} pinRef={pinRef}
+      hovered={hovered} setHovered={setHovered} onSelect={onSelect}
+    />
+  );
   return (
-    <group
-      ref={groupRef}
-      scale={hovered ? 1.22 : 1}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
-      onPointerOut={(e)  => { e.stopPropagation(); setHovered(false); }}
-      onClick={(e) => { e.stopPropagation(); onSelect?.(item); }}
-    >
-      {/* cream backing — the polaroid "frame" */}
-      <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[BACKING_W, BACKING_H]} />
-        <meshBasicMaterial ref={backingRef} color="#f5f0e8" transparent opacity={0} toneMapped={false} />
-      </mesh>
-
-      {/* photo, sitting slightly proud of the backing so it doesn't z-fight */}
-      <mesh position={[0, IMAGE_Y, 0.004]}>
-        <planeGeometry args={[IMG_SIZE, IMG_SIZE]} />
-        <meshBasicMaterial ref={imageRef} map={texture} color={tint} transparent opacity={0} toneMapped={false} />
-      </mesh>
-
-      {/* pin dot — the clothesline threads through this exact point */}
-      <mesh position={[0, PIN_Y, 0.008]}>
-        <circleGeometry args={[0.008, 20]} />
-        <meshBasicMaterial ref={pinRef} color={item.pinColor || '#eb4034'} transparent opacity={0} toneMapped={false} />
-      </mesh>
-
-      {hovered && (
-        <Html center distanceFactor={2.2} zIndexRange={[60, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="strip-card-tooltip">{item.title}</div>
-        </Html>
-      )}
-    </group>
+    <CardBoundary fallback={body(null)}>
+      <Suspense fallback={body(null)}>
+        <Textured src={item.heroImage}>{(texture) => body(texture)}</Textured>
+      </Suspense>
+    </CardBoundary>
   );
 };
 
-// ── Clothesline: a thin string threaded through every visible card's pin,
-//    with a gentle sag and a small deterministic wobble between each pair
-//    of pins so it reads as a real hung line rather than a rigid rod.
-const ClothesLine = ({ def, items, pinPositionsRef }) => {
-  const lineRef     = useRef();
+// ── Clothesline: a thin string through every visible card's pin, drooping a little between pins ──
+const ClothesLine = ({ strip, items, pinPositionsRef, revealRef }) => {
+  const lineRef = useRef();
   const geometryRef = useRef();
+  const horizontal = strip.horizontal;
 
   useFrame(() => {
     if (!lineRef.current || !geometryRef.current) return;
     const pins = pinPositionsRef.current || [];
-
     const visible = [];
-    for (let i = 0; i < items.length; i++) {
-      const p = pins[i];
-      if (p) visible.push({ pos: p, id: items[i].id });
-    }
-
-    if (visible.length < 2) {
+    for (let i = 0; i < items.length; i++) if (pins[i]) visible.push({ pos: pins[i], id: items[i].id });
+    if (visible.length < 2 || revealRef.current < 0.4) {
       lineRef.current.visible = false;
       return;
     }
     lineRef.current.visible = true;
 
-    // Thread through every pin, inserting a sagging (+ slightly wobbled)
-    // midpoint between each consecutive pair so the fitted curve droops
-    // like a real clothesline instead of connecting pins with straight,
-    // perfectly even segments.
-    const controlPts = [visible[0].pos.clone()];
+    const pts = [visible[0].pos.clone()];
     for (let i = 0; i < visible.length - 1; i++) {
       const a = visible[i].pos;
       const b = visible[i + 1].pos;
       const mid = a.clone().add(b).multiplyScalar(0.5);
-      const segLen = a.distanceTo(b);
-
-      const wobble = seededRand(`${def.id}-${visible[i].id}-${visible[i + 1].id}`);
-      mid.y -= segLen * 0.22;            // gravity sag
-      mid.x += wobble * segLen * 0.15;   // marginal random wobble
-      mid.z += wobble * segLen * 0.05;
-
-      controlPts.push(mid, b.clone());
+      const len = a.distanceTo(b);
+      const wobble = seededRand(`${strip.id}-${visible[i].id}-${visible[i + 1].id}`);
+      if (horizontal) mid.y -= len * 0.18; // gravity
+      else mid.x -= Math.sign(mid.x || 1) * len * 0.12; // sides sag towards the middle of the frame
+      mid.z += wobble * len * 0.04;
+      pts.push(mid, b.clone());
     }
-
-    const curve  = new CatmullRomCurve3(controlPts, false, 'catmullrom', 0.5);
-    const points = curve.getPoints(Math.max(16, controlPts.length * 6));
-
-    geometryRef.current.setFromPoints(points);
+    const curve = new CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
+    geometryRef.current.setFromPoints(curve.getPoints(Math.max(16, pts.length * 6)));
   });
 
   return (
-    <line ref={lineRef}>
+    <line ref={lineRef} frustumCulled={false}>
       <bufferGeometry ref={geometryRef} />
-      <lineBasicMaterial color="#cbb994" transparent opacity={0.5} toneMapped={false} />
+      <lineBasicMaterial color="#cbb994" transparent opacity={0.55} toneMapped={false} />
     </line>
   );
 };
 
-// ── One strip: cards occupy a fixed set of slots across a quarter-sphere
-//    arc, sliding smoothly as the shared `scrollRef` eases toward whatever
-//    the mouse's hover position (near this strip) currently targets. Also
-//    owns the clothesline that threads through every visible card's pin.
-const Strip = ({ def, items, selectedItemId, selectedCountry, onSelect }) => {
-  const scrollRef       = useRef(0);   // current eased scroll-window position
-  const scrollTargetRef = useRef(0);   // target scroll-window position
-  const pinPositionsRef = useRef([]);  // shared pin world-positions, read by the clothesline
+// ── One strip ─────────────────────────────────────────────────────────────────────────────────
+const Strip = ({ strip, frame, items, revealRef, selectedItemId, selectedCountry, onSelect }) => {
+  const scrollRef = useRef(0);
+  const targetRef = useRef(0);
+  const pinPositionsRef = useRef([]);
+  const _a = useMemo(() => [0, 0], []);
+  const _b = useMemo(() => [0, 0], []);
+  const maxScroll = Math.max(0, items.length - strip.count);
+  const a = useMemo(() => new Vector3(), []);
+  const b = useMemo(() => new Vector3(), []);
 
-  const slots     = Math.floor(QUARTER_DEG / ANGLE_STEP_DEG) + 1; // fixed slots across the quarter arc
-  const maxScroll = Math.max(0, items.length - slots);
-  const outwardAxis = useMemo(() => def.center.clone().normalize(), [def.center]);
-
-  useEffect(() => {
-    pinPositionsRef.current = new Array(items.length).fill(null);
-  }, [items]);
+  useEffect(() => { pinPositionsRef.current = new Array(items.length).fill(null); }, [items]);
 
   useFrame((state) => {
     if (maxScroll > 0) {
-      // Intersect the mouse ray with the world z=0 plane (where every
-      // strip lives) to get the mouse's current world-space position.
-      const ray = state.raycaster.ray;
-      if (Math.abs(ray.direction.z) > 1e-6) {
-        const tPlane = -ray.origin.z / ray.direction.z;
-        const worldMouse = ray.origin.clone().addScaledVector(ray.direction, tPlane);
-        const toMouse = worldMouse.sub(def.center);
-        const dist = toMouse.length();
-
-        // "Hovering over OR NEAR the strip" — a generous radius around its
-        // little sphere's centre, not just the exact card pixels.
-        if (dist < HOVER_RADIUS) {
-          const proj = toMouse.dot(outwardAxis);
-          const progress = clamp01((proj + HOVER_RADIUS) / (2 * HOVER_RADIUS));
-          scrollTargetRef.current = progress * maxScroll;
-        }
-      }
+      // Where the strip's first and last slots are on screen (NDC) → a line to scrub along.
+      ringAt(frame, strip.from, _a);
+      ringAt(frame, strip.limit, _b);
+      a.set(_a[0], _a[1], 0);
+      b.set(_b[0], _b[1], 0);
+      const ax = b.x - a.x;
+      const ay = b.y - a.y;
+      const len2 = ax * ax + ay * ay || 1;
+      const px = state.pointer.x - a.x;
+      const py = state.pointer.y - a.y;
+      const u = (px * ax + py * ay) / len2;
+      const dist = Math.abs(px * ay - py * ax) / Math.sqrt(len2);
+      if (dist < BAND && u > -0.12 && u < 1.12) targetRef.current = clamp01(u) * maxScroll;
     }
-
-    // Clamp (start/end, no wraparound) and smoothly ease toward the target.
-    scrollTargetRef.current = Math.min(Math.max(scrollTargetRef.current, 0), maxScroll);
-    scrollRef.current += (scrollTargetRef.current - scrollRef.current) * SCROLL_EASE;
-    scrollRef.current = Math.min(Math.max(scrollRef.current, 0), maxScroll);
+    targetRef.current = Math.min(Math.max(targetRef.current, 0), maxScroll);
+    scrollRef.current += (targetRef.current - scrollRef.current) * SCROLL_EASE;
   });
 
   if (items.length === 0) return null;
-
   return (
     <group>
       {items.map((item, i) => (
@@ -308,56 +257,77 @@ const Strip = ({ def, items, selectedItemId, selectedCountry, onSelect }) => {
           key={item.id}
           item={item}
           index={i}
-          def={def}
+          strip={strip}
+          frame={frame}
+          itemCount={items.length}
           scrollRef={scrollRef}
+          revealRef={revealRef}
           pinPositionsRef={pinPositionsRef}
           isSelected={selectedItemId === item.id}
           isSameCountry={selectedCountry === item.country}
           onSelect={onSelect}
         />
       ))}
-      <ClothesLine def={def} items={items} pinPositionsRef={pinPositionsRef} />
+      <ClothesLine strip={strip} items={items} pinPositionsRef={pinPositionsRef} revealRef={revealRef} />
     </group>
   );
 };
 
-// Split a pool of items into 2 interleaved halves (even/odd index) so both
-// resulting strips stay populated with a mix rather than being front- and
-// back-loaded.
-const splitEvenOdd = (arr) => [
-  arr.filter((_, i) => i % 2 === 0),
-  arr.filter((_, i) => i % 2 === 1),
-];
+// Split a pool into two interleaved halves so both strips stay populated with a mix.
+const splitEvenOdd = (arr) => [arr.filter((_, i) => i % 2 === 0), arr.filter((_, i) => i % 2 === 1)];
 
-const StripCarousel = ({ projects = [], fotos = [], selectedCountry, selectedItem }) => {
+const Frame = ({ projects, fotos, visible, selectedCountry, selectedItem, onSelect }) => {
+  const { width, height } = useThree((s) => s.size);
+  const frame = useMemo(() => solveFrame(width, height), [width, height]);
+  const strips = useMemo(() => stripLayout(frame), [frame]);
   const [projectsA, projectsB] = useMemo(() => splitEvenOdd(projects), [projects]);
-  const [fotosC, fotosD]       = useMemo(() => splitEvenOdd(fotos), [fotos]);
-
+  const [fotosC, fotosD] = useMemo(() => splitEvenOdd(fotos), [fotos]);
   const stripItems = { V1: projectsA, V2: projectsB, H1: fotosC, H2: fotosD };
 
-  const handleSelect = (item) => {
-    if (item?.link) window.location.href = withBase(item.link);
-  };
+  const revealRef = useRef(0);
+  const rootRef = useRef();
+  useFrame((_, delta) => {
+    const dt = Math.min(delta, 0.05);
+    revealRef.current += ((visible ? 1 : 0) - revealRef.current) * (1 - Math.exp(-dt * (visible ? 2.1 : 4)));
+    if (revealRef.current < 0.002 && !visible) revealRef.current = 0;
+    if (rootRef.current) rootRef.current.visible = revealRef.current > 0;
+    if (!visible && uiState.cardHover) uiState.cardHover = false;
+  });
 
   return (
-    <Canvas className="strip-carousel-canvas" camera={{ position: [0, 0, 6.5], fov: 50 }}>
+    <group ref={rootRef} visible={false}>
+      {strips.map((strip) => (
+        <Strip
+          key={strip.id}
+          strip={strip}
+          frame={frame}
+          items={stripItems[strip.id]}
+          revealRef={revealRef}
+          selectedItemId={selectedItem}
+          selectedCountry={selectedCountry}
+          onSelect={onSelect}
+        />
+      ))}
+    </group>
+  );
+};
+
+const StripCarousel = ({ projects = [], fotos = [], visible = true, selectedCountry, selectedItem, eventSource }) => {
+  const handleSelect = (item) => { if (item?.link) window.location.href = withBase(item.link); };
+  return (
+    <Canvas
+      className="strip-carousel-canvas"
+      camera={{ position: [0, 0, FRAME_CAMERA.distance], fov: FRAME_CAMERA.fovDeg, near: 1, far: 40 }}
+      dpr={[1, 2]}
+      gl={{ alpha: true, antialias: true }}
+      eventSource={eventSource}
+      eventPrefix="client"
+    >
       <ambientLight intensity={0.85} />
       <directionalLight position={[4, 3, 5]} intensity={0.55} />
       <Suspense fallback={null}>
-        {STRIP_DEFS.map((def) => (
-          <Strip
-            key={def.id}
-            def={def}
-            items={stripItems[def.id]}
-            selectedItemId={selectedItem}
-            selectedCountry={selectedCountry}
-            onSelect={handleSelect}
-          />
-        ))}
+        <Frame projects={projects} fotos={fotos} visible={visible} selectedCountry={selectedCountry} selectedItem={selectedItem} onSelect={handleSelect} />
       </Suspense>
-      {/* No OrbitControls, no drag — every strip is fixed in place.
-          Hovering over or near a strip (see Strip's useFrame) scrubs
-          smoothly through its cards; nothing loops. */}
     </Canvas>
   );
 };

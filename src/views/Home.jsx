@@ -1,11 +1,12 @@
 // src/pages/Home.jsx
 import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import Earth from '../components/home/Earth.jsx';
 import StripCarousel from '../components/home/StripCarousel.jsx';
 import { globeProjects, getSortedProjects, getSortedFotos } from '../constants/index.js';
 import gsap from 'gsap';
+import { uiState } from '../globe/uiState.js';
+import { GLOBE_FOV } from '../globe/constants.js';
 
 // ── Camera Intro ──────────────────────────────────────────────────────────────
 // SHELVED: set SHOW_CAMERA_INTRO to true to bring the viewfinder intro back. Nothing else needs to change.
@@ -83,27 +84,56 @@ const CameraIntro = ({ onComplete }) => {
 const Home = () => {
   const [introComplete,   setIntroComplete]   = useState(!SHOW_CAMERA_INTRO);
   const [globeTheme,      setGlobeTheme]      = useState('neutral');
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState(null); // name, as the project/photo data knows it
+  const [selectedKey,     setSelectedKey]     = useState(null); // globe identity of the country (ISO code, else name)
   const [selectedItem,    setSelectedItem]    = useState(null);
   const [columnsVisible,  setColumnsVisible]  = useState(false);
+  const [stripsMounted,   setStripsMounted]   = useState(false); // the polaroid canvas is created on first selection
   const [sortedProjects,  setSortedProjects]  = useState([]);
   const [sortedFotos,     setSortedFotos]     = useState([]);
+  const [hoverInfo,       setHoverInfo]       = useState(null);
+  const mainRef = useRef(null);
+  const tipRef  = useRef(null);
 
-  const handleItemSelect = useCallback((item) => {
-    setSelectedItem(item.id);
-    setSelectedCountry(item.country);
-    setSortedProjects(getSortedProjects(item.country, item.id));
-    setSortedFotos(getSortedFotos(item.country, item.id));
-    setColumnsVisible(true);
-  }, []);
-
-  const handleCountrySelect = useCallback((country) => {
-    setSelectedCountry(country.country);
+  // Any country on the globe can be selected; ones with projects/photos fill the polaroid frame.
+  const handleCountrySelect = useCallback((info) => {
+    setSelectedCountry(info.country);
+    setSelectedKey(info.key);
     setSelectedItem(null);
-    setSortedProjects(getSortedProjects(country.country));
-    setSortedFotos(getSortedFotos(country.country));
+    setSortedProjects(getSortedProjects(info.country));
+    setSortedFotos(getSortedFotos(info.country));
     setColumnsVisible(true);
+    setStripsMounted(true);
   }, []);
+
+  // Zoom back out. The polaroids keep their content while they fly out.
+  const handleDeselect = useCallback(() => {
+    setSelectedCountry(null);
+    setSelectedKey(null);
+    setSelectedItem(null);
+    setColumnsVisible(false);
+  }, []);
+
+  // A click that hit nothing on the globe canvas (empty space around it) also zooms out.
+  const handlePointerMissed = useCallback(() => {
+    if (selectedKey && !uiState.cardHover && uiState.dragMoved < 6) handleDeselect();
+  }, [selectedKey, handleDeselect]);
+
+  useEffect(() => {
+    if (!selectedKey) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') handleDeselect(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedKey, handleDeselect]);
+
+  // The hover tooltip follows the pointer by writing a transform straight to the DOM (no re-render per move).
+  const handlePointerMove = useCallback((e) => {
+    if (tipRef.current) tipRef.current.style.transform = `translate(${e.clientX + 16}px, ${e.clientY + 18}px)`;
+  }, []);
+
+  // No tooltip over the country that is already open (the badge says it), nor over a polaroid.
+  const hoverCountryInfo = hoverInfo && !uiState.cardHover && (hoverInfo.iso ?? hoverInfo.name) !== selectedKey ? hoverInfo : null;
+  const selectedInfo = selectedKey ? globeProjects.find((c) => c.iso === selectedKey) : null;
 
   const starNavigationPoints = [
     { title: 'Future Projects', lat:  45, lon: 120, link: '/projects/future'  },
@@ -113,14 +143,19 @@ const Home = () => {
   ];
 
   return (
-    <main className="hp-main">
+    <main className="hp-main" ref={mainRef} onPointerMove={handlePointerMove}>
       {/* Viewfinder intro */}
       {SHOW_CAMERA_INTRO && !introComplete && <CameraIntro onComplete={() => setIntroComplete(true)} />}
 
       {/* Globe — always full-screen, z-index 1 */}
       <div className={`hp-globe-layer ${introComplete ? 'hp-globe-visible' : ''}`}>
-        <Canvas className="hp-canvas" style={{ background: 'transparent' }}>
-          <PerspectiveCamera makeDefault position={[0, 0, 6]} />
+        <Canvas
+          className="hp-canvas"
+          style={{ background: 'transparent' }}
+          camera={{ fov: GLOBE_FOV, near: 0.3, far: 80, position: [0, 0, 6] }}
+          dpr={[1, 2]}
+          onPointerMissed={handlePointerMissed}
+        >
           <ambientLight intensity={0.25} />
           <directionalLight position={[5, 3, 5]} intensity={0.4} />
           <Suspense fallback={null}>
@@ -129,39 +164,64 @@ const Home = () => {
               stars={starNavigationPoints}
               globeTheme={globeTheme}
               onThemeChange={setGlobeTheme}
-              onItemSelect={handleItemSelect}
               onCountrySelect={handleCountrySelect}
-              selectedCountry={selectedCountry}
-              selectedItem={selectedItem}
+              onDeselect={handleDeselect}
+              onHover={setHoverInfo}
+              selectedKey={selectedKey}
               showPins
               showStars
-              autoRotate={false}
+              autoRotate
             />
           </Suspense>
-          <OrbitControls
-            enableZoom={false}
-            enablePan={false}
-            rotateSpeed={0.5}
-            enableDamping
-            dampingFactor={0.1}
-          />
         </Canvas>
 
         {selectedCountry && (
-          <div className="hp-country-badge">
+          <div className="hp-country-badge hp-country-badge--interactive">
             <span className="hp-country-badge-name">{selectedCountry}</span>
+            {selectedInfo ? (
+              <span className="hp-country-badge-count">
+                {selectedInfo.projects.length} projects · {selectedInfo.fotos.length} snaps
+              </span>
+            ) : (
+              <span className="hp-country-badge-count">nothing here yet</span>
+            )}
+            <button className="hp-country-badge-close" onClick={handleDeselect} aria-label="Back to the globe" title="Back to the globe (Esc)">✕</button>
           </div>
         )}
       </div>
 
-      {/* ── 4-strip 3D carousel — sits on top of globe, full 100vw × 100vh ── */}
+      {/* Hover tooltip: follows the pointer (see handlePointerMove) */}
+      <div ref={tipRef} className={`hp-hover-tip ${hoverCountryInfo ? 'hp-hover-tip--on' : ''}`}>
+        {hoverCountryInfo && (
+          <div className="country-tooltip">
+            {hoverCountryInfo.iso && (
+              <img className="country-flag" src={`https://flagcdn.com/w80/${hoverCountryInfo.iso}.png`} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+            <div className="country-tooltip-body">
+              <span className="country-tooltip-name">{hoverCountryInfo.name}</span>
+              {hoverCountryInfo.hasContent ? (
+                <>
+                  <span className="country-tooltip-stat" style={{ color: '#FF6B6B' }}>📐 {hoverCountryInfo.projects} {hoverCountryInfo.projects === 1 ? 'project' : 'projects'}</span>
+                  <span className="country-tooltip-stat" style={{ color: '#4ECDC4' }}>📷 {hoverCountryInfo.fotos} {hoverCountryInfo.fotos === 1 ? 'snap' : 'snaps'}</span>
+                </>
+              ) : (
+                <span className="country-tooltip-stat">click to explore</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Polaroid frame — four curved strips around the globe, full 100vw × 100vh ── */}
       <div className={`hp-overlay-layout ${columnsVisible ? 'hp-overlay-visible' : ''}`}>
-        {columnsVisible && (
+        {stripsMounted && (
           <StripCarousel
             projects={sortedProjects}
             fotos={sortedFotos}
+            visible={columnsVisible}
             selectedCountry={selectedCountry}
             selectedItem={selectedItem}
+            eventSource={mainRef}
           />
         )}
       </div>
