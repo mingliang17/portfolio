@@ -2,14 +2,18 @@
 //
 // The home-page globe: a vector globe in the spirit of a rotating-globe map. Flat-coloured countries with
 // visible borders on a blue sphere, drag to spin (with inertia), a slow idle spin, hover to highlight,
-// click ANY country to select it.
+// click a country that has work to open it.
 //
-// On selection the globe turns to centre that country and the camera dollies in until the country fills the
-// opening that the polaroid frame (StripCarousel) leaves around it. Clicking the sea, pressing Esc or the
-// badge's ✕ (see Home.jsx) zooms back out.
+// Every country can be HOVERED (highlight + tooltip), but only countries with projects or snaps
+// (constants/index.js → globeProjects) can be SELECTED. Those keep their pins and are tinted. On selection the
+// globe turns to centre that country and the camera dollies in until the country fills the opening between the
+// two polaroid columns (StripCarousel). Clicking the sea, pressing Esc or the badge's ✕ (see Home.jsx) zooms back out.
 //
-// Countries that have projects or photos (constants/index.js → globeProjects) keep their pins, are tinted, and
-// show their counts on hover; every other country is selectable too (and simply has no polaroids).
+// Constellations drift in a flat ring around the globe (turning anticlockwise) and behave the same way: hover them,
+// and if they have work, click to fly the camera to them and open the polaroid menu.
+//
+// Dragging: the pointer handler lives on the R3F root element, NOT on the canvas. The theme toggle (<Html fullscreen>)
+// is laid over the canvas, so a handler on the canvas itself never receives the press.
 //
 // Everything on the globe is ours: country data is public/data/countries-50m.json (scripts/build-globe-data.mjs),
 // drawn by src/globe/*. See docs/Globe.md.
@@ -24,8 +28,10 @@ import { findCountryAt } from '@/globe/topo.js';
 import { dirToLonLat, lonLatToDir, focusOf, viewFor, distanceForRadius, fitDistance, DEG } from '@/globe/geo.js';
 import { GLOBE_THEMES, DEFAULT_THEME } from '@/globe/themes.js';
 import { GLOBE_RADIUS, GROUP_SCALE, WORLD_RADIUS, GLOBE_FOV, BASE_SILHOUETTE } from '@/globe/constants.js';
-import { uiState } from '@/globe/uiState.js';
+import { uiState, inBands } from '@/globe/uiState.js';
 import { frameMetrics } from '@/utils/stripFrame.js';
+import { ringLayout, flyTo, RING_SPEED } from '@/globe/constellationRing.js';
+import ConstellationRing from './Constellations.jsx';
 import { GlobeBody, Atmosphere, CountryBorders, CountryOverlay } from './globe/GlobeParts.jsx';
 
 const IDLE_SPEED = 0.11; // rad/s of idle spin
@@ -92,27 +98,37 @@ const Pin = ({ country, viewRef, isSelected, isHovered, onHover, onSelect }) => 
 const Earth = forwardRef(({
   countries = [], // countries with content: { country, iso, lat, lon, projects, fotos }
   stars = [],
+  constellations = [], // { key, name, stars, lines, projects, fotos } (constants/index.js → constellationEntries)
   globeTheme = DEFAULT_THEME,
   onThemeChange,
-  onCountrySelect, // ({ country, iso, key, lat, lon, hasContent })
+  onCountrySelect, // ({ country, iso, key, lat, lon, hasContent, kind? })
   onDeselect,
-  onHover, // ({ name, iso, projects, fotos, hasContent } | null)
+  onHover, // ({ name, iso, projects, fotos, hasContent, kind? } | null)
   selectedKey = null,
   showPins = true,
   showStars = true,
   autoRotate = true,
 }, ref) => {
   const { camera, gl, size } = useThree();
+  // The element R3F listens on. It contains the canvas AND the <Html> overlay, so a press on the overlay bubbles through it.
+  // (canvas.parentElement is NOT enough: the overlay is a sibling of the canvas's own container, not inside it.)
+  const eventRoot = useThree((st) => st.events.connected);
   const world = useWorld();
   const groupRef = useRef();
   const starsRef = useRef();
+  const ringGroupRef = useRef();
+  const ring = useRef({ angle: 0 });
   const [hoverKey, setHoverKey] = useState(null);
+  const [hoverConstKey, setHoverConstKey] = useState(null);
   const [hoveredStar, setHoveredStar] = useState(null);
 
   useImperativeHandle(ref, () => ({ getGlobe: () => groupRef.current }));
 
   const contentByKey = useMemo(() => new Map(countries.map((c) => [c.iso, c])), [countries]);
   const contentKeys = useMemo(() => new Set(countries.map((c) => c.iso)), [countries]);
+  const constContent = useMemo(() => new Set(constellations.filter((c) => (c.projects?.length || 0) + (c.fotos?.length || 0) > 0).map((c) => c.key)), [constellations]);
+  const constContentRef = useRef(constContent);
+  constContentRef.current = constContent;
   const worldByKey = useMemo(() => new Map((world?.countries ?? []).map((c) => [c.key, c])), [world]);
 
   // Camera distance when nothing is selected: the whole globe, never wider than the screen allows.
@@ -121,17 +137,26 @@ const Earth = forwardRef(({
     [size.width, size.height],
   );
 
+  // The constellations' ring: where each one sits on the plane behind the globe.
+  const ringData = useMemo(
+    () => ringLayout(constellations, { camDist: baseDist, fovDeg: GLOBE_FOV, globeNdc: Math.min(BASE_SILHOUETTE, 0.8 * (size.width / size.height)) }),
+    [constellations, baseDist, size.width, size.height],
+  );
+
   // ── Motion state (refs: it changes every frame and must not re-render React) ──
   const initial = useMemo(() => viewFor(15, 22), []);
   const view = useRef({
     yaw: initial.yaw, pitch: initial.pitch, vYaw: 0, vPitch: 0,
     dist: baseDist, targetDist: baseDist, targetView: null,
+    camX: 0, camY: 0, targetX: 0, targetY: 0, // the camera slides over to a selected constellation
     dragging: false, lastInteract: -10, focus: 0, now: 0,
   });
   const selectedRef = useRef(selectedKey);
   const hoverRef = useRef(hoverKey);
+  const hoverConstRef = useRef(hoverConstKey);
   selectedRef.current = selectedKey;
   hoverRef.current = hoverKey;
+  hoverConstRef.current = hoverConstKey;
 
   // ── Selection → turn to the country and zoom in; deselection → zoom back out ──
   useEffect(() => {
@@ -139,9 +164,27 @@ const Earth = forwardRef(({
     if (!selectedKey) {
       v.targetView = null;
       v.targetDist = baseDist;
+      v.targetX = 0;
+      v.targetY = 0;
       v.lastInteract = v.now;
       return;
     }
+    if (selectedKey.startsWith('const:')) {
+      // A constellation: slide the camera over it and close in until it fills the opening between the columns.
+      const item = ringData.items.find((i) => i.key === selectedKey);
+      if (!item) return;
+      const m = frameMetrics(size.width, size.height);
+      const f = flyTo(item, ring.current.angle, { openingPx: m.openingRadius, H: size.height, fovDeg: GLOBE_FOV, baseDist });
+      v.targetView = null;
+      v.targetX = f.x;
+      v.targetY = f.y;
+      v.targetDist = f.dist;
+      v.vYaw = 0;
+      v.vPitch = 0;
+      return;
+    }
+    v.targetX = 0;
+    v.targetY = 0;
     const wc = worldByKey.get(selectedKey);
     const content = contentByKey.get(selectedKey);
     const focus = wc ? focusOf(wc) : content ? { lon: content.lon, lat: content.lat, radius: 8 * DEG } : null;
@@ -157,7 +200,7 @@ const Earth = forwardRef(({
     });
     v.vYaw = 0;
     v.vPitch = 0;
-  }, [selectedKey, worldByKey, contentByKey, baseDist, size.width, size.height]);
+  }, [selectedKey, worldByKey, contentByKey, baseDist, ringData, size.width, size.height]);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -185,9 +228,20 @@ const Earth = forwardRef(({
     }
 
     // Camera dolly + how "zoomed" we are (0 → 1) for things that must get out of the way.
-    v.dist += (v.targetDist - v.dist) * (1 - Math.exp(-dt * 2.4));
-    camera.position.set(0, 0, v.dist);
+    const ke = 1 - Math.exp(-dt * 2.4);
+    v.dist += (v.targetDist - v.dist) * ke;
+    v.camX += (v.targetX - v.camX) * ke;
+    v.camY += (v.targetY - v.camY) * ke;
+    camera.position.set(v.camX, v.camY, v.dist);
     v.focus += ((selectedRef.current ? 1 : 0) - v.focus) * (1 - Math.exp(-dt * 3));
+
+    // The constellations turn anticlockwise, flat, unless one is being looked at or pointed at.
+    const selectedConst = !!selectedRef.current?.startsWith('const:');
+    if (!selectedConst && hoverConstRef.current == null) ring.current.angle += RING_SPEED * dt;
+    if (ringGroupRef.current) {
+      ringGroupRef.current.rotation.z = ring.current.angle;
+      ringGroupRef.current.visible = (selectedConst ? 0 : v.focus) < 0.05; // they step aside while a COUNTRY is zoomed
+    }
 
     if (groupRef.current) groupRef.current.rotation.set(v.pitch, v.yaw, 0);
     if (starsRef.current) {
@@ -197,9 +251,17 @@ const Earth = forwardRef(({
   });
 
   // ── Dragging ──
+  // Listen on the R3F root element, not the canvas: the theme toggle's <Html fullscreen> sits over the canvas, so
+  // presses land on that overlay and never reach the canvas (hover still works because R3F listens on the root).
+  const cursorFor = () => {
+    if (hoverRef.current != null && contentKeys.has(hoverRef.current)) return 'pointer';
+    if (hoverConstRef.current != null && constContentRef.current.has(hoverConstRef.current)) return 'pointer';
+    return 'grab';
+  };
   useEffect(() => {
-    const el = gl.domElement;
+    const root = eventRoot ?? gl.domElement.parentElement ?? gl.domElement;
     const v = view.current;
+    root.style.touchAction = 'none'; // let a finger turn the globe instead of scrolling the page
     let lastX = 0;
     let lastY = 0;
     let startX = 0;
@@ -208,6 +270,8 @@ const Earth = forwardRef(({
 
     const down = (e) => {
       if (e.button !== 0 || uiState.cardHover) return;
+      if (e.target?.closest?.('button, a, input')) return; // the theme toggle etc.
+      if (e.pointerType === 'touch' && inBands(e.clientX, e.clientY)) return; // a finger on a polaroid column scrolls it
       v.dragging = true;
       v.targetView = null;
       v.vYaw = 0;
@@ -216,7 +280,7 @@ const Earth = forwardRef(({
       lastY = startY = e.clientY;
       lastT = performance.now();
       uiState.dragMoved = 0;
-      el.style.cursor = 'grabbing';
+      root.style.cursor = 'grabbing';
     };
     const move = (e) => {
       if (!v.dragging) return;
@@ -240,21 +304,40 @@ const Earth = forwardRef(({
       v.dragging = false;
       v.lastInteract = v.now; // restart the idle timer
       if (performance.now() - lastT > 90) { v.vYaw = 0; v.vPitch = 0; } // a held pause is not a fling
-      el.style.cursor = hoverRef.current ? 'pointer' : 'grab';
+      root.style.cursor = cursorFor();
     };
-    el.addEventListener('pointerdown', down);
+    // Arrow keys nudge the globe too (an alternative to dragging; ignored while a country is open or a field has focus).
+    const KEY_KICK = { ArrowLeft: [-0.9, 0], ArrowRight: [0.9, 0], ArrowUp: [0, -0.9], ArrowDown: [0, 0.9] };
+    const key = (e) => {
+      const kick = KEY_KICK[e.key];
+      if (!kick || e.metaKey || e.ctrlKey || e.altKey || selectedRef.current) return;
+      if (e.target?.closest?.('input, textarea, select, [contenteditable]')) return;
+      v.targetView = null;
+      v.vYaw += kick[0];
+      v.vPitch += kick[1];
+      v.lastInteract = v.now;
+    };
+    window.addEventListener('keydown', key);
+
+    root.addEventListener('pointerdown', down);
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
     return () => {
-      el.removeEventListener('pointerdown', down);
+      window.removeEventListener('keydown', key);
+      root.removeEventListener('pointerdown', down);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
     };
-  }, [gl]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gl, eventRoot]);
 
-  useEffect(() => { gl.domElement.style.cursor = hoverKey ? 'pointer' : 'grab'; }, [gl, hoverKey]);
+  // Pointer over something you can open, a grabbing hand otherwise (the cursor belongs on the root: see above).
+  useEffect(() => {
+    if (!view.current.dragging) (eventRoot ?? gl.domElement.parentElement ?? gl.domElement).style.cursor = cursorFor();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gl, eventRoot, hoverKey, hoverConstKey, contentKeys]);
 
   // ── Picking ──
   const pick = (e) => {
@@ -289,13 +372,24 @@ const Earth = forwardRef(({
     e.stopPropagation();
     if (uiState.cardHover || e.delta > 6 || uiState.dragMoved > 6) return;
     const c = pick(e);
-    if (c) select(c);
-    else if (selectedRef.current) onDeselect?.();
+    if (c) {
+      if (contentKeys.has(c.key)) select(c); // a country without work can be hovered but not opened
+    } else if (selectedRef.current) onDeselect?.();
+  };
+
+  const selectConstellation = (entry) => {
+    if (!constContent.has(entry.key)) return; // same rule: no work, no menu
+    onCountrySelect?.({ country: entry.name, iso: null, key: entry.key, hasContent: true, kind: 'constellation' });
   };
 
   // Tell the page what is under the pointer (for its tooltip).
   useEffect(() => {
     if (!onHover) return;
+    if (hoverConstKey) {
+      const c = constellations.find((x) => x.key === hoverConstKey);
+      onHover(c ? { name: c.name, key: c.key, iso: null, kind: 'constellation', projects: c.projects?.length ?? 0, fotos: c.fotos?.length ?? 0, hasContent: constContent.has(c.key) } : null);
+      return;
+    }
     if (!hoverKey) { onHover(null); return; }
     const wc = worldByKey.get(hoverKey);
     const content = contentByKey.get(hoverKey);
@@ -306,7 +400,7 @@ const Earth = forwardRef(({
       fotos: content?.fotos?.length ?? 0,
       hasContent: !!content,
     });
-  }, [hoverKey, worldByKey, contentByKey, onHover]);
+  }, [hoverKey, hoverConstKey, worldByKey, contentByKey, constellations, constContent, onHover]);
 
   const palette = GLOBE_THEMES[globeTheme] ?? GLOBE_THEMES[DEFAULT_THEME];
   const hoverCountry = hoverKey && hoverKey !== selectedKey ? worldByKey.get(hoverKey) : null;
@@ -380,6 +474,17 @@ const Earth = forwardRef(({
           );
         })}
       </group>
+
+      {/* Constellations: flat in 2D behind the globe, turning anticlockwise. */}
+      <ConstellationRing
+        ref={ringGroupRef}
+        entries={constellations}
+        layout={ringData}
+        hoverKey={hoverConstKey}
+        selectedKey={selectedKey}
+        onHover={setHoverConstKey}
+        onSelect={selectConstellation}
+      />
 
       {/* Day / Neutral / Night */}
       <Html fullscreen>

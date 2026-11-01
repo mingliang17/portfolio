@@ -3,7 +3,7 @@ import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react
 import { Canvas } from '@react-three/fiber';
 import Earth from '../components/home/Earth.jsx';
 import StripCarousel from '../components/home/StripCarousel.jsx';
-import { globeProjects, getSortedProjects, getSortedFotos } from '../constants/index.js';
+import { globeProjects, constellationEntries, getSortedProjects, getSortedFotos } from '../constants/index.js';
 import gsap from 'gsap';
 import { uiState } from '../globe/uiState.js';
 import { GLOBE_FOV } from '../globe/constants.js';
@@ -95,7 +95,7 @@ const Home = () => {
   const mainRef = useRef(null);
   const tipRef  = useRef(null);
 
-  // Any country on the globe can be selected; ones with projects/photos fill the polaroid frame.
+  // Only a country or constellation WITH work can be selected (Earth enforces it); its own work comes first in the columns.
   const handleCountrySelect = useCallback((info) => {
     setSelectedCountry(info.country);
     setSelectedKey(info.key);
@@ -132,8 +132,8 @@ const Home = () => {
   }, []);
 
   // No tooltip over the country that is already open (the badge says it), nor over a polaroid.
-  const hoverCountryInfo = hoverInfo && !uiState.cardHover && (hoverInfo.iso ?? hoverInfo.name) !== selectedKey ? hoverInfo : null;
-  const selectedInfo = selectedKey ? globeProjects.find((c) => c.iso === selectedKey) : null;
+  const hoverCountryInfo = hoverInfo && !uiState.cardHover && (hoverInfo.key ?? hoverInfo.iso ?? hoverInfo.name) !== selectedKey ? hoverInfo : null;
+  const selectedInfo = selectedKey ? globeProjects.find((c) => c.iso === selectedKey) ?? constellationEntries.find((c) => c.key === selectedKey) : null;
 
   const starNavigationPoints = [
     { title: 'Future Projects', lat:  45, lon: 120, link: '/projects/future'  },
@@ -161,6 +161,7 @@ const Home = () => {
           <Suspense fallback={null}>
             <Earth
               countries={globeProjects}
+              constellations={constellationEntries}
               stars={starNavigationPoints}
               globeTheme={globeTheme}
               onThemeChange={setGlobeTheme}
@@ -180,7 +181,7 @@ const Home = () => {
             <span className="hp-country-badge-name">{selectedCountry}</span>
             {selectedInfo ? (
               <span className="hp-country-badge-count">
-                {selectedInfo.projects.length} projects · {selectedInfo.fotos.length} snaps
+                {selectedInfo.projects.length} {selectedInfo.projects.length === 1 ? 'project' : 'projects'} · {selectedInfo.fotos.length} {selectedInfo.fotos.length === 1 ? 'snap' : 'snaps'}
               </span>
             ) : (
               <span className="hp-country-badge-count">nothing here yet</span>
@@ -197,6 +198,7 @@ const Home = () => {
             {hoverCountryInfo.iso && (
               <img className="country-flag" src={`https://flagcdn.com/w80/${hoverCountryInfo.iso}.png`} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
             )}
+            {hoverCountryInfo.kind === 'constellation' && <span className="country-flag country-flag--star" aria-hidden="true">✦</span>}
             <div className="country-tooltip-body">
               <span className="country-tooltip-name">{hoverCountryInfo.name}</span>
               {hoverCountryInfo.hasContent ? (
@@ -205,14 +207,14 @@ const Home = () => {
                   <span className="country-tooltip-stat" style={{ color: '#4ECDC4' }}>📷 {hoverCountryInfo.fotos} {hoverCountryInfo.fotos === 1 ? 'snap' : 'snaps'}</span>
                 </>
               ) : (
-                <span className="country-tooltip-stat">click to explore</span>
+                <span className="country-tooltip-stat country-tooltip-stat--muted">no projects or snaps yet</span>
               )}
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Polaroid frame — four curved strips around the globe, full 100vw × 100vh ── */}
+      {/* ── Polaroid menu — two columns of pinned-up polaroids either side of the globe, full 100vw × 100vh ── */}
       <div className={`hp-overlay-layout ${columnsVisible ? 'hp-overlay-visible' : ''}`}>
         {stripsMounted && (
           <StripCarousel

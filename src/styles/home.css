@@ -77,7 +77,8 @@
 
 /* Phones: the navbar fills the top, so the badge drops below it and drops the counts. */
 @media (max-width: 600px) {
-  .hp-country-badge { top: 4.5rem; left: 1rem; }
+  /* centred in the gap between the two polaroid columns (no transform: the entrance animation owns it) */
+  .hp-country-badge { top: 4.5rem; left: 0; right: 0; margin: 0 auto; width: fit-content; max-width: 40vw; }
   .hp-country-badge-count { display: none; }
 }
 
@@ -280,3 +281,10 @@
    container at any viewport size — no overrides
    needed here for now.
    ════════════════════════════════════════════════ */
+
+/* The globe is dragged with a finger too: stop the browser scrolling or zooming the page instead. */
+.hp-globe-layer, .hp-canvas { touch-action: none; }
+
+/* Constellations: a star instead of a flag, and a quieter line for the ones with no work yet. */
+.country-flag--star { display: grid; place-items: center; font-size: 1.5rem; color: #ffe3a8; width: 2rem; text-shadow: 0 0 8px rgba(255, 214, 140, 0.8); }
+.country-tooltip-stat--muted { opacity: 0.6; font-style: italic; }

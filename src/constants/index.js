@@ -1,4 +1,5 @@
 // src/constants/index.js
+import { CONSTELLATIONS, CONSTELLATION_PROJECTS, CONSTELLATION_FOTOS } from './constellations.js';
 
 const createProjectLink = (id) => `/projects/${id}`;
 const createFotoLink = (id) => `/fotos/${id}`;
@@ -8,7 +9,7 @@ const proj = (seed) => `https://picsum.photos/seed/prj${seed}/800/600`;
 const foto = (seed) => `https://picsum.photos/seed/fot${seed}/600/800`;
 
 // ─── 20 Placeholder Projects ─────────────────────────────────────────────────
-const ALL_PROJECTS = [
+const REAL_PROJECTS = [
   { id: 'proj-au-1', title: 'Sydney Cultural Hub', country: 'Australia', heroImage: proj(1), link: createProjectLink('proj-au-1'), pinColor: '#FF6B6B' },
   { id: 'proj-au-2', title: 'Melbourne Civic Tower', country: 'Australia', heroImage: proj(2), link: createProjectLink('proj-au-2'), pinColor: '#4ECDC4' },
   { id: 'proj-au-3', title: 'Brisbane River Precinct', country: 'Australia', heroImage: proj(3), link: createProjectLink('proj-au-3'), pinColor: '#FFE66D' },
@@ -31,8 +32,10 @@ const ALL_PROJECTS = [
   { id: 'proj-za-3', title: 'Durban Waterfront', country: 'South Africa', heroImage: proj(20), link: createProjectLink('proj-za-3'), pinColor: '#4ECDC4' },
 ];
 
+const ALL_PROJECTS = [...REAL_PROJECTS, ...CONSTELLATION_PROJECTS]; // constellations hold placeholder work too
+
 // ─── 20 Placeholder Fotos ────────────────────────────────────────────────────
-const ALL_FOTOS = [
+const REAL_FOTOS = [
   { id: 'foto-au-1', title: 'Sydney Opera House', country: 'Australia', heroImage: foto(1), link: createFotoLink('foto-au-1'), date: 'Mar 2023', caption: 'Golden hour at the harbour', pinColor: '#FF6B6B' },
   { id: 'foto-au-2', title: 'Great Barrier Reef', country: 'Australia', heroImage: foto(2), link: createFotoLink('foto-au-2'), date: 'Jun 2023', caption: 'Underwater wonder', pinColor: '#4ECDC4' },
   { id: 'foto-cn-1', title: 'Shanghai Bund', country: 'China', heroImage: foto(3), link: createFotoLink('foto-cn-1'), date: 'Aug 2023', caption: 'Skyline at night', pinColor: '#FFE66D' },
@@ -54,6 +57,8 @@ const ALL_FOTOS = [
   { id: 'foto-za-2', title: 'Kruger Sunrise', country: 'South Africa', heroImage: foto(19), link: createFotoLink('foto-za-2'), date: 'Aug 2022', caption: 'Safari dawn' },
   { id: 'foto-za-3', title: 'Table Mountain Clouds', country: 'South Africa', heroImage: foto(20), link: createFotoLink('foto-za-3'), date: 'Sep 2022', caption: 'Tablecloth mist' },
 ];
+
+const ALL_FOTOS = [...REAL_FOTOS, ...CONSTELLATION_FOTOS];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const projectsFor = (country) => ALL_PROJECTS.filter(p => p.country === country);
@@ -112,3 +117,12 @@ export const workExperiences = [
   { id: 2, name: 'Figma', pos: 'Web Developer', duration: '2020 - 2022', title: 'Figma is my collaborative platform.', icon: '/assets/figma.svg', animation: 'dancing' },
   { id: 3, name: 'Notion', pos: 'Junior Web Developer', duration: '2019 - 2020', title: 'Notion helps organise my projects.', icon: '/assets/notion.svg', animation: 'thankful' },
 ];
+
+// ─── Constellations: like countries, with their own projects and snaps (empty ones can only be hovered) ───
+export const constellationEntries = CONSTELLATIONS.map((c) => ({
+  ...c,
+  key: `const:${c.id}`,
+  country: c.name, // the field the projects / photos use
+  projects: projectsFor(c.name),
+  fotos: fotosFor(c.name),
+}));

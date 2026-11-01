@@ -41,6 +41,9 @@ export const PATTERNS = {
   // ref 9 — dotted scan lines
   scan: { base: ON_AXIS, line: 0, dot: 0.55, draw: (f, s) => scan(f, s, { ringPx: 58, dotPx: 15 }) },
 
+  // a much fainter dust, for pages that have stars of their own (the home page)
+  faintDust: { base: ON_AXIS, line: 0, dot: 0.2, draw: (f, s) => dust(f, s, { spacingPx: 19 }) },
+
   // ref 2 — fine dust
   dust: { base: ON_AXIS, line: 0, dot: 0.5, draw: (f, s) => dust(f, s, { spacingPx: 13 }) },
 };
