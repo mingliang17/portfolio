@@ -271,7 +271,7 @@ const Earth = forwardRef(({
     const down = (e) => {
       if (e.button !== 0 || uiState.cardHover) return;
       if (e.target?.closest?.('button, a, input')) return; // the theme toggle etc.
-      if (e.pointerType === 'touch' && inBands(e.clientX, e.clientY)) return; // a finger on a polaroid column scrolls it
+      if (inBands(e.clientX, e.clientY)) return; // a press on a polaroid strip scrolls the strip, not the globe
       v.dragging = true;
       v.targetView = null;
       v.vYaw = 0;

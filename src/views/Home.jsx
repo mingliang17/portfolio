@@ -175,20 +175,6 @@ const Home = () => {
             />
           </Suspense>
         </Canvas>
-
-        {selectedCountry && (
-          <div className="hp-country-badge hp-country-badge--interactive">
-            <span className="hp-country-badge-name">{selectedCountry}</span>
-            {selectedInfo ? (
-              <span className="hp-country-badge-count">
-                {selectedInfo.projects.length} {selectedInfo.projects.length === 1 ? 'project' : 'projects'} · {selectedInfo.fotos.length} {selectedInfo.fotos.length === 1 ? 'snap' : 'snaps'}
-              </span>
-            ) : (
-              <span className="hp-country-badge-count">nothing here yet</span>
-            )}
-            <button className="hp-country-badge-close" onClick={handleDeselect} aria-label="Back to the globe" title="Back to the globe (Esc)">✕</button>
-          </div>
-        )}
       </div>
 
       {/* Hover tooltip: follows the pointer (see handlePointerMove) */}
@@ -227,6 +213,21 @@ const Home = () => {
           />
         )}
       </div>
+
+      {/* The badge sits ABOVE the polaroid strips (they run through the top-left corner). */}
+      {selectedCountry && (
+        <div className="hp-country-badge hp-country-badge--interactive">
+          <span className="hp-country-badge-name">{selectedCountry}</span>
+          {selectedInfo ? (
+            <span className="hp-country-badge-count">
+              {selectedInfo.projects.length} {selectedInfo.projects.length === 1 ? 'project' : 'projects'} · {selectedInfo.fotos.length} {selectedInfo.fotos.length === 1 ? 'snap' : 'snaps'}
+            </span>
+          ) : (
+            <span className="hp-country-badge-count">nothing here yet</span>
+          )}
+          <button className="hp-country-badge-close" onClick={handleDeselect} aria-label="Back to the globe" title="Back to the globe (Esc)">✕</button>
+        </div>
+      )}
     </main>
   );
 };

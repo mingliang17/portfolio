@@ -33,7 +33,7 @@ src/utils/stripFrame.js            the polaroid columns' layout and hand-made wo
 * **Only places with work can be opened.** A country (or constellation) with projects or snaps shows a pointer cursor
   and "n projects · n snaps"; one without says "no projects or snaps yet" and is hover-only.
 * **Open one** by clicking it (or a pin): a country is turned to face you and the camera moves in until it fits the
-  gap between the two polaroid columns; a constellation is flown to the same way. The polaroids fly in.
+  gap between the two polaroid columns; a constellation is flown to the same way. The polaroids slide in.
 * **Leave** with the ✕ in the badge, `Esc`, or a click on empty space: the camera moves back out.
 * Day / Neutral / Night switch the palette.
 
@@ -42,26 +42,34 @@ case). To add a country with work, give it an `iso` and a `lat`/`lon` for its pi
 
 ## The polaroid menu
 
-Two straight vertical columns, one either side of the globe: **projects on the left, snaps on the right**. Each card
-is a little crooked (a small rotation, a little drift sideways and up or down, a hair of size change), always the same
-for the same card, so the line reads as pinned up by hand. A thin string runs through the pins. The cards leave 10% of
-the screen empty outside them and scale with the screen. Move the mouse along a column, use the wheel over it, or
-drag it with a finger to scroll; it stops at both ends. A card straightens up and grows when you point at it.
+Two **endless** vertical strips, one either side of the globe: **projects on the left, snaps on the right**. Each
+strip runs off the top and bottom of the page and loops (the list simply comes round again), so there is no end
+to reach. Each card is a little crooked (a small rotation, a little drift sideways and up or down, a hair of size
+change), always the same for the same card, so the line reads as pinned up by hand. A thin string runs through the
+pins. A card straightens up and grows when you point at it.
 
-The selected place's own work comes first (`getSortedProjects` / `getSortedFotos`); everything that belongs
-elsewhere stays in the columns but is lightly greyed out (colour drained, slightly dimmed).
+* **Colour.** When a country or constellation is open, its own work comes first in each list
+  (`getSortedProjects` / `getSortedFotos`) and is scrolled to the **middle of the screen in full colour**. Everything
+  that belongs elsewhere stays in the strip but its **photo** is fully desaturated and half see-through.
+* **Solid frames.** The polaroid itself (the white frame and its pin) is always solid white; only the photo within is
+  ever translucent. Cards slide in from the side instead of fading in.
+* **Scrolling.** Wheel while the pointer is over a strip; drag a strip with the mouse or a finger; or rest the pointer
+  near the top or bottom of a strip to glide it (nothing happens in the middle 40%). Pressing on a strip never turns
+  the globe.
 
 Tuned by constants at the top of `src/utils/stripFrame.js`:
 
 | constant | default | meaning |
 |---|---|---|
-| `FRAME_MARGIN` | `0.1` | empty border outside the columns, as a fraction of the screen |
+| `FRAME_MARGIN` | `0.1` | empty border at each SIDE of the screen outside the strips |
 | `CARD_HEIGHT_FRAC` | `0.15` | card height as a fraction of the screen's shorter side |
 | `CARD_GAP` | `0.03` | how close neighbours sit (pitch = height × (1 + gap)) |
+| `OVERSCAN` | `0.7` | how far past the screen edge the strips run, in card heights |
 | `MAX_ROTATION` / `MIN_ROTATION` | `6°` / `1.2°` | how crooked the cards are |
-| `MAX_SPREAD` | `1.7` | with few cards, how far apart they spread |
+| `EDGE_DEAD_ZONE` / `EDGE_MAX_SPEED` | `0.4` / `2.2` | edge gliding: still zone, and top speed in cards per second |
 
-How much a place is greyed out: `GRAY_AMOUNT` and `GRAY_DIM` in `StripCarousel.jsx`.
+How much another place's photo is faded: `OTHER_GRAY` (1 = no colour left) and `OTHER_PHOTO_OPACITY` (0.5) in
+`StripCarousel.jsx`. A short list is repeated to fill the strip, so it is never bare.
 
 ## Constellations
 

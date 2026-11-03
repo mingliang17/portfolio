@@ -35,13 +35,13 @@
   position: absolute;
   top: 1.5rem;
   left: 1.5rem; /* top-left: the navbar owns the top centre */
-  background: rgba(255,255,255,0.08);
+  background: rgba(12,12,16,0.72); /* dark enough to read over a white polaroid */
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 999px;
   padding: 0.4rem 1.2rem;
   pointer-events: none;
-  z-index: 5;
+  z-index: 20; /* above the polaroid strips (z-index 10), which run through this corner */
   animation: badge-in 0.4s ease both;
 }
 @keyframes badge-in {

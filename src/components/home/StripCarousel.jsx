@@ -1,36 +1,39 @@
 // src/components/home/StripCarousel.jsx
 //
-// The polaroid menu: TWO straight vertical columns either side of the globe. Projects hang down the left, snaps
-// down the right. Cards are pinned up by hand, so each is a little crooked: a small rotation, a small drift sideways
-// and up/down, a hair bigger or smaller (deterministic per card, see cardJitter in src/utils/stripFrame.js).
+// The polaroid menu: TWO ENDLESS vertical strips either side of the globe. Projects hang down the left, snaps down
+// the right. Each strip runs off the top and bottom of the page and loops, so there is no end to reach.
 //
 //       ┌──┐             ┌──┐
-//       │  │   (globe)   │  │        10% of the screen is left empty outside the columns; the cards scale with
-//       └──┘             └──┘        the screen; each column scrolls when it holds more cards than fit.
+//       │  │   (globe)   │  │        The cards are pinned up by hand: each is a little crooked (a small rotation,
+//       └──┘             └──┘        a little drift sideways and up/down; see cardJitter in src/utils/stripFrame.js).
 //
-// WHEN A COUNTRY OR CONSTELLATION IS SELECTED its own work comes first (see getSortedProjects / getSortedFotos);
-// everything belonging to somewhere else stays in the columns but is lightly greyed out.
+// WHEN A COUNTRY OR CONSTELLATION IS OPEN its own work comes first in the list (getSortedProjects / getSortedFotos)
+// and is scrolled to the middle of the screen in full colour. Everything belonging to somewhere else stays in the
+// strip but its PHOTO is drained of colour and made see-through. The polaroid itself (the white frame and its pin)
+// is always solid white: only the photo within ever fades.
 //
-// SCROLLING a column: move the mouse up and down along it, or use the wheel while the pointer is over it, or drag
-// it with a finger. There is no looping; it stops at both ends.
+// SCROLLING a strip: the wheel while the pointer is over it, dragging it (mouse or finger), or resting the pointer
+// near its top or bottom, which glides it. It never ends: the list comes round again.
 //
 // A clothesline threads through every visible card's pin. Click a card to open it. A card whose photo fails to
 // load shows a plain card instead of taking the canvas down.
 //
 // The canvas ignores the pointer itself (so the globe underneath stays draggable); it listens to the page through
 // `eventSource` instead, and tells the globe when the pointer is over a card (uiState.cardHover) and where the
-// columns are (uiState.bands).
+// strips are (uiState.bands).
 import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
 import { withBase } from '@/utils/assetPath.js';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3 } from 'three';
-import { columnLayout, slotY, cardJitter, columnBand, FRAME_CAMERA, CARD_ASPECT } from '@/utils/stripFrame.js';
+import {
+  columnLayout, columnBand, wrapOffset, lapOffsets, startScroll, edgeScrollSpeed, cardJitter, FRAME_CAMERA, CARD_ASPECT,
+} from '@/utils/stripFrame.js';
 import { uiState } from '@/globe/uiState.js';
 
-const SCROLL_EASE = 0.14; // 0–1, higher = snappier scrolling
-const GRAY_AMOUNT = 0.78; // how far other places' cards are drained of colour
-const GRAY_DIM = 0.86; // …and how much of their opacity they keep
+const SCROLL_RATE = 9; // how quickly a strip catches up with where you scrolled it (higher = snappier)
+const OTHER_GRAY = 1; // how much colour another place's PHOTO loses (1 = none left)
+const OTHER_PHOTO_OPACITY = 0.5; // …and how see-through it is. The polaroid frame is never see-through.
 
 // A polaroid in card units: height 1, width CARD_ASPECT. Everything is scaled per frame.
 const BACKING_W = CARD_ASPECT;
@@ -51,13 +54,13 @@ const makeGrayPatch = (uniform) => (shader) => {
     .replace('void main() {', 'uniform float uGray;\nvoid main() {')
     .replace(
       '#include <color_fragment>',
-      '#include <color_fragment>\n  float grayLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(grayLuma) * 0.94, uGray);',
+      '#include <color_fragment>\n  float grayLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(grayLuma), uGray);',
     );
 };
-const GRAY_CACHE_KEY = () => 'polaroid-gray';
+const GRAY_CACHE_KEY = () => 'polaroid-photo-gray';
 
 // ── One polaroid ──────────────────────────────────────────────────────────────────────────────
-const CardBody = ({ item, texture, tint, grayUniform, groupRef, backingRef, imageRef, pinRef, hovered, setHovered, onSelect }) => {
+const CardBody = ({ item, texture, tint, grayUniform, groupRef, imageRef, hovered, setHovered, onSelect }) => {
   const patch = useMemo(() => makeGrayPatch(grayUniform), [grayUniform]);
   return (
     <group
@@ -65,19 +68,21 @@ const CardBody = ({ item, texture, tint, grayUniform, groupRef, backingRef, imag
       visible={false}
       onPointerOver={(e) => { e.stopPropagation(); uiState.cardHover = true; setHovered(true); }}
       onPointerOut={(e) => { e.stopPropagation(); uiState.cardHover = false; setHovered(false); }}
-      onClick={(e) => { e.stopPropagation(); onSelect?.(item); }}
+      onClick={(e) => { e.stopPropagation(); if (e.delta > 6) return; onSelect?.(item); }} // a drag along the strip is not a click
     >
+      {/* The polaroid: solid white, never see-through. */}
       <mesh>
         <planeGeometry args={[BACKING_W, BACKING_H]} />
-        <meshBasicMaterial ref={backingRef} color="#f5f0e8" transparent opacity={0} toneMapped={false} onBeforeCompile={patch} customProgramCacheKey={GRAY_CACHE_KEY} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} />
       </mesh>
+      {/* The photo: the only part that is drained of colour and made see-through. */}
       <mesh position={[0, IMAGE_Y, 0.004]}>
         <planeGeometry args={[IMG, IMG]} />
-        <meshBasicMaterial ref={imageRef} map={texture ?? null} color={texture ? tint : '#9aa3ad'} transparent opacity={0} toneMapped={false} onBeforeCompile={patch} customProgramCacheKey={GRAY_CACHE_KEY} />
+        <meshBasicMaterial ref={imageRef} map={texture ?? null} color={texture ? tint : '#9aa3ad'} transparent toneMapped={false} onBeforeCompile={patch} customProgramCacheKey={GRAY_CACHE_KEY} />
       </mesh>
       <mesh position={[0, PIN_Y, 0.008]}>
         <circleGeometry args={[0.03, 20]} />
-        <meshBasicMaterial ref={pinRef} color={item.pinColor || '#eb4034'} transparent opacity={0} toneMapped={false} />
+        <meshBasicMaterial color={item.pinColor || '#eb4034'} toneMapped={false} />
       </mesh>
       {hovered && (
         <Html center position={[0, 0.72, 0]} zIndexRange={[60, 0]} style={{ pointerEvents: 'none' }}>
@@ -97,72 +102,72 @@ class CardBoundary extends React.Component {
 const Textured = ({ src, children }) => children(useTexture(src));
 
 /**
- * Position, tilt, fade and fly-in of one card, every frame.
- * `slot` is fractional while the column scrolls, so cards glide.
+ * One item at one lap of the loop: where it sits, how it is tilted, how it flies in. Runs every frame.
+ * `index` is the item's place in the list; its distance from the middle of the screen comes from the scroll position.
  */
-const StripCard = ({ item, index, col, frame, itemCount, scrollRef, revealRef, pinPositionsRef, isSelected, isOther, onSelect }) => {
+const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pinsRef, isSelected, isOther, onSelect }) => {
   const groupRef = useRef();
-  const backingRef = useRef();
   const imageRef = useRef();
-  const pinRef = useRef();
   const [hovered, setHovered] = useState(false);
   const hoverAmt = useRef(0);
-  const grayUniform = useMemo(() => ({ value: 0 }), []);
+  const otherAmt = useRef(isOther ? 1 : 0);
+  const grayUniform = useMemo(() => ({ value: isOther ? OTHER_GRAY : 0 }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const jitter = useMemo(() => cardJitter(item.id), [item.id]);
+  const pinKey = `${index}:${lap}`;
   const tint = isSelected ? '#bcd8ff' : '#ffffff';
-  const grayTarget = isOther ? 1 : 0;
 
   useEffect(() => () => { if (hovered) uiState.cardHover = false; }, [hovered]);
+  useEffect(() => () => { pinsRef.current.delete(pinKey); }, [pinsRef, pinKey]);
 
   useFrame((_, delta) => {
     const g = groupRef.current;
     if (!g) return;
     const m = frame.layout.metrics;
-    const y = slotY(col, index - scrollRef.current, itemCount); // px, y down
-    const along = y - col.y0; // 0 at the column's first slot, col.span at its last
-    const half = col.pitch * 0.5;
-    if (revealRef.current < 0.001 || along < -half || along > col.span + half) {
+    const d = wrapOffset(index, scrollRef.current, N) + lap * N; // card-slots from the middle of the screen
+    const off = d * col.pitch; // px from the middle
+    if (revealRef.current < 0.001 || Math.abs(off) > col.reach) {
       g.visible = false;
-      if (pinPositionsRef.current) pinPositionsRef.current[index] = null;
+      pinsRef.current.delete(pinKey);
       return;
     }
 
-    const k = 1 - Math.exp(-Math.min(delta, 0.05) * 9);
-    hoverAmt.current += ((hovered ? 1 : 0) - hoverAmt.current) * k;
-    grayUniform.value += (grayTarget * GRAY_AMOUNT - grayUniform.value) * (1 - Math.exp(-Math.min(delta, 0.05) * 5));
+    const dt = Math.min(delta, 0.05);
+    hoverAmt.current += ((hovered ? 1 : 0) - hoverAmt.current) * (1 - Math.exp(-dt * 9));
+    otherAmt.current += ((isOther ? 1 : 0) - otherAmt.current) * (1 - Math.exp(-dt * 5));
+    grayUniform.value = otherAmt.current * OTHER_GRAY;
 
-    // Fly in from the side of the screen, staggered down the column.
-    const r = ease(revealRef.current * 1.7 - clamp01(along / Math.max(col.span, 1e-6)) * 0.7);
-    const edge = clamp01(1 - Math.max(-along, along - col.span) / half); // fade over half a pitch at either end
+    // Fly in from the side of the screen, the middle first.
+    const r = ease(revealRef.current * 1.6 - clamp01(Math.abs(off) / col.reach) * 0.6);
+    const side = col.side === 'left' ? -1 : 1;
+    const fly = (1 - r) * 0.45 * frame.W * side;
 
     // Hand-made: a little off the line, a little crooked (it straightens up when you point at it).
-    const px = col.x + jitter.dx * m.cardW;
-    const py = y + jitter.dy * m.cardH;
-    const side = col.side === 'left' ? -1 : 1;
-    const fly = (1 - r) * 0.35 * frame.W * side;
-    g.position.set((px + fly - frame.W / 2) * frame.wpp, (frame.H / 2 - py) * frame.wpp, hoverAmt.current * 0.4 + index * 0.0015);
+    const px = col.x + jitter.dx * m.cardW + fly;
+    const py = col.yMid + off + jitter.dy * m.cardH;
+
+    // Cards overlap a little, and the frames are solid, so each needs its own depth: lower on the page = in front.
+    // Position and size are corrected for the depth so it does not change how big the card looks.
+    const z = (off / frame.H) * 0.35 + hoverAmt.current * 0.7;
+    const persp = (FRAME_CAMERA.distance - z) / FRAME_CAMERA.distance;
+    g.position.set((px - frame.W / 2) * frame.wpp * persp, (frame.H / 2 - py) * frame.wpp * persp, z);
     g.rotation.z = jitter.rot * (1 - 0.85 * hoverAmt.current);
-    const scale = m.cardH * frame.wpp * jitter.scale * (0.6 + 0.4 * r) * (1 + 0.12 * hoverAmt.current);
+    const scale = m.cardH * frame.wpp * jitter.scale * (0.85 + 0.15 * r) * (1 + 0.12 * hoverAmt.current) * persp;
     g.scale.setScalar(scale);
-    g.visible = r > 0.002 && edge > 0.002;
+    g.visible = r > 0.002;
 
-    const opacity = r * edge * (1 - (1 - GRAY_DIM) * (grayUniform.value / GRAY_AMOUNT));
-    if (backingRef.current) backingRef.current.opacity = opacity;
-    if (imageRef.current) imageRef.current.opacity = opacity;
-    if (pinRef.current) pinRef.current.opacity = opacity;
+    // Only the photo changes opacity.
+    if (imageRef.current) imageRef.current.opacity = 1 - (1 - OTHER_PHOTO_OPACITY) * otherAmt.current;
 
-    if (pinPositionsRef.current) {
-      const c = Math.cos(g.rotation.z);
-      const s = Math.sin(g.rotation.z);
-      const ly = PIN_Y * scale;
-      pinPositionsRef.current[index] = new Vector3(g.position.x - s * ly, g.position.y + c * ly, g.position.z + 0.008 * scale);
-    }
+    const c = Math.cos(g.rotation.z);
+    const s = Math.sin(g.rotation.z);
+    const ly = PIN_Y * scale;
+    pinsRef.current.set(pinKey, new Vector3(g.position.x - s * ly, g.position.y + c * ly, g.position.z + 0.008 * scale));
   });
 
   const body = (texture) => (
     <CardBody
       item={item} texture={texture} tint={tint} grayUniform={grayUniform}
-      groupRef={groupRef} backingRef={backingRef} imageRef={imageRef} pinRef={pinRef}
+      groupRef={groupRef} imageRef={imageRef}
       hovered={hovered} setHovered={setHovered} onSelect={onSelect}
     />
   );
@@ -176,16 +181,14 @@ const StripCard = ({ item, index, col, frame, itemCount, scrollRef, revealRef, p
 };
 
 // ── Clothesline: a thin string through every visible card's pin, drooping a little between pins ──
-const ClothesLine = ({ col, items, pinPositionsRef, revealRef }) => {
+const ClothesLine = ({ col, pinsRef, revealRef }) => {
   const lineRef = useRef();
   const geometryRef = useRef();
   const inward = col.side === 'left' ? 1 : -1; // the string sags towards the globe
 
   useFrame(() => {
     if (!lineRef.current || !geometryRef.current) return;
-    const pins = pinPositionsRef.current || [];
-    const visible = [];
-    for (let i = 0; i < items.length; i++) if (pins[i]) visible.push(pins[i]);
+    const visible = [...pinsRef.current.values()].sort((a, b) => b.y - a.y); // top to bottom
     if (visible.length < 2 || revealRef.current < 0.4) {
       lineRef.current.visible = false;
       return;
@@ -212,78 +215,87 @@ const ClothesLine = ({ col, items, pinPositionsRef, revealRef }) => {
   );
 };
 
-// ── One column ────────────────────────────────────────────────────────────────────────────────
+// ── One strip ─────────────────────────────────────────────────────────────────────────────────
 const Column = ({ col, frame, items, revealRef, selectedItemId, selectedCountry, onSelect }) => {
-  const scrollRef = useRef(0);
+  const N = items.length;
+  const scrollRef = useRef(0); // the list position that is at the middle of the screen (fractional while it glides)
   const targetRef = useRef(0);
-  const pinPositionsRef = useRef([]);
+  const pinsRef = useRef(new Map());
+  const pointer = useRef({ x: -1, y: -1, type: 'mouse' });
+  const dragRef = useRef(null);
   const eventTarget = useThree((s) => s.events.connected);
-  const maxScroll = Math.max(0, items.length - col.count);
-  const band = useMemo(() => columnBand(col), [col]);
+  const band = useMemo(() => columnBand(col, frame.H), [col, frame.H]);
+  const laps = useMemo(() => lapOffsets(N, col.slots), [N, col.slots]);
+  const signature = useMemo(() => items.map((i) => i.id).join('|'), [items]);
 
-  useEffect(() => { pinPositionsRef.current = new Array(items.length).fill(null); }, [items]);
-  useEffect(() => { targetRef.current = Math.min(targetRef.current, maxScroll); }, [maxScroll]);
-
-  // Scrolling by mouse (glide along the column), wheel, or touch (drag). Pointer coordinates are CSS px, like the layout.
+  // When a place opens (or the list changes), put its own cards in the middle of the screen.
   useEffect(() => {
-    if (!eventTarget || maxScroll <= 0) return undefined;
-    const inBand = (x, y) => x >= band.x0 && x <= band.x1 && y >= band.y0 && y <= band.y1;
-    const setTarget = (v) => { targetRef.current = Math.min(Math.max(v, 0), maxScroll); };
-    let touch = null;
+    scrollRef.current = targetRef.current = startScroll(items, selectedCountry);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature, selectedCountry]);
 
-    const onMove = (e) => {
-      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
-        if (touch) setTarget(touch.start - (e.clientY - touch.y) / col.pitch);
-        return;
-      }
-      if (inBand(e.clientX, e.clientY)) setTarget(clamp01((e.clientY - col.y0) / Math.max(col.span, 1)) * maxScroll);
-    };
+  // Scrolling by wheel, by dragging (mouse or finger), and by resting the pointer near the top or bottom.
+  useEffect(() => {
+    if (!eventTarget || N === 0) return undefined;
+    const inBand = (x, y) => x >= band.x0 && x <= band.x1 && y >= band.y0 && y <= band.y1;
     const onDown = (e) => {
-      if ((e.pointerType === 'touch' || e.pointerType === 'pen') && inBand(e.clientX, e.clientY)) touch = { y: e.clientY, start: targetRef.current };
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (inBand(e.clientX, e.clientY)) dragRef.current = { y: e.clientY, start: targetRef.current };
     };
-    const onUp = () => { touch = null; };
+    const onMove = (e) => {
+      pointer.current = { x: e.clientX, y: e.clientY, type: e.pointerType };
+      if (dragRef.current) targetRef.current = dragRef.current.start - (e.clientY - dragRef.current.y) / col.pitch;
+    };
+    const onUp = () => { dragRef.current = null; };
     const onWheel = (e) => {
-      if (!inBand(e.clientX, e.clientY)) return;
-      setTarget(targetRef.current + (e.deltaMode === 1 ? e.deltaY : e.deltaY / (col.pitch * 1.1)));
+      if (inBand(e.clientX, e.clientY)) targetRef.current += e.deltaMode === 1 ? e.deltaY : e.deltaY / (col.pitch * 1.1);
     };
-    eventTarget.addEventListener('pointermove', onMove);
     eventTarget.addEventListener('pointerdown', onDown);
+    eventTarget.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
     eventTarget.addEventListener('wheel', onWheel, { passive: true });
     return () => {
-      eventTarget.removeEventListener('pointermove', onMove);
       eventTarget.removeEventListener('pointerdown', onDown);
+      eventTarget.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
       eventTarget.removeEventListener('wheel', onWheel);
     };
-  }, [eventTarget, band, col, maxScroll]);
+  }, [eventTarget, band, col.pitch, N]);
 
-  useFrame(() => {
-    scrollRef.current += (targetRef.current - scrollRef.current) * SCROLL_EASE;
+  useFrame((_, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const p = pointer.current;
+    if (!dragRef.current && p.type === 'mouse' && revealRef.current > 0.5 && p.x >= band.x0 && p.x <= band.x1) {
+      targetRef.current += edgeScrollSpeed(p.y, frame.H) * dt; // rest the pointer near the top/bottom to glide
+    }
+    scrollRef.current += (targetRef.current - scrollRef.current) * (1 - Math.exp(-dt * SCROLL_RATE));
   });
 
-  if (items.length === 0) return null;
+  if (N === 0) return null;
   return (
     <group>
-      {items.map((item, i) => (
-        <StripCard
-          key={item.id}
-          item={item}
-          index={i}
-          col={col}
-          frame={frame}
-          itemCount={items.length}
-          scrollRef={scrollRef}
-          revealRef={revealRef}
-          pinPositionsRef={pinPositionsRef}
-          isSelected={selectedItemId === item.id}
-          isOther={!!selectedCountry && item.country !== selectedCountry}
-          onSelect={onSelect}
-        />
-      ))}
-      <ClothesLine col={col} items={items} pinPositionsRef={pinPositionsRef} revealRef={revealRef} />
+      {items.map((item, i) =>
+        laps.map((lap) => (
+          <StripCard
+            key={`${item.id}:${lap}`}
+            item={item}
+            index={i}
+            lap={lap}
+            N={N}
+            col={col}
+            frame={frame}
+            scrollRef={scrollRef}
+            revealRef={revealRef}
+            pinsRef={pinsRef}
+            isSelected={selectedItemId === item.id}
+            isOther={!!selectedCountry && item.country !== selectedCountry}
+            onSelect={onSelect}
+          />
+        )),
+      )}
+      <ClothesLine col={col} pinsRef={pinsRef} revealRef={revealRef} />
     </group>
   );
 };
@@ -306,9 +318,9 @@ const Frame = ({ projects, fotos, visible, selectedCountry, selectedItem, onSele
     if (!visible && uiState.cardHover) uiState.cardHover = false;
   });
 
-  // Tell the globe where the columns are (so a finger on one scrolls it rather than turning the globe).
+  // Tell the globe where the strips are (so a drag on one scrolls it rather than turning the globe).
   useEffect(() => {
-    uiState.bands = visible ? frame.layout.columns.map(columnBand) : [];
+    uiState.bands = visible ? frame.layout.columns.map((c) => columnBand(c, frame.H)) : [];
     return () => { uiState.bands = []; };
   }, [visible, frame]);
 
