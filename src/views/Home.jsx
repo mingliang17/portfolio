@@ -1,84 +1,24 @@
-// src/pages/Home.jsx
+// src/views/Home.jsx
 import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Earth from '../components/home/Earth.jsx';
 import StripCarousel from '../components/home/StripCarousel.jsx';
+import CameraIntro from '../components/home/CameraIntro.jsx';
+import HomeHints from '../components/home/HomeHints.jsx';
 import { globeProjects, constellationEntries, getSortedProjects, getSortedFotos } from '../constants/index.js';
-import gsap from 'gsap';
 import { uiState } from '../globe/uiState.js';
 import { GLOBE_FOV } from '../globe/constants.js';
 
-// ── Camera Intro ──────────────────────────────────────────────────────────────
-// SHELVED: set SHOW_CAMERA_INTRO to true to bring the viewfinder intro back. Nothing else needs to change.
+// SHELVED: set SHOW_CAMERA_INTRO to true to bring the viewfinder intro back (src/components/home/CameraIntro.jsx).
 const SHOW_CAMERA_INTRO = false;
 
-const CameraIntro = ({ onComplete }) => {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ onComplete });
-
-      gsap.set('.ci-overlay',  { opacity: 1 });
-      gsap.set('.ci-flash',    { opacity: 0 });
-      gsap.set(['.ci-corner', '.ci-grid-line'], { opacity: 0 });
-      gsap.set('.ci-hud-text',  { opacity: 0, y: 8 });
-      gsap.set('.ci-af-label',  { opacity: 0 });
-      gsap.set('.ci-crosshair', { opacity: 0 });
-
-      tl
-        .to('.ci-overlay',     { opacity: 0.55, duration: 0.8, ease: 'power2.out' }, 0)
-        .to('.ci-hud-text',    { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 0.3)
-        .to('.ci-corner',      { opacity: 0.95, duration: 0.4, stagger: 0.06 }, 0.7)
-        .to('.ci-crosshair',   { opacity: 0.5, duration: 0.3 }, 0.9)
-        .to('.ci-grid-line',   { opacity: 0.18, duration: 0.4 }, 0.9)
-        .to('.ci-frame-outer', { scale: 0.88, duration: 0.6, ease: 'power3.inOut', transformOrigin: 'center' }, 1.8)
-        .to('.ci-overlay',     { opacity: 0.28, duration: 0.6 }, 1.8)
-        .to('.ci-af-label',    { opacity: 1, duration: 0.3 }, 2.2)
-        .to('.ci-corner',      { borderColor: '#00ff88', duration: 0.3 }, 2.1)
-        .to('.ci-overlay',     { opacity: 1, duration: 0.07, ease: 'power1.in' }, 2.7)
-        .to('.ci-flash',       { opacity: 1, duration: 0.05 }, 2.7)
-        .to('.ci-flash',       { opacity: 0, duration: 0.3, ease: 'power2.out' }, 2.75)
-        .to('.ci-overlay',     { opacity: 0, duration: 1.1, ease: 'power2.inOut' }, 2.75);
-    }, ref);
-
-    return () => ctx.revert();
-  }, []);
-
-  return (
-    <div ref={ref} className="ci-wrapper" style={{ pointerEvents: 'none' }}>
-      <div className="ci-overlay" />
-      <div className="ci-flash" />
-      <div className="ci-frame-outer">
-        <div className="ci-corner ci-tl" />
-        <div className="ci-corner ci-tr" />
-        <div className="ci-corner ci-bl" />
-        <div className="ci-corner ci-br" />
-        <div className="ci-crosshair">
-          <div className="ci-ch-h" />
-          <div className="ci-ch-v" />
-        </div>
-        <div className="ci-grid">
-          <div className="ci-grid-line ci-gl-h" style={{ top: '33.33%' }} />
-          <div className="ci-grid-line ci-gl-h" style={{ top: '66.66%' }} />
-          <div className="ci-grid-line ci-gl-v" style={{ left: '33.33%' }} />
-          <div className="ci-grid-line ci-gl-v" style={{ left: '66.66%' }} />
-        </div>
-        <div className="ci-af-label">◉ AF LOCK</div>
-      </div>
-      <div className="ci-hud ci-hud-top">
-        <span className="ci-hud-text">ISO 1600</span>
-        <span className="ci-hud-text">⬤ REC</span>
-        <span className="ci-hud-text">f/2.8</span>
-      </div>
-      <div className="ci-hud ci-hud-bottom">
-        <span className="ci-hud-text">1/200s</span>
-        <span className="ci-hud-text">EARTH — LIVE VIEW</span>
-        <span className="ci-hud-text">35mm</span>
-      </div>
-    </div>
-  );
-};
+// The four navigation stars that orbit the globe (a constant: it must not be rebuilt on every render).
+const STAR_NAVIGATION_POINTS = [
+  { title: 'Future Projects', lat:  45, lon: 120, link: '/projects/future'  },
+  { title: 'Archive',         lat: -30, lon: -45, link: '/projects/archive' },
+  { title: 'Research Lab',    lat:  60, lon: -90, link: '/projects/lab'     },
+  { title: 'Collaborations',  lat:  10, lon:  60, link: '/projects/collabs' },
+];
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 const Home = () => {
@@ -86,8 +26,6 @@ const Home = () => {
   const [globeTheme,      setGlobeTheme]      = useState('neutral');
   const [selectedCountry, setSelectedCountry] = useState(null); // name, as the project/photo data knows it
   const [selectedKey,     setSelectedKey]     = useState(null); // globe identity of the country (ISO code, else name)
-  const [selectedItem,    setSelectedItem]    = useState(null);
-  const [columnsVisible,  setColumnsVisible]  = useState(false);
   const [stripsMounted,   setStripsMounted]   = useState(false); // the polaroid canvas is created on first selection
   const [sortedProjects,  setSortedProjects]  = useState([]);
   const [sortedFotos,     setSortedFotos]     = useState([]);
@@ -99,10 +37,8 @@ const Home = () => {
   const handleCountrySelect = useCallback((info) => {
     setSelectedCountry(info.country);
     setSelectedKey(info.key);
-    setSelectedItem(null);
     setSortedProjects(getSortedProjects(info.country));
     setSortedFotos(getSortedFotos(info.country));
-    setColumnsVisible(true);
     setStripsMounted(true);
   }, []);
 
@@ -110,8 +46,6 @@ const Home = () => {
   const handleDeselect = useCallback(() => {
     setSelectedCountry(null);
     setSelectedKey(null);
-    setSelectedItem(null);
-    setColumnsVisible(false);
   }, []);
 
   // A click that hit nothing on the globe canvas (empty space around it) also zooms out.
@@ -133,14 +67,8 @@ const Home = () => {
 
   // No tooltip over the country that is already open (the badge says it), nor over a polaroid.
   const hoverCountryInfo = hoverInfo && !uiState.cardHover && (hoverInfo.key ?? hoverInfo.iso ?? hoverInfo.name) !== selectedKey ? hoverInfo : null;
+  const columnsVisible = !!selectedKey; // the polaroid columns are out exactly while a place is open
   const selectedInfo = selectedKey ? globeProjects.find((c) => c.iso === selectedKey) ?? constellationEntries.find((c) => c.key === selectedKey) : null;
-
-  const starNavigationPoints = [
-    { title: 'Future Projects', lat:  45, lon: 120, link: '/projects/future'  },
-    { title: 'Archive',         lat: -30, lon: -45, link: '/projects/archive' },
-    { title: 'Research Lab',    lat:  60, lon: -90, link: '/projects/lab'     },
-    { title: 'Collaborations',  lat:  10, lon:  60, link: '/projects/collabs' },
-  ];
 
   return (
     <main className="hp-main" ref={mainRef} onPointerMove={handlePointerMove}>
@@ -162,7 +90,7 @@ const Home = () => {
             <Earth
               countries={globeProjects}
               constellations={constellationEntries}
-              stars={starNavigationPoints}
+              stars={STAR_NAVIGATION_POINTS}
               globeTheme={globeTheme}
               onThemeChange={setGlobeTheme}
               onCountrySelect={handleCountrySelect}
@@ -208,7 +136,6 @@ const Home = () => {
             fotos={sortedFotos}
             visible={columnsVisible}
             selectedCountry={selectedCountry}
-            selectedItem={selectedItem}
             eventSource={mainRef}
           />
         )}
@@ -228,6 +155,9 @@ const Home = () => {
           <button className="hp-country-badge-close" onClick={handleDeselect} aria-label="Back to the globe" title="Back to the globe (Esc)">✕</button>
         </div>
       )}
+
+      {/* How to use the page: changes with whether a place is open */}
+      {introComplete && <HomeHints placeOpen={columnsVisible} />}
     </main>
   );
 };

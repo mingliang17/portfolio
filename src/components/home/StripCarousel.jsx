@@ -46,6 +46,8 @@ const PIN_Y = BACKING_H / 2 - BORDER / 2;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const ease = (t) => 1 - Math.pow(1 - clamp01(t), 3);
+/** Frame-rate independent exponential smoothing: the fraction of the remaining gap to close this frame. */
+const smooth = (dt, rate) => 1 - Math.exp(-dt * rate);
 
 /** Lets a MeshBasicMaterial be drained of colour by a uniform (0 = as is, 1 = fully grey). */
 const makeGrayPatch = (uniform) => (shader) => {
@@ -60,7 +62,7 @@ const makeGrayPatch = (uniform) => (shader) => {
 const GRAY_CACHE_KEY = () => 'polaroid-photo-gray';
 
 // ── One polaroid ──────────────────────────────────────────────────────────────────────────────
-const CardBody = ({ item, texture, tint, grayUniform, groupRef, imageRef, hovered, setHovered, onSelect }) => {
+const CardBody = ({ item, texture, grayUniform, groupRef, imageRef, hovered, setHovered, onSelect }) => {
   const patch = useMemo(() => makeGrayPatch(grayUniform), [grayUniform]);
   return (
     <group
@@ -78,7 +80,7 @@ const CardBody = ({ item, texture, tint, grayUniform, groupRef, imageRef, hovere
       {/* The photo: the only part that is drained of colour and made see-through. */}
       <mesh position={[0, IMAGE_Y, 0.004]}>
         <planeGeometry args={[IMG, IMG]} />
-        <meshBasicMaterial ref={imageRef} map={texture ?? null} color={texture ? tint : '#9aa3ad'} transparent toneMapped={false} onBeforeCompile={patch} customProgramCacheKey={GRAY_CACHE_KEY} />
+        <meshBasicMaterial ref={imageRef} map={texture ?? null} color={texture ? '#ffffff' : '#9aa3ad'} transparent toneMapped={false} onBeforeCompile={patch} customProgramCacheKey={GRAY_CACHE_KEY} />
       </mesh>
       <mesh position={[0, PIN_Y, 0.008]}>
         <circleGeometry args={[0.03, 20]} />
@@ -105,7 +107,7 @@ const Textured = ({ src, children }) => children(useTexture(src));
  * One item at one lap of the loop: where it sits, how it is tilted, how it flies in. Runs every frame.
  * `index` is the item's place in the list; its distance from the middle of the screen comes from the scroll position.
  */
-const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pinsRef, isSelected, isOther, onSelect }) => {
+const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pinsRef, isOther, onSelect }) => {
   const groupRef = useRef();
   const imageRef = useRef();
   const [hovered, setHovered] = useState(false);
@@ -114,7 +116,6 @@ const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pins
   const grayUniform = useMemo(() => ({ value: isOther ? OTHER_GRAY : 0 }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const jitter = useMemo(() => cardJitter(item.id), [item.id]);
   const pinKey = `${index}:${lap}`;
-  const tint = isSelected ? '#bcd8ff' : '#ffffff';
 
   useEffect(() => () => { if (hovered) uiState.cardHover = false; }, [hovered]);
   useEffect(() => () => { pinsRef.current.delete(pinKey); }, [pinsRef, pinKey]);
@@ -132,8 +133,8 @@ const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pins
     }
 
     const dt = Math.min(delta, 0.05);
-    hoverAmt.current += ((hovered ? 1 : 0) - hoverAmt.current) * (1 - Math.exp(-dt * 9));
-    otherAmt.current += ((isOther ? 1 : 0) - otherAmt.current) * (1 - Math.exp(-dt * 5));
+    hoverAmt.current += ((hovered ? 1 : 0) - hoverAmt.current) * smooth(dt, 9);
+    otherAmt.current += ((isOther ? 1 : 0) - otherAmt.current) * smooth(dt, 5);
     grayUniform.value = otherAmt.current * OTHER_GRAY;
 
     // Fly in from the side of the screen, the middle first.
@@ -161,12 +162,14 @@ const StripCard = ({ item, index, lap, N, col, frame, scrollRef, revealRef, pins
     const c = Math.cos(g.rotation.z);
     const s = Math.sin(g.rotation.z);
     const ly = PIN_Y * scale;
-    pinsRef.current.set(pinKey, new Vector3(g.position.x - s * ly, g.position.y + c * ly, g.position.z + 0.008 * scale));
+    let pin = pinsRef.current.get(pinKey);
+    if (!pin) pinsRef.current.set(pinKey, (pin = new Vector3()));
+    pin.set(g.position.x - s * ly, g.position.y + c * ly, g.position.z + 0.008 * scale);
   });
 
   const body = (texture) => (
     <CardBody
-      item={item} texture={texture} tint={tint} grayUniform={grayUniform}
+      item={item} texture={texture} grayUniform={grayUniform}
       groupRef={groupRef} imageRef={imageRef}
       hovered={hovered} setHovered={setHovered} onSelect={onSelect}
     />
@@ -216,7 +219,7 @@ const ClothesLine = ({ col, pinsRef, revealRef }) => {
 };
 
 // ── One strip ─────────────────────────────────────────────────────────────────────────────────
-const Column = ({ col, frame, items, revealRef, selectedItemId, selectedCountry, onSelect }) => {
+const Column = ({ col, frame, items, revealRef, selectedCountry, onSelect }) => {
   const N = items.length;
   const scrollRef = useRef(0); // the list position that is at the middle of the screen (fractional while it glides)
   const targetRef = useRef(0);
@@ -270,7 +273,7 @@ const Column = ({ col, frame, items, revealRef, selectedItemId, selectedCountry,
     if (!dragRef.current && p.type === 'mouse' && revealRef.current > 0.5 && p.x >= band.x0 && p.x <= band.x1) {
       targetRef.current += edgeScrollSpeed(p.y, frame.H) * dt; // rest the pointer near the top/bottom to glide
     }
-    scrollRef.current += (targetRef.current - scrollRef.current) * (1 - Math.exp(-dt * SCROLL_RATE));
+    scrollRef.current += (targetRef.current - scrollRef.current) * smooth(dt, SCROLL_RATE);
   });
 
   if (N === 0) return null;
@@ -289,7 +292,6 @@ const Column = ({ col, frame, items, revealRef, selectedItemId, selectedCountry,
             scrollRef={scrollRef}
             revealRef={revealRef}
             pinsRef={pinsRef}
-            isSelected={selectedItemId === item.id}
             isOther={!!selectedCountry && item.country !== selectedCountry}
             onSelect={onSelect}
           />
@@ -300,7 +302,7 @@ const Column = ({ col, frame, items, revealRef, selectedItemId, selectedCountry,
   );
 };
 
-const Frame = ({ projects, fotos, visible, selectedCountry, selectedItem, onSelect }) => {
+const Frame = ({ projects, fotos, visible, selectedCountry, onSelect }) => {
   const { width, height } = useThree((s) => s.size);
   const frame = useMemo(() => {
     const tanH = Math.tan((FRAME_CAMERA.fovDeg * Math.PI) / 360);
@@ -312,7 +314,7 @@ const Frame = ({ projects, fotos, visible, selectedCountry, selectedItem, onSele
   const rootRef = useRef();
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    revealRef.current += ((visible ? 1 : 0) - revealRef.current) * (1 - Math.exp(-dt * (visible ? 2.1 : 4)));
+    revealRef.current += ((visible ? 1 : 0) - revealRef.current) * smooth(dt, visible ? 2.1 : 4);
     if (revealRef.current < 0.002 && !visible) revealRef.current = 0;
     if (rootRef.current) rootRef.current.visible = revealRef.current > 0;
     if (!visible && uiState.cardHover) uiState.cardHover = false;
@@ -326,13 +328,13 @@ const Frame = ({ projects, fotos, visible, selectedCountry, selectedItem, onSele
 
   return (
     <group ref={rootRef} visible={false}>
-      <Column col={left} frame={frame} items={projects} revealRef={revealRef} selectedItemId={selectedItem} selectedCountry={selectedCountry} onSelect={onSelect} />
-      <Column col={right} frame={frame} items={fotos} revealRef={revealRef} selectedItemId={selectedItem} selectedCountry={selectedCountry} onSelect={onSelect} />
+      <Column col={left} frame={frame} items={projects} revealRef={revealRef} selectedCountry={selectedCountry} onSelect={onSelect} />
+      <Column col={right} frame={frame} items={fotos} revealRef={revealRef} selectedCountry={selectedCountry} onSelect={onSelect} />
     </group>
   );
 };
 
-const StripCarousel = ({ projects = [], fotos = [], visible = true, selectedCountry, selectedItem, eventSource }) => {
+const StripCarousel = ({ projects = [], fotos = [], visible = true, selectedCountry, eventSource }) => {
   const handleSelect = (item) => { if (item?.link) window.location.href = withBase(item.link); };
   return (
     <Canvas
@@ -344,7 +346,7 @@ const StripCarousel = ({ projects = [], fotos = [], visible = true, selectedCoun
       eventPrefix="client"
     >
       <Suspense fallback={null}>
-        <Frame projects={projects} fotos={fotos} visible={visible} selectedCountry={selectedCountry} selectedItem={selectedItem} onSelect={handleSelect} />
+        <Frame projects={projects} fotos={fotos} visible={visible} selectedCountry={selectedCountry} onSelect={handleSelect} />
       </Suspense>
     </Canvas>
   );

@@ -77,27 +77,16 @@ export const globeProjects = [
 ];
 
 // ─── Sorted accessors (selected country first) ────────────────────────────────
-export const getSortedProjects = (selectedCountry, selectedItemId = null) => {
-  const same = ALL_PROJECTS.filter(p => p.country === selectedCountry);
-  if (selectedItemId) {
-    same.sort((a, b) => (a.id === selectedItemId ? -1 : b.id === selectedItemId ? 1 : a.title.localeCompare(b.title)));
-  } else {
-    same.sort((a, b) => a.title.localeCompare(b.title));
-  }
-  const other = ALL_PROJECTS.filter(p => p.country !== selectedCountry).sort((a, b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
-  return [...same, ...other];
-};
+// The selected place's own work first (A–Z), then everything else grouped by country (A–Z), then by title.
+const byTitle = (a, b) => a.title.localeCompare(b.title);
+const byCountryThenTitle = (a, b) => a.country.localeCompare(b.country) || byTitle(a, b);
+const sortedFor = (list, country) => [
+  ...list.filter((x) => x.country === country).sort(byTitle),
+  ...list.filter((x) => x.country !== country).sort(byCountryThenTitle),
+];
 
-export const getSortedFotos = (selectedCountry, selectedItemId = null) => {
-  const same = ALL_FOTOS.filter(f => f.country === selectedCountry);
-  if (selectedItemId) {
-    same.sort((a, b) => (a.id === selectedItemId ? -1 : b.id === selectedItemId ? 1 : a.title.localeCompare(b.title)));
-  } else {
-    same.sort((a, b) => a.title.localeCompare(b.title));
-  }
-  const other = ALL_FOTOS.filter(f => f.country !== selectedCountry).sort((a, b) => a.country.localeCompare(b.country) || a.title.localeCompare(b.title));
-  return [...same, ...other];
-};
+export const getSortedProjects = (selectedCountry) => sortedFor(ALL_PROJECTS, selectedCountry);
+export const getSortedFotos = (selectedCountry) => sortedFor(ALL_FOTOS, selectedCountry);
 
 export const getFotoById = (id) => ALL_FOTOS.find(f => f.id === id) || null;
 export const getProjectById = (id) => ALL_PROJECTS.find(p => p.id === id) || null;

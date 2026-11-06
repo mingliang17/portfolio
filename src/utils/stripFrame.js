@@ -14,7 +14,7 @@
 // Everything is in CSS pixels, y down, like the page. StripCarousel turns it into world units.
 
 export const FRAME_MARGIN = 0.1; // empty border at each SIDE of the screen outside the columns (fraction of the width)
-export const CARD_HEIGHT_FRAC = 0.15; // polaroid height as a fraction of min(width, height)
+export const CARD_HEIGHT_FRAC = 0.225; // polaroid height as a fraction of min(width, height) (1.5 × the original 0.15)
 export const CARD_ASPECT = 0.857; // polaroid width / height
 export const CARD_GAP = 0.03; // pitch = card height × (1 + gap): neighbours nearly touch
 export const OVERSCAN = 0.7; // cards are kept this many card-heights beyond the screen edge, so they run off it
@@ -29,7 +29,7 @@ export function frameMetrics(W, H) {
   const mx = FRAME_MARGIN * W;
   const my = FRAME_MARGIN * H;
   let cardH = Math.max(56, CARD_HEIGHT_FRAC * Math.min(W, H));
-  // Never let the two columns eat more than 60% of a narrow screen.
+  // Never let the two columns eat more than 60% of a narrow screen (on portrait phones this caps the 1.5× size).
   cardH = Math.min(cardH, (0.6 * W - 2 * mx) / (2.8 * CARD_ASPECT));
   cardH = Math.max(40, cardH);
   const cardW = cardH * CARD_ASPECT;

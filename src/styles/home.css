@@ -288,3 +288,88 @@
 /* Constellations: a star instead of a flag, and a quieter line for the ones with no work yet. */
 .country-flag--star { display: grid; place-items: center; font-size: 1.5rem; color: #ffe3a8; width: 2rem; text-shadow: 0 0 8px rgba(255, 214, 140, 0.8); }
 .country-tooltip-stat--muted { opacity: 0.6; font-style: italic; }
+
+/* ════════════════════════════════════════════════
+   HINTS (src/components/home/HomeHints.jsx)
+   A quiet bar above the Day / Neutral / Night toggle. The bar never takes the pointer (so the globe and the
+   polaroid strips stay draggable); only its ✕ / ? buttons do. It sits above the polaroids (z-index 10).
+   ════════════════════════════════════════════════ */
+.hp-hints {
+  position: absolute;
+  left: 50%;
+  bottom: 6rem; /* the theme toggle sits at 2.5rem */
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: min(92vw, 46rem);
+  padding: 0.55rem 0.6rem 0.55rem 1.1rem;
+  background: rgba(12, 12, 16, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.2rem;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  animation: hints-in 0.5s ease both;
+}
+@keyframes hints-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.hp-hints-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.2rem;
+}
+.hp-hint { display: flex; align-items: baseline; gap: 0.45rem; }
+.hp-hint strong { color: #fff; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.hp-hint-icon { color: #4ecdc4; font-size: 0.8rem; }
+
+.hp-hints-close,
+.hp-hints-toggle {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.1);
+  border: 0;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.hp-hints-close:hover,
+.hp-hints-toggle:hover { background: rgba(255, 255, 255, 0.25); }
+.hp-hints-close { flex: none; width: 1.5rem; height: 1.5rem; font-size: 0.65rem; }
+.hp-hints-toggle {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 2.5rem;
+  z-index: 25;
+  width: 2rem;
+  height: 2rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  background: rgba(12, 12, 16, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Tablets / small laptops: the gap between the two (now bigger) polaroid columns is narrower, so the bar must be too. */
+@media (max-width: 1100px) and (min-width: 601px) {
+  .hp-hints { max-width: 50vw; }
+}
+
+/* Phones: stack the hints; the gap between the columns is tiny, so the bar overlaps them a little (it ignores the pointer). */
+@media (max-width: 600px) {
+  .hp-hints { bottom: 5.2rem; padding: 0.5rem 0.5rem 0.5rem 0.8rem; font-size: 0.58rem; }
+  .hp-hints-list { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+  .hp-hints-toggle { right: 1rem; bottom: 2.7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-hints { animation: none; }
+}
